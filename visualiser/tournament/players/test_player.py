@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 from unittest.mock import patch
 
 from django.test import TestCase, tag
@@ -130,19 +129,19 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Alpha',
                                           rank=3,
-                                          date=datetime(day=1, month=6, year=1994, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=1994, tzinfo=dt.timezone.utc))
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Bravo',
                                           rank=1,
-                                          date=datetime(day=1, month=6, year=2004, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=2004, tzinfo=dt.timezone.utc))
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Charlie',
                                           rank=1,
-                                          date=datetime(day=1, month=6, year=2014, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=2014, tzinfo=dt.timezone.utc))
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Delta',
                                           rank=5,
-                                          date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=2024, tzinfo=dt.timezone.utc))
 
         self.assertEqual({'played': 4,
                   'first': {'event_name': 'Alpha', 'year': 1994},
@@ -180,11 +179,11 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Alpha',
                                           rank=3,
-                                          date=datetime(day=1, month=6, year=1994, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=1994, tzinfo=dt.timezone.utc))
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Bravo',
                                           rank=2,
-                                          date=datetime(day=1, month=6, year=2004, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=2004, tzinfo=dt.timezone.utc))
 
         self.assertEqual({'played': 2,
                   'first': {'event_name': 'Alpha', 'year': 1994},
@@ -232,7 +231,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -262,11 +261,11 @@ class PlayerTests(TestCase):
     # TODO test when some background objects are missing
     def test_player_background_updated_playereventranking(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(datetime_timezone.utc)
+        start = dt.datetime.now(dt.timezone.utc)
         # Create one of each type of background record, with PlayerEventRanking last
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Other tournament',
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -286,8 +285,8 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
-        end = datetime.now(datetime_timezone.utc)
+                                                date=dt.datetime.now(dt.timezone.utc))
+        end = dt.datetime.now(dt.timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -297,12 +296,12 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playertitle(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(datetime_timezone.utc)
+        start = dt.datetime.now(dt.timezone.utc)
         # Create one of each type of background record, with PlayerTitle last
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(player=p,
                                         event_ranking=per,
                                         round_number=4,
@@ -319,7 +318,7 @@ class PlayerTests(TestCase):
         pt = PlayerTitle.objects.create(player=p,
                                         title='Canadian Beaver',
                                         year=1976)
-        end = datetime.now(datetime_timezone.utc)
+        end = dt.datetime.now(dt.timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -329,12 +328,12 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playergameresult(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(datetime_timezone.utc)
+        start = dt.datetime.now(dt.timezone.utc)
         # Create one of each type of background record, with PlayerGameResult last
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -351,7 +350,7 @@ class PlayerTests(TestCase):
                                               game_number=17,
                                               power=self.austria,
                                               rank=2)
-        end = datetime.now(datetime_timezone.utc)
+        end = dt.datetime.now(dt.timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -361,12 +360,12 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playeraward(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(datetime_timezone.utc)
+        start = dt.datetime.now(dt.timezone.utc)
         # Create one of each type of background record, with PlayerAward last
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -383,7 +382,7 @@ class PlayerTests(TestCase):
         pa = PlayerAward.objects.create(player=p,
                                         event_ranking=per,
                                         name='Nicest Person')
-        end = datetime.now(datetime_timezone.utc)
+        end = dt.datetime.now(dt.timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -393,12 +392,12 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playerranking(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(datetime_timezone.utc)
+        start = dt.datetime.now(dt.timezone.utc)
         # Create one of each type of background record, with PlayerRanking last
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -415,7 +414,7 @@ class PlayerTests(TestCase):
                                           system='Who Chris Likes Most',
                                           international_rank='8',
                                           national_rank='3')
-        end = datetime.now(datetime_timezone.utc)
+        end = dt.datetime.now(dt.timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -475,25 +474,25 @@ class PlayerTests(TestCase):
 
     # Player.tournamentplayers()
     def test_player_tournamentplayers(self):
-        today = date.today()
+        today = dt.date.today()
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=72),
+                                       end_date=today + dt.timedelta(hours=72),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
                                        is_published=True)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=24),
+                                       end_date=today + dt.timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
                                        is_published=False)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=48),
+                                       end_date=today + dt.timedelta(hours=48),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
@@ -531,7 +530,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -564,7 +563,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -603,7 +602,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -647,11 +646,11 @@ class PlayerTests(TestCase):
         self.assertEqual(0, p.playeraward_set.count())
         self.assertEqual(0, p.playerranking_set.count())
         # Add one of each type of background object
-        today = datetime.today()
+        today = dt.datetime.today()
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -689,7 +688,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Best tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per,
                                         round_number=1,
                                         game_number=1,
@@ -707,11 +706,11 @@ class PlayerTests(TestCase):
         per1 = PlayerEventRanking.objects.create(player=p,
                                                  event_name='Best tournament',
                                                  rank=3,
-                                                 date=datetime.now(datetime_timezone.utc))
+                                                 date=dt.datetime.now(dt.timezone.utc))
         per2 = PlayerEventRanking.objects.create(player=p,
                                                  event_name='Worst tournament',
                                                  rank=346,
-                                                 date=datetime.now(datetime_timezone.utc))
+                                                 date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per1,
                                         round_number=1,
                                         game_number=1,
@@ -767,7 +766,7 @@ class PlayerTests(TestCase):
                                                  event_name='First event',
                                                  rank=3,
                                                  event_kind=EventKinds.TOURNAMENT,
-                                                 date=datetime.now(datetime_timezone.utc))
+                                                 date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per1,
                                         round_number=1,
                                         game_number=1,
@@ -787,7 +786,7 @@ class PlayerTests(TestCase):
                                                  event_name='Second event',
                                                  rank=4,
                                                  event_kind=EventKinds.TOURNAMENT,
-                                                 date=datetime.now(datetime_timezone.utc))
+                                                 date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per2,
                                         round_number=1,
                                         game_number=2,
@@ -806,7 +805,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='WDC tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per,
                                         round_number=7,
                                         game_number=1,
@@ -833,7 +832,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Tournament A',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per,
                                         round_number=1,
                                         game_number=1,
@@ -845,7 +844,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Tournament B',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per,
                                         round_number=1,
                                         game_number=2,
@@ -871,8 +870,8 @@ class PlayerTests(TestCase):
     def test_player_background_award_repeat(self):
         p = Player.objects.create(first_name='Joe',
                                   last_name='Bloggs')
-        today = datetime.today()
-        yesterday = today - timedelta(days=1)
+        today = dt.datetime.today()
+        yesterday = today - dt.timedelta(days=1)
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
@@ -922,7 +921,7 @@ class PlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+                                                date=dt.datetime(day=1, month=6, year=2024, tzinfo=dt.timezone.utc))
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
                                    name='Nicest Person')
@@ -950,19 +949,19 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Alpha',
                                           rank=3,
-                                          date=datetime(day=1, month=6, year=1994, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=1994, tzinfo=dt.timezone.utc))
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Bravo',
                                           rank=1,
-                                          date=datetime(day=1, month=6, year=2004, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=2004, tzinfo=dt.timezone.utc))
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Charlie',
                                           rank=1,
-                                          date=datetime(day=1, month=6, year=2014, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=2014, tzinfo=dt.timezone.utc))
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Delta',
                                           rank=5,
-                                          date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+                                          date=dt.datetime(day=1, month=6, year=2024, tzinfo=dt.timezone.utc))
         res = p.background()
         self.assertIn('Chris Brand has won 2 of 4 events (50.00%).', res)
         self.assertIn('Chris Brand won their first event (Bravo) in 2004.', res)
@@ -978,13 +977,13 @@ class PlayerTests(TestCase):
                                                         rank=1,
                                                         tournament_kind='WDC',
                                                         event_kind=EventKinds.TOURNAMENT,
-                                                        date=datetime.now(datetime_timezone.utc))
+                                                        date=dt.datetime.now(dt.timezone.utc))
         per_league = PlayerEventRanking.objects.create(player=p,
                                                        event_name='League Event',
                                                        rank=2,
                                                        tournament_kind='LEAGUE',
                                                        event_kind=EventKinds.LEAGUE,
-                                                       date=datetime.now(datetime_timezone.utc))
+                                                       date=dt.datetime.now(dt.timezone.utc))
         PlayerGameResult.objects.create(event_ranking=per_default,
                                         round_number=1,
                                         game_number=1,

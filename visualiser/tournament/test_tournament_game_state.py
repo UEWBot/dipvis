@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase
 
@@ -28,7 +27,7 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                find_game_scoring_system)
 from tournament.tournament_game_state import TournamentGameState
 
-HOURS_24 = timedelta(hours=24)
+HOURS_24 = dt.timedelta(hours=24)
 
 
 class TournamentGameStateTests(TestCase):
@@ -43,7 +42,7 @@ class TournamentGameStateTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        today = date.today()
+        today = dt.date.today()
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=today,
@@ -56,19 +55,19 @@ class TournamentGameStateTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=datetime_timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=12, tzinfo=dt.timezone.utc)))
         r13 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=datetime_timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=16, tzinfo=dt.timezone.utc)))
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
                              dias=True,
-                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=datetime_timezone.utc)))
+                             start=dt.datetime.combine(t1.start_date, dt.time(hour=20, tzinfo=dt.timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, timedelta
+import datetime as dt
 
 from django.test import TestCase
 
@@ -40,10 +40,10 @@ class PlayerGameResultTests(TestCase):
         cls.turkey = GreatPower.objects.get(abbreviation='T')
         cls.best_ranking = PlayerEventRanking.objects.create(player=Player.objects.first(),
                                                              event_name='Best Tournament',
-                                                             date=date.today())
+                                                             date=dt.date.today())
         cls.worst_ranking = PlayerEventRanking.objects.create(player=Player.objects.first(),
                                                               event_name='Worst Tournament',
-                                                              date=date.today() - timedelta(days=1))
+                                                              date=dt.date.today() - dt.timedelta(days=1))
 
     # PlayerGameResult.for_same_game()
     def test_playergameresult_same(self):
@@ -178,7 +178,7 @@ class PlayerGameResultTests(TestCase):
 
         ranking = PlayerEventRanking.objects.create(player=p,
                                 event_name='WDD Linked Tournament',
-                                date=date.today(),
+                                date=dt.date.today(),
                                 wdd_tournament_id=369)
         pgr = PlayerGameResult(event_ranking=ranking,
                        round_number=1,
@@ -208,7 +208,7 @@ class PlayerGameResultTests(TestCase):
 
         ranking = PlayerEventRanking.objects.create(player=p,
                                 event_name='WDR Linked Tournament',
-                                date=date.today(),
+                                date=dt.date.today(),
                                 wdr_tournament_id=369)
         pgr = PlayerGameResult(event_ranking=ranking,
                        round_number=1,

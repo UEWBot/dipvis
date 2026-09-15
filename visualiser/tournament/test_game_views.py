@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 from urllib.parse import urlencode
 from unittest.mock import patch
 
@@ -37,8 +36,8 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
 from tournament.players import Player
 
 
-HOURS_8 = timedelta(hours=8)
-HOURS_24 = timedelta(hours=24)
+HOURS_8 = dt.timedelta(hours=8)
+HOURS_24 = dt.timedelta(hours=24)
 VALID_BS_URL = 'https://www.backstabbr.com/game/4917371326693376'
 VALID_WD_URL = 'https://webdiplomacy.net/board.php?gameID=340030'
 NOTE = 'Played on the wooden board'
@@ -66,7 +65,7 @@ class GameViewTests(TestCase):
                                       is_superuser=True)
         u1.save()
 
-        today = date.today()
+        today = dt.date.today()
         # Published Tournament so it's visible to all
         # This one has Secret draw votes
         cls.t1 = Tournament.objects.create(name='t1',
@@ -80,7 +79,7 @@ class GameViewTests(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.g1 = Game.objects.create(name='Game1',
                                      started_at=cls.r1.start,
                                      the_round=cls.r1,
@@ -90,7 +89,7 @@ class GameViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
+                                 start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
         cls.g2 = Game.objects.create(name='Game2',
                                      started_at=r.start,
                                      the_round=r,
@@ -108,7 +107,7 @@ class GameViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t2,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                 start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.g3 = Game.objects.create(name='Game3',
                                      started_at=r.start,
                                      the_round=r,
@@ -117,7 +116,7 @@ class GameViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t2,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=datetime.combine(cls.t2.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
+                                 start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
         cls.g4 = Game.objects.create(name='Game4',
                                      started_at=r.start,
                                      the_round=r,

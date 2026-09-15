@@ -17,7 +17,7 @@
 """
 Preference Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, timedelta
+import datetime as dt
 
 from django.forms import modelformset_factory
 from django.test import TestCase
@@ -35,10 +35,10 @@ class PrefsFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         p = Player.objects.create(first_name='Arthur', last_name='Bottom')
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='t1',
                                       start_date=today,
-                                      end_date=today + timedelta(hours=24),
+                                      end_date=today + dt.timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
@@ -104,10 +104,10 @@ class PrefsFormsetTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)

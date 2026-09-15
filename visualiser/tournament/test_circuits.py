@@ -18,7 +18,7 @@
 Tests for Circuit models
 """
 
-from datetime import date
+import datetime as dt
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
@@ -49,7 +49,7 @@ class CircuitScoringTests(TestCase):
         self.assertEqual(str(scoring), 'My circuit scoring')
 
     def test_c_scoring_sum_percentiles(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='Circuit percentile test',
                                       start_date=today,
                                       end_date=today,
@@ -72,7 +72,7 @@ class CircuitScoringTests(TestCase):
         self.assertEqual(percentiles, {})
 
     def test_c_scoring_sum_percentiles_ties_share_percentile(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='Circuit percentile ties test',
                                       start_date=today,
                                       end_date=today,
@@ -91,7 +91,7 @@ class CircuitScoringTests(TestCase):
         self.assertEqual(percentiles[p3], 2 / 3)
 
     def test_c_percentiles_single_player(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='Circuit percentile single test',
                                       start_date=today,
                                       end_date=today,
@@ -104,7 +104,7 @@ class CircuitScoringTests(TestCase):
         self.assertEqual(percentiles[p1], 0.0)
 
     def test_c_percentiles_all_tied(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='Circuit percentile all tied test',
                                       start_date=today,
                                       end_date=today,
@@ -121,7 +121,7 @@ class CircuitScoringTests(TestCase):
         self.assertEqual(percentiles[p3], 0.0)
 
     def test_c_scoring_sum_percentiles_uses_best_three_scores_only(self):
-        today = date.today()
+        today = dt.date.today()
         p1 = Player.objects.order_by('pk').first()
         p2 = Player.objects.order_by('pk')[1]
 
@@ -172,7 +172,7 @@ class CircuitScoringTests(TestCase):
 
     def test_c_scoring_sum_percentiles_player_absent_from_some_tournaments(self):
         """A circuit player who didn't attend every tournament should score only from attended ones."""
-        today = date.today()
+        today = dt.date.today()
         p1, p2 = list(Player.objects.order_by('pk')[:2])
 
         circuit = Circuit.objects.create(name='Absent player circuit',
@@ -216,7 +216,7 @@ class CircuitScoringTests(TestCase):
 
     def test_c_scoring_scored_rounds_exceeds_tournaments_attended(self):
         """When scored_rounds > tournaments attended, all attended tournaments count."""
-        today = date.today()
+        today = dt.date.today()
         p1, p2 = list(Player.objects.order_by('pk')[:2])
         circuit = Circuit.objects.create(name='Too few tournaments circuit',
                                          start_date=today,
@@ -252,7 +252,7 @@ class CircuitScoringTests(TestCase):
 
     def test_c_scoring_scored_rounds_zero(self):
         """When scored_rounds=0, all circuit scores are zero regardless of tournament results."""
-        today = date.today()
+        today = dt.date.today()
         p1 = Player.objects.order_by('pk').first()
         circuit = Circuit.objects.create(name='Zero rounds circuit',
                                          start_date=today,
@@ -302,7 +302,7 @@ class CircuitTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.today = date.today()
+        cls.today = dt.date.today()
         cls.p1, cls.p2, cls.p3 = list(Player.objects.order_by('pk')[:3])
 
     def _new_tournament(self, name):

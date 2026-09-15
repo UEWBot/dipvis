@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase
 
@@ -35,7 +34,7 @@ class PlayerEventRankingTests(TestCase):
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
                                  rank=3,
-                                 date=datetime.now(datetime_timezone.utc),
+                                 date=dt.datetime.now(dt.timezone.utc),
                                  wdd_tournament_id=369)
         url = ptr.wdd_url()
         # Player.objects.first() has no WDDPlayer, so no URL can be formed
@@ -51,7 +50,7 @@ class PlayerEventRankingTests(TestCase):
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
                                  rank=3,
-                                 date=datetime.now(datetime_timezone.utc),
+                                 date=dt.datetime.now(dt.timezone.utc),
                                  wdd_tournament_id=369)
         url = ptr.wdd_url()
         self.assertIn('https://', url)
@@ -68,7 +67,7 @@ class PlayerEventRankingTests(TestCase):
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
                                  rank=3,
-                                 date=datetime.now(datetime_timezone.utc),
+                                 date=dt.datetime.now(dt.timezone.utc),
                                  wdr_tournament_id=369)
         url = ptr.wdr_url()
         self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369', url)
@@ -81,7 +80,7 @@ class PlayerEventRankingTests(TestCase):
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
                                  rank=3,
-                                 date=datetime.now(datetime_timezone.utc))
+                                 date=dt.datetime.now(dt.timezone.utc))
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year
         self.assertIn(p.first_name, p_str)
@@ -94,7 +93,7 @@ class PlayerEventRankingTests(TestCase):
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
                                  rank=None,
-                                 date=datetime.now(datetime_timezone.utc))
+                                 date=dt.datetime.now(dt.timezone.utc))
         p_str = str(ptr)
         self.assertIn(p.first_name, p_str)
         self.assertIn(p.last_name, p_str)
@@ -106,7 +105,7 @@ class PlayerEventRankingTests(TestCase):
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament 1974',
                                  rank=3,
-                                 date=datetime.now(datetime_timezone.utc))
+                                 date=dt.datetime.now(dt.timezone.utc))
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year
         self.assertIn(p.first_name, p_str)

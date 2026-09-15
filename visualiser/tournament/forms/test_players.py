@@ -17,7 +17,7 @@
 """
 Player Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, timedelta
+import datetime as dt
 
 from django.test import TestCase
 
@@ -32,10 +32,10 @@ class PlayerFormTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)

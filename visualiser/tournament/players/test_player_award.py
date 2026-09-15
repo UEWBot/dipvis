@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase
 
@@ -41,7 +40,7 @@ class PlayerAwardTests(TestCase):
         cls.turkey = GreatPower.objects.get(abbreviation='T')
         cls.ranking = PlayerEventRanking.objects.create(player=Player.objects.first(),
                                                         event_name='Some tournament',
-                                                        date=datetime.now())
+                                                        date=dt.datetime.now())
 
     # PlayerAward.wdd_url()
     def test_playeraward_wdd_url_power(self):
@@ -56,7 +55,7 @@ class PlayerAwardTests(TestCase):
 
         ranking = PlayerEventRanking.objects.create(player=p,
                                                     event_name='WDD Linked Tournament',
-                                                    date=datetime.now(),
+                                                    date=dt.datetime.now(),
                                                     wdd_tournament_id=369)
         pa = PlayerAward(player=p,
                          event_ranking=ranking,
@@ -77,7 +76,7 @@ class PlayerAwardTests(TestCase):
 
         ranking = PlayerEventRanking.objects.create(player=p,
                                                     event_name='WDD Linked Tournament',
-                                                    date=datetime.now(),
+                                                    date=dt.datetime.now(),
                                                     wdd_tournament_id=369)
         pa = PlayerAward(player=p,
                          event_ranking=ranking,
@@ -98,7 +97,7 @@ class PlayerAwardTests(TestCase):
 
         ranking = PlayerEventRanking.objects.create(player=p,
                                                     event_name='WDR Linked Tournament',
-                                                    date=datetime.now(),
+                                                    date=dt.datetime.now(),
                                                     wdr_tournament_id=369)
         pa = PlayerAward(player=p,
                          event_ranking=ranking,

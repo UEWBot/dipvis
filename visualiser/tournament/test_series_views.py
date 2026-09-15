@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, timedelta
+import datetime as dt
 
 from django.test import TestCase
 from django.urls import reverse
@@ -30,17 +30,17 @@ class SeriesViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Three Tournaments
-        today = date.today()
+        today = dt.date.today()
         t1 = Tournament.objects.create(name='t1',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=24),
+                                       end_date=today + dt.timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
                                        is_published=True)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=24),
+                                       end_date=today + dt.timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
@@ -48,7 +48,7 @@ class SeriesViewTests(TestCase):
                                        is_published=True)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=24),
+                                       end_date=today + dt.timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,

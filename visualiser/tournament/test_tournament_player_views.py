@@ -15,8 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import Permission, User
@@ -107,12 +106,12 @@ class TournamentPlayerViewTests(TestCase):
                                         last_name='Krispy',
                                         user=cls.u3)
 
-        today = date.today()
+        today = dt.date.today()
         # Published Tournament, so it's visible to all
         # Ongoing, one round
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -129,7 +128,7 @@ class TournamentPlayerViewTests(TestCase):
         ta1 = TournamentAward.objects.get(tournament=cls.t1, award=a1)
         ta2 = TournamentAward.objects.get(tournament=cls.t1, award=a2)
         Round.objects.create(tournament=cls.t1,
-                             start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
+                             start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True)
         # Pre-generate a UUID for player prefs
@@ -146,7 +145,7 @@ class TournamentPlayerViewTests(TestCase):
         # Unpublished Tournament, with a manager (u3)
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -154,7 +153,7 @@ class TournamentPlayerViewTests(TestCase):
                                            format=Formats.VFTF,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
-                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
+                                       start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g21 = Game.objects.create(name='Game1',
@@ -212,7 +211,7 @@ class TournamentPlayerViewTests(TestCase):
         # Unpublished Tournament, without a manager
         cls.t3 = Tournament.objects.create(name='t3',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -222,14 +221,14 @@ class TournamentPlayerViewTests(TestCase):
         # One round, tournament complete
         cls.t4 = Tournament.objects.create(name='t4',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True,
                                            editable=False)
         cls.r41 = Round.objects.create(tournament=cls.t4,
-                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
+                                       start=dt.datetime.combine(cls.t4.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g41 = Game.objects.create(name='Game1',
@@ -343,13 +342,13 @@ class TournamentPlayerViewTests(TestCase):
         # Ongoing, one round that has started
         cls.t5 = Tournament.objects.create(name='t5',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
         cls.r51 = Round.objects.create(tournament=cls.t5,
-                                       start=datetime.combine(cls.t5.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
+                                       start=dt.datetime.combine(cls.t5.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True)
         # Pre-generate a UUID for player prefs
@@ -386,10 +385,10 @@ class TournamentPlayerViewTests(TestCase):
                     self.assertNotContains(response, f'{tp.player.last_name}*')
 
     def test_index_no_players_registered(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='t_no_players',
                                       start_date=today,
-                                      end_date=today + timedelta(hours=24),
+                                      end_date=today + dt.timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,

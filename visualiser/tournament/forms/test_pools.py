@@ -17,8 +17,7 @@
 """
 Pool Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase
 
@@ -38,17 +37,17 @@ class PoolFormTest(TestCase):
     def setUpTestData(cls):
         # We need a Tournament with a Round with two Pools
         # and at least seven TournamentPlayers and RoundPlayers
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='tourney',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)
         cls.r = Round.objects.create(tournament=cls.t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                     start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.pool1 = Pool.objects.create(the_round=cls.r,
                                         name='Fixed',
                                         board_count=1)

@@ -18,7 +18,7 @@
 CircuitPlayerAdminForm tests for the Diplomacy Tournament Visualiser.
 """
 
-from datetime import date
+import datetime as dt
 
 from django.test import TestCase
 
@@ -32,7 +32,7 @@ from . import CircuitPlayerAdminForm
 class CircuitPlayerAdminFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.today = date.today()
+        cls.today = dt.date.today()
 
         cls.p1 = Player.objects.create(first_name='Alpha', last_name='Player')
         cls.p2 = Player.objects.create(first_name='Bravo', last_name='Player')

@@ -17,8 +17,7 @@
 """
 Game Seeding Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.forms.formsets import formset_factory
 from django.test import TestCase
@@ -41,21 +40,21 @@ class GamePlayersFormTest(TestCase):
         # We need a Tournament with a Round, and some RoundPlayers to choose from
         # We'll also create some extra TournamentPlayers and Players
         # to ensure that the form doesn't pick them up
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)
         cls.r1 = Round.objects.create(tournament=cls.t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=datetime.combine(cls.t.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
+                                  start=dt.datetime.combine(cls.t.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
@@ -589,17 +588,17 @@ class BaseGamePlayersFormsetTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='t1',
                                       start_date=today,
-                                      end_date=today + timedelta(hours=24),
+                                      end_date=today + dt.timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         cls.r = Round.objects.create(tournament=t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                     start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         # Seven Players, all of whom are playing this Round
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')

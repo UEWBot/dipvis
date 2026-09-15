@@ -17,8 +17,7 @@
 """
 Roll Call Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.forms.formsets import formset_factory
 from django.test import TestCase
@@ -38,10 +37,10 @@ class PlayerRoundFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         # We need a Player and a Tournament
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)
@@ -140,24 +139,24 @@ class BasePlayerRoundFormsetTest(TestCase):
         # We need three Tournaments, one with TournamentPlayers and Rounds,
         # and one finished,
         # and we need at least one Player who isn't playing the Tournament
-        today = date.today()
+        today = dt.date.today()
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET)
         cls.r1 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.r2 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET)
@@ -169,14 +168,14 @@ class BasePlayerRoundFormsetTest(TestCase):
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r1)
         cls.t3 = Tournament.objects.create(name='t3',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET)
         cls.r3 = Round.objects.create(tournament=cls.t3,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(cls.t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.g = Game.objects.create(name='Test Game',
                                     the_round=cls.r3,
                                     the_set=GameSet.objects.first(),

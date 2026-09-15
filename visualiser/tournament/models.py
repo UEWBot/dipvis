@@ -24,7 +24,7 @@ import sys
 import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from datetime import date, timedelta
+import datetime as dt
 from operator import countOf, itemgetter
 from pathlib import Path
 
@@ -1250,7 +1250,7 @@ class Tournament(models.Model):
         if self.delay_game_url_publication:
             # Wait until 24 hours after the end of the last Round
             # (we ignore timezone issues - the delay doesn't have to be precise)
-            return (date.today() > self.end_date + timedelta(hours=24))
+            return (dt.date.today() > self.end_date + dt.timedelta(hours=24))
         return True
 
     def any_players_paid(self):

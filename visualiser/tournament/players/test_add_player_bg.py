@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import importlib
-from datetime import date
+import datetime as dt
 from unittest.mock import patch
 
 from django_countries.fields import Country
@@ -419,7 +419,7 @@ class AddPlayerBgTests(TestCase):
                                   last_name='WrongYear')
         ranking = PlayerEventRanking.objects.create(player=p,
                                                     event_name='The World Diplomacy Championship 2018',
-                                                    date=date(2018, 8, 4),
+                                                    date=dt.date(2018, 8, 4),
                                                     rank=1,
                                                     event_kind=EventKinds.TOURNAMENT)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
@@ -437,12 +437,12 @@ class AddPlayerBgTests(TestCase):
                                   last_name='NoTournament')
         PlayerEventRanking.objects.create(player=p,
                                           event_name='WDC 2016',
-                                          date=date(2016, 8, 4),
+                                          date=dt.date(2016, 8, 4),
                                           rank=1,
                                           event_kind=EventKinds.TOURNAMENT)
         PlayerEventRanking.objects.create(player=p,
                                           event_name='DipCon 2016',
-                                          date=date(2016, 7, 4),
+                                          date=dt.date(2016, 7, 4),
                                           rank=1,
                                           event_kind=EventKinds.TOURNAMENT)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
@@ -459,12 +459,12 @@ class AddPlayerBgTests(TestCase):
                                   last_name='AmbiguousCircuit')
         PlayerEventRanking.objects.create(player=p,
                                           event_name='North American Grand Prix 2000 East',
-                                          date=date(2001, 8, 5),
+                                          date=dt.date(2001, 8, 5),
                                           rank=1,
                                           event_kind=EventKinds.CIRCUIT)
         PlayerEventRanking.objects.create(player=p,
                                           event_name='North American Grand Prix 2000 West',
-                                          date=date(2000, 12, 31),
+                                          date=dt.date(2000, 12, 31),
                                           rank=1,
                                           event_kind=EventKinds.CIRCUIT)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
@@ -668,7 +668,7 @@ class AddPlayerBgTests(TestCase):
                                   wdr_player_id=9992)
         existing = PlayerEventRanking.objects.create(player=p,
                                                      event_name='Thailand Diplomacy Championship 2022-2023',
-                                                     date=date(2023, 12, 15),
+                                                     date=dt.date(2023, 12, 15),
                                                      rank=2)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
         fake_wdr = {

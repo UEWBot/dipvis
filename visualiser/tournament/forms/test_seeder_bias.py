@@ -17,7 +17,7 @@
 """
 Seeder Bias Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, timedelta
+import datetime as dt
 
 from django.test import TestCase
 
@@ -37,16 +37,16 @@ class SeederBiasFormTest(TestCase):
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
         p3 = Player.objects.create(first_name='Charlie', last_name='Calculus')
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=24),
+                                       end_date=today + dt.timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)

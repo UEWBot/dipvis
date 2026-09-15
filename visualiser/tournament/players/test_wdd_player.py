@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase, tag
 
@@ -67,7 +66,7 @@ class WDDPlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -110,7 +109,7 @@ class WDDPlayerTests(TestCase):
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 rank=3,
-                                                date=datetime.now(datetime_timezone.utc))
+                                                date=dt.datetime.now(dt.timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)

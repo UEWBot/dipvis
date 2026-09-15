@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Permission
@@ -34,14 +33,14 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS, Award,
                                RoundPlayer, Team, Tournament, TournamentPlayer)
 from tournament.players import Player
 
-HOURS_24 = timedelta(hours=24)
+HOURS_24 = dt.timedelta(hours=24)
 
 
 class TournamentAdminTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
     def test_tournament_admin_form_incompatible_valid_scoring_systems(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='admin-form-manager')
         award = Award.objects.create(name='Admin Form Award',
                                      description='Used by admin form test')
@@ -77,7 +76,7 @@ class TournamentAdminTests(TestCase):
         self.assertIn('tournament_scoring_system', form.errors)
 
     def test_tournament_admin_manager_can_change_uneditable_tournament_only(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='manage-admin-manager',
                                            is_staff=True)
         change_tournament_perm = Permission.objects.get(codename='change_tournament')
@@ -94,8 +93,9 @@ class TournamentAdminTests(TestCase):
         round_obj = Round.objects.create(tournament=tournament,
                                          scoring_system=G_SCORING_SYSTEMS[0].name,
                                          dias=True,
-                                         start=datetime.combine(tournament.start_date,
-                                                                time(hour=8, tzinfo=datetime_timezone.utc)))
+                                         start=dt.datetime.combine(tournament.start_date,
+                                                                   dt.time(hour=8,
+                                                                           tzinfo=dt.timezone.utc)))
         try:
             tournament.managers.add(manager)
             request = RequestFactory().get('/admin/tournament/tournament/')
@@ -111,7 +111,7 @@ class TournamentAdminTests(TestCase):
             manager.delete()
 
     def test_tournament_admin_superuser_can_change_uneditable_tournament_only(self):
-        today = date.today()
+        today = dt.date.today()
         superuser = User.objects.create_user(username='manage-admin-superuser',
                                              is_staff=True,
                                              is_superuser=True)
@@ -125,8 +125,9 @@ class TournamentAdminTests(TestCase):
         round_obj = Round.objects.create(tournament=tournament,
                                          scoring_system=G_SCORING_SYSTEMS[0].name,
                                          dias=True,
-                                         start=datetime.combine(tournament.start_date,
-                                                                time(hour=8, tzinfo=datetime_timezone.utc)))
+                                         start=dt.datetime.combine(tournament.start_date,
+                                                                   dt.time(hour=8,
+                                                                           tzinfo=dt.timezone.utc)))
         try:
             request = RequestFactory().get('/admin/tournament/tournament/')
             request.user = superuser
@@ -141,7 +142,7 @@ class TournamentAdminTests(TestCase):
             superuser.delete()
 
     def test_round_admin_has_delete_permission_requires_editable_tournament(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='round-delete-manager',
                                            is_staff=True)
         delete_round_perm = Permission.objects.get(codename='delete_round')
@@ -157,8 +158,9 @@ class TournamentAdminTests(TestCase):
         round_obj = Round.objects.create(tournament=tournament,
                                          scoring_system=G_SCORING_SYSTEMS[0].name,
                                          dias=True,
-                                         start=datetime.combine(tournament.start_date,
-                                                                time(hour=8, tzinfo=datetime_timezone.utc)))
+                                         start=dt.datetime.combine(tournament.start_date,
+                                                                   dt.time(hour=8,
+                                                                           tzinfo=dt.timezone.utc)))
         try:
             tournament.managers.add(manager)
             request = RequestFactory().get('/admin/tournament/round/')
@@ -175,7 +177,7 @@ class TournamentAdminTests(TestCase):
             manager.delete()
 
     def test_tournament_admin_has_view_permission_published_for_non_manager(self):
-        today = date.today()
+        today = dt.date.today()
         user = User.objects.create_user(username='admin-view-user',
                                         is_staff=True)
         view_perm = Permission.objects.get(codename='view_tournament')
@@ -197,7 +199,7 @@ class TournamentAdminTests(TestCase):
             user.delete()
 
     def test_tournament_admin_has_view_permission_unpublished_is_limited(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='admin-view-manager',
                                            is_staff=True)
         other_user = User.objects.create_user(username='admin-view-non-manager',
@@ -263,7 +265,7 @@ class TournamentAdminTests(TestCase):
         self.assertFalse(admin_instance.has_delete_permission(deny_request, None))
 
     def test_score_model_admin_view_hidden_scores_limited_to_managers(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='score-view-manager',
                                            is_staff=True)
         other_user = User.objects.create_user(username='score-view-non-manager',
@@ -289,8 +291,9 @@ class TournamentAdminTests(TestCase):
         round_obj = Round.objects.create(tournament=tournament,
                                          scoring_system=G_SCORING_SYSTEMS[0].name,
                                          dias=True,
-                                         start=datetime.combine(tournament.start_date,
-                                                                time(hour=8, tzinfo=datetime_timezone.utc)))
+                                         start=dt.datetime.combine(tournament.start_date,
+                                                                   dt.time(hour=8,
+                                                                           tzinfo=dt.timezone.utc)))
         rp = RoundPlayer.objects.create(the_round=round_obj,
                                         player=player)
         game = Game.objects.create(name='ScoreVisibilityGame',
@@ -348,7 +351,7 @@ class TournamentAdminTests(TestCase):
             superuser.delete()
 
     def test_score_model_admin_queryset_hides_hidden_scores_for_non_managers(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='score-list-manager',
                                            is_staff=True)
         other_user = User.objects.create_user(username='score-list-non-manager',
@@ -389,13 +392,15 @@ class TournamentAdminTests(TestCase):
         hidden_round = Round.objects.create(tournament=hidden_tournament,
                                             scoring_system=G_SCORING_SYSTEMS[0].name,
                                             dias=True,
-                                            start=datetime.combine(hidden_tournament.start_date,
-                                                                   time(hour=8, tzinfo=datetime_timezone.utc)))
+                                            start=dt.datetime.combine(hidden_tournament.start_date,
+                                                                      dt.time(hour=8,
+                                                                              tzinfo=dt.timezone.utc)))
         visible_round = Round.objects.create(tournament=visible_tournament,
                                              scoring_system=G_SCORING_SYSTEMS[0].name,
                                              dias=True,
-                                             start=datetime.combine(visible_tournament.start_date,
-                                                                    time(hour=9, tzinfo=datetime_timezone.utc)))
+                                             start=dt.datetime.combine(visible_tournament.start_date,
+                                                                       dt.time(hour=9,
+                                                                               tzinfo=dt.timezone.utc)))
 
         hidden_rp = RoundPlayer.objects.create(the_round=hidden_round,
                                                player=hidden_player)
@@ -472,7 +477,7 @@ class TournamentAdminTests(TestCase):
             superuser.delete()
 
     def test_round_admin_queryset_hides_unpublished_for_non_managers(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='round-list-manager',
                                            is_staff=True)
         other_user = User.objects.create_user(username='round-list-non-manager',
@@ -499,13 +504,15 @@ class TournamentAdminTests(TestCase):
         published_round = Round.objects.create(tournament=published_tournament,
                                                scoring_system=G_SCORING_SYSTEMS[0].name,
                                                dias=True,
-                                               start=datetime.combine(published_tournament.start_date,
-                                                                      time(hour=8, tzinfo=datetime_timezone.utc)))
+                                               start=dt.datetime.combine(published_tournament.start_date,
+                                                                         dt.time(hour=8,
+                                                                                 tzinfo=dt.timezone.utc)))
         unpublished_round = Round.objects.create(tournament=unpublished_tournament,
                                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                                  dias=True,
-                                                 start=datetime.combine(unpublished_tournament.start_date,
-                                                                        time(hour=9, tzinfo=datetime_timezone.utc)))
+                                                 start=dt.datetime.combine(unpublished_tournament.start_date,
+                                                                           dt.time(hour=9,
+                                                                                   tzinfo=dt.timezone.utc)))
 
         view_round_perm = Permission.objects.get(codename='view_round')
         manager.user_permissions.add(view_round_perm)
@@ -541,7 +548,7 @@ class TournamentAdminTests(TestCase):
             superuser.delete()
 
     def test_tournament_admin_queryset_hides_unpublished_for_non_managers(self):
-        today = date.today()
+        today = dt.date.today()
         manager = User.objects.create_user(username='tournament-list-manager',
                                            is_staff=True)
         other_user = User.objects.create_user(username='tournament-list-non-manager',

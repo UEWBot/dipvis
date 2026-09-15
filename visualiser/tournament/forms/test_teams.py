@@ -17,7 +17,7 @@
 """
 Team Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, timedelta
+import datetime as dt
 
 from django.forms import modelformset_factory
 from django.test import TestCase
@@ -37,10 +37,10 @@ class TeamFormTest(TestCase):
         p3 = Player.objects.create(first_name='Ethel', last_name='Felony')
         # This one isn't in the tournament
         cls.p4 = Player.objects.create(first_name='Gregory', last_name='Human')
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET,
@@ -151,10 +151,10 @@ class TeamsFormsetTest(TestCase):
         cls.p4 = Player.objects.create(first_name='Gregory', last_name='Human')
         # This one isn't in the tournament
         cls.p5 = Player.objects.create(first_name='Iris', last_name='Jogger')
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET,

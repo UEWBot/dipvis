@@ -23,8 +23,7 @@ This module provides utility functions for DipVis.
 """
 
 import csv
-from datetime import datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 from time import sleep
 
 import requests
@@ -123,9 +122,9 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
             r = Round.objects.create(tournament=t,
                                      scoring_system='Dixie',
                                      dias=False,
-                                     start=datetime.combine(t.start_date,
-                                                            time(hour=r_num,
-                                                                 tzinfo=datetime_timezone.utc)))
+                                     start=dt.datetime.combine(t.start_date,
+                                                               dt.time(hour=r_num,
+                                                                       tzinfo=dt.timezone.utc)))
             # Create 4 Games
             for g_num in range(1, 5):
                 Game.objects.create(name=_generate_game_name(r_num, g_num),
@@ -377,7 +376,7 @@ def upcoming_rounds(num_days=45, include_unpublished=False):
     """
     current_tz = django_timezone.get_current_timezone()
     today = django_timezone.now()
-    end_date = today + timedelta(days=num_days)
+    end_date = today + dt.timedelta(days=num_days)
     for r in Round.objects.filter(is_finished=False,
                                   start__range=[today, end_date]):
         if include_unpublished or r.tournament.is_published:

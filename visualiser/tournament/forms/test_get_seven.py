@@ -17,8 +17,7 @@
 """
 Get Seven Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase
 
@@ -40,29 +39,29 @@ class GetSevenPlayersFormTest(TestCase):
         # - one with an exact multiple of 7 (round 2),
         # - one that needs a subset of the standby players to play (round 3)
         # - one that needs all the standby players to play (round 4),
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='t1',
                                       start_date=today,
-                                      end_date=today + timedelta(hours=24),
+                                      end_date=today + dt.timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.r2 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=12, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date, dt.time(hour=12, tzinfo=dt.timezone.utc)))
         cls.r3 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=16, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date, dt.time(hour=16, tzinfo=dt.timezone.utc)))
         cls.r4 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=20, tzinfo=datetime_timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date, dt.time(hour=20, tzinfo=dt.timezone.utc)))
 
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')

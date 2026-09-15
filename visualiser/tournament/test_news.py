@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase
 
@@ -32,11 +31,11 @@ from tournament.news import (MASK_ALL_NEWS, _game_news, _round_leader_str,
 from tournament.players import Player
 
 
-HOURS_8 = timedelta(hours=8)
-HOURS_9 = timedelta(hours=9)
-HOURS_10 = timedelta(hours=10)
-HOURS_16 = timedelta(hours=16)
-HOURS_24 = timedelta(hours=24)
+HOURS_8 = dt.timedelta(hours=8)
+HOURS_9 = dt.timedelta(hours=9)
+HOURS_10 = dt.timedelta(hours=10)
+HOURS_16 = dt.timedelta(hours=16)
+HOURS_24 = dt.timedelta(hours=24)
 
 
 class NewsTests(TestCase):
@@ -50,7 +49,7 @@ class NewsTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        today = date.today()
+        today = dt.date.today()
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=today,
@@ -69,7 +68,7 @@ class NewsTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=9, tzinfo=datetime_timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=9, tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -86,7 +85,7 @@ class NewsTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t3.start_date, time(hour=9, tzinfo=datetime_timezone.utc)),
+                                   start=dt.datetime.combine(t3.start_date, dt.time(hour=9, tzinfo=dt.timezone.utc)),
                                    final_year=1907)
         r32 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
@@ -324,7 +323,7 @@ class NewsTests(TestCase):
 
     def test_tournament_news_not_started(self):
         # TODO is a Tournament with no rounds the only way to get this message?
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='t2',
                                       start_date=today,
                                       end_date=today + HOURS_24,
@@ -335,7 +334,7 @@ class NewsTests(TestCase):
         self.assertIn('Tournament has yet to start.', res)
 
     def test_tournament_news_finished_no_players(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='t-finished-empty',
                                       start_date=today,
                                       end_date=today + HOURS_24,

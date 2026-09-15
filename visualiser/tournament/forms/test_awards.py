@@ -17,8 +17,7 @@
 """
 Award Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 
 from django.test import TestCase
 
@@ -40,10 +39,10 @@ class AwardRecipientFormTest(TestCase):
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         p3 = Player.objects.create(first_name='Edward', last_name='Foxtrot')
         p4 = Player.objects.create(first_name='Georgette', last_name='Halitosis')
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)
@@ -57,7 +56,7 @@ class AwardRecipientFormTest(TestCase):
         cls.r = Round.objects.create(tournament=cls.t,
                                      scoring_system=R_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                     start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.g = Game.objects.create(name='g1',
                                     started_at=cls.r.start,
                                     the_round=cls.r,
@@ -84,7 +83,7 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=other_t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(other_t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                       start=dt.datetime.combine(other_t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,
@@ -104,7 +103,7 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=self.t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(self.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)) + timedelta(hours=1))
+                                       start=dt.datetime.combine(self.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,
@@ -121,7 +120,7 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=self.t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(self.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)) + timedelta(hours=1))
+                                       start=dt.datetime.combine(self.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,
@@ -139,7 +138,7 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=self.t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(self.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)) + timedelta(hours=1))
+                                       start=dt.datetime.combine(self.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,
@@ -159,10 +158,10 @@ class AwardRecipientFormSetTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        today = date.today()
+        today = dt.date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
-                                          end_date=today + timedelta(hours=24),
+                                          end_date=today + dt.timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET)

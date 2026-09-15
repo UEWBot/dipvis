@@ -26,7 +26,7 @@ Most of the code is dedicated to storing background information
 about a player and retrieving it as needed.
 """
 
-import datetime
+import datetime as dt
 import traceback
 
 from django_countries.fields import Country

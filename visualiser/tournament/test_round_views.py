@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta
-from datetime import timezone as datetime_timezone
+import datetime as dt
 from urllib.parse import urlencode
 from unittest.mock import patch
 
@@ -89,11 +88,11 @@ class RoundViewTests(TestCase):
         cls.p14 = Player.objects.create(first_name='Nigel',
                                         last_name='Notorious')
 
-        today = date.today()
+        today = dt.date.today()
         # Published Tournament so it's visible to all
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -103,7 +102,7 @@ class RoundViewTests(TestCase):
         cls.r11 = Round.objects.create(tournament=cls.t1,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                       start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         # Add TournamentPlayers
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t1)
@@ -149,7 +148,7 @@ class RoundViewTests(TestCase):
         # Published Tournament so it's visible to all. PREFERENCES power assignment
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -158,15 +157,15 @@ class RoundViewTests(TestCase):
         cls.r21 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                       start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.r22 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.r21.start + timedelta(hours=24))
+                                       start=cls.r21.start + dt.timedelta(hours=24))
         cls.r23 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.r21.start + timedelta(hours=48))
+                                       start=cls.r21.start + dt.timedelta(hours=48))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t2)
         TournamentPlayer.objects.create(player=cls.p2,
@@ -205,7 +204,7 @@ class RoundViewTests(TestCase):
         # Published Tournament so it's visible to all. AUTO power assignment
         cls.t3 = Tournament.objects.create(name='t3',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -215,11 +214,11 @@ class RoundViewTests(TestCase):
         cls.r31 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                       start=dt.datetime.combine(cls.t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         cls.r32 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.r31.start + timedelta(hours=24))
+                                       start=cls.r31.start + dt.timedelta(hours=24))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t3)
         cls.tp2 = TournamentPlayer.objects.create(player=cls.p2,
@@ -275,7 +274,7 @@ class RoundViewTests(TestCase):
         # Published Tournament so it's visible to all. AUTO power assignment
         cls.t4 = Tournament.objects.create(name='t4',
                                            start_date=today,
-                                           end_date=today + timedelta(hours=24),
+                                           end_date=today + dt.timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -285,7 +284,7 @@ class RoundViewTests(TestCase):
         cls.r41 = Round.objects.create(tournament=cls.t4,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                       start=dt.datetime.combine(cls.t4.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t4)
         TournamentPlayer.objects.create(player=cls.p2,
@@ -366,8 +365,8 @@ class RoundViewTests(TestCase):
 
     def test_detail_final_year_and_pools(self):
         t = Tournament.objects.create(name='detail_final_year',
-                                      start_date=date.today(),
-                                      end_date=date.today() + timedelta(hours=24),
+                                      start_date=dt.date.today(),
+                                      end_date=dt.date.today() + dt.timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -375,7 +374,7 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
+                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
                                  final_year=1905)
         Pool.objects.create(the_round=r,
                             name='Pool A',
@@ -394,8 +393,8 @@ class RoundViewTests(TestCase):
 
     def test_detail_earliest_end_time_and_games(self):
         t = Tournament.objects.create(name='detail_earliest_end_time',
-                                      start_date=date.today(),
-                                      end_date=date.today() + timedelta(hours=24),
+                                      start_date=dt.date.today(),
+                                      end_date=dt.date.today() + dt.timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -403,9 +402,9 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
-                                 earliest_end_time=datetime.combine(t.start_date, time(hour=10, tzinfo=datetime_timezone.utc)),
-                                 latest_end_time=datetime.combine(t.start_date, time(hour=12, tzinfo=datetime_timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                 earliest_end_time=dt.datetime.combine(t.start_date, dt.time(hour=10, tzinfo=dt.timezone.utc)),
+                                 latest_end_time=dt.datetime.combine(t.start_date, dt.time(hour=12, tzinfo=dt.timezone.utc)))
         g = Game.objects.create(name='detail-round-game',
                                 started_at=r.start,
                                 is_finished=True,
@@ -484,8 +483,8 @@ class RoundViewTests(TestCase):
 
     def test_round_scores_no_round_scores_template_non_final_scores(self):
         t = Tournament.objects.create(name='round_scores_no_round_scores',
-                                      start_date=date.today(),
-                                      end_date=date.today() + timedelta(hours=24),
+                                      start_date=dt.date.today(),
+                                      end_date=dt.date.today() + dt.timedelta(hours=24),
                                       round_scoring_system=NO_SCORING_SYSTEM_STR,
                                       tournament_scoring_system='Sum best 3 games in any rounds',
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -493,11 +492,11 @@ class RoundViewTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=r1.start + timedelta(hours=24))
+                                  start=r1.start + dt.timedelta(hours=24))
         TournamentPlayer.objects.create(player=self.p1,
                                         tournament=t)
         RoundPlayer.objects.create(player=self.p1,
@@ -1009,7 +1008,7 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=self.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=self.r11.start + timedelta(hours=1))
+                                 start=self.r11.start + dt.timedelta(hours=1))
         for player in [self.p1, self.p2, self.p3, self.p4, self.p5]:
             RoundPlayer.objects.create(player=player, the_round=r)
         RoundPlayer.objects.create(player=self.p6, the_round=r, standby=True)
@@ -1028,7 +1027,7 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=self.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=self.r11.start + timedelta(hours=2))
+                                 start=self.r11.start + dt.timedelta(hours=2))
         for player in [self.p1, self.p2, self.p3, self.p4, self.p5, self.p6]:
             RoundPlayer.objects.create(player=player, the_round=r)
         for player in [self.p7, self.p8, self.p9, self.p10]:

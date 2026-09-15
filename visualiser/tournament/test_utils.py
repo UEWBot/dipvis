@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+import datetime as dt
 import os
 import tempfile
 from types import SimpleNamespace
@@ -170,16 +170,16 @@ class UtilsTests(TestCase):
     def test_archive_tournaments(self, mock_print):
         today = django_timezone.now().date()
         t_archived = Tournament.objects.create(name='util-archive-target',
-                                               start_date=today - timedelta(days=2),
-                                               end_date=today - timedelta(days=1),
+                                               start_date=today - dt.timedelta(days=2),
+                                               end_date=today - dt.timedelta(days=1),
                                                round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                                tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                                draw_secrecy=DrawSecrecy.SECRET,
                                                is_published=True,
                                                editable=True)
         t_unpublished = Tournament.objects.create(name='util-archive-unpub',
-                                                  start_date=today - timedelta(days=2),
-                                                  end_date=today - timedelta(days=1),
+                                                  start_date=today - dt.timedelta(days=2),
+                                                  end_date=today - dt.timedelta(days=1),
                                                   round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                                   tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                                   draw_secrecy=DrawSecrecy.SECRET,
@@ -187,7 +187,7 @@ class UtilsTests(TestCase):
                                                   editable=True)
         t_future = Tournament.objects.create(name='util-archive-future',
                                              start_date=today,
-                                             end_date=today + timedelta(days=5),
+                                             end_date=today + dt.timedelta(days=5),
                                              round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                              tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                              draw_secrecy=DrawSecrecy.SECRET,
@@ -213,8 +213,8 @@ class UtilsTests(TestCase):
     def test_archive_tournaments_dry_run(self, mock_print):
         today = django_timezone.now().date()
         t = Tournament.objects.create(name='util-archive-dry-run',
-                                      start_date=today - timedelta(days=2),
-                                      end_date=today - timedelta(days=1),
+                                      start_date=today - dt.timedelta(days=2),
+                                      end_date=today - dt.timedelta(days=1),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -290,12 +290,12 @@ class UtilsTests(TestCase):
                              scoring_system=R_SCORING_SYSTEMS[0].name,
                              dias=True,
                              is_finished=False,
-                             start=now + timedelta(days=1))
+                             start=now + dt.timedelta(days=1))
         Round.objects.create(tournament=t_unpub,
                              scoring_system=R_SCORING_SYSTEMS[0].name,
                              dias=True,
                              is_finished=False,
-                             start=now + timedelta(days=1))
+                             start=now + dt.timedelta(days=1))
 
         with patch('builtins.print') as mock_print:
             upcoming_rounds(num_days=2, include_unpublished=False)
@@ -324,12 +324,12 @@ class UtilsTests(TestCase):
                              scoring_system=R_SCORING_SYSTEMS[0].name,
                              dias=True,
                              is_finished=False,
-                             start=now + timedelta(days=1))
+                             start=now + dt.timedelta(days=1))
         Round.objects.create(tournament=t_unpub,
                              scoring_system=R_SCORING_SYSTEMS[0].name,
                              dias=True,
                              is_finished=False,
-                             start=now + timedelta(days=1))
+                             start=now + dt.timedelta(days=1))
 
         with patch('builtins.print') as mock_print:
             upcoming_rounds(num_days=2, include_unpublished=True)

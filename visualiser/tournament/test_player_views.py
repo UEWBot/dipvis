@@ -14,8 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime
-from datetime import timezone as datetime_timezone
+import datetime as dt
 from urllib.parse import urlencode
 from unittest.mock import patch
 
@@ -125,12 +124,12 @@ class PlayerViewTests(TestCase):
                                                   event_name='Background Open',
                                                   rank=1,
                                                   event_kind=EventKinds.TOURNAMENT,
-                                                  date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+                                                  date=dt.datetime(day=1, month=6, year=2024, tzinfo=dt.timezone.utc))
         league_event = PlayerEventRanking.objects.create(player=self.p1,
                                                          event_name='Background League',
                                                          rank=2,
                                                          event_kind=EventKinds.LEAGUE,
-                                                         date=datetime(day=1, month=7, year=2024, tzinfo=datetime_timezone.utc))
+                                                         date=dt.datetime(day=1, month=7, year=2024, tzinfo=dt.timezone.utc))
         PlayerTitle.objects.create(player=self.p1,
                                    title='World Champion',
                                    year=2024)
@@ -190,12 +189,12 @@ class PlayerViewTests(TestCase):
                                                             event_name='Background Open',
                                                             rank=1,
                                                             event_kind=EventKinds.TOURNAMENT,
-                                                            date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+                                                            date=dt.datetime(day=1, month=6, year=2024, tzinfo=dt.timezone.utc))
         league_event = PlayerEventRanking.objects.create(player=self.p1,
                                                          event_name='Background League',
                                                          rank=2,
                                                          event_kind=EventKinds.LEAGUE,
-                                                         date=datetime(day=1, month=7, year=2024, tzinfo=datetime_timezone.utc))
+                                                         date=dt.datetime(day=1, month=7, year=2024, tzinfo=dt.timezone.utc))
         austria = GreatPower.objects.get(abbreviation='A')
         PlayerGameResult.objects.create(event_ranking=tournament_event,
                                         round_number=1,
@@ -261,7 +260,7 @@ class PlayerViewTests(TestCase):
         self.assertContains(response, 'Compare With Another Player')
 
     def test_detail_shows_circuit_participation_links(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='Circuit Participation Test',
                                       start_date=today,
                                       end_date=today,
@@ -334,7 +333,7 @@ class PlayerViewTests(TestCase):
         self.p1.save(update_fields=['picture'])
 
     def test_detail_shows_tournament_entry(self):
-        today = date.today()
+        today = dt.date.today()
         t = Tournament.objects.create(name='Detail Test Open',
                                       start_date=today,
                                       end_date=today,
@@ -450,7 +449,7 @@ class PlayerViewTests(TestCase):
                                    last_name='Belligerent')
         # Add a shared game
         # Add in another result for a non-shared game
-        today = date.today()
+        today = dt.date.today()
         ranking1 = PlayerEventRanking.objects.create(player=self.p1,
                                                      event_name='Galaxy Championship',
                                                      date=today)
@@ -502,7 +501,7 @@ class PlayerViewTests(TestCase):
         turkey = GreatPower.objects.get(abbreviation='T')
         p2 = Player.objects.create(first_name='Wendy',
                                    last_name='West')
-        today = date.today()
+        today = dt.date.today()
         ranking1 = PlayerEventRanking.objects.create(player=self.p1,
                                                      event_name='Nebula Classic',
                                                      date=today,
@@ -540,7 +539,7 @@ class PlayerViewTests(TestCase):
         russia = GreatPower.objects.get(abbreviation='R')
         p2 = Player.objects.create(first_name='Waldo',
                                    last_name='White')
-        today = date.today()
+        today = dt.date.today()
         ranking1 = PlayerEventRanking.objects.create(player=self.p1,
                                                      event_name='Comet Open',
                                                      date=today,
