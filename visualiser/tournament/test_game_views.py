@@ -2345,6 +2345,21 @@ class GameViewTests(TestCase):
         self.g1.supplycentreownership_set.filter(year=1903).delete()
         self.g1.centrecount_set.filter(year=1903).delete()
 
+    def test_api_with_counts_but_no_ownerships(self):
+        year = 1903
+        self.assertFalse(self.g1.supplycentreownership_set.filter(year=year).exists())
+        CentreCount.objects.create(game=self.g1,
+                                   power=self.austria,
+                                   year=year,
+                                   count=5)
+        response = self.client.get(reverse('api_game', args=(1, self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn(str(year), data['sc_chart'])
+        self.assertNotIn(str(year), data['sc_owners'])
+        self.g1.centrecount_set.filter(year=year).delete()
+
     def test_api_with_passed_draw(self):
         self.assertEqual(self.g1.drawproposal_set.count(), 0)
         dp = DrawProposal.objects.create(game=self.g1,
