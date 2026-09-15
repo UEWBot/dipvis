@@ -15,9 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime as dt
+import json
 from urllib.parse import urlencode
 from unittest.mock import patch
 
+from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
@@ -772,6 +774,10 @@ class GameViewTests(TestCase):
                 for p, c in dots.items():
                     with self.subTest(year=year, power=p):
                         self.assertEqual(ccs.get(power=p).count, c)
+        count_entries = LogEntry.objects.filter(user__username=self.USERNAME1)
+        self.assertTrue(any(entry.action_flag == CHANGE
+                            and {'changed': {'fields': ['Count']}} in json.loads(entry.change_message)
+                            for entry in count_entries))
         # Clean up
         for year in counts.keys():
             ccs = CentreCount.objects.filter(game=self.g1, year=year)
@@ -1085,6 +1091,10 @@ class GameViewTests(TestCase):
         # TODO And the appropriate SupplyCentreOwnerships should have been created
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 34)
         self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 7)
+        owner_entries = LogEntry.objects.filter(user__username=self.USERNAME1)
+        self.assertTrue(any(entry.action_flag == ADDITION
+                    and {'form': {'name': 'SCOwnerForm'}} in json.loads(entry.change_message)
+                    for entry in owner_entries))
         # Clean up
         self.g1.supplycentreownership_set.filter(year=1907).delete()
         self.g1.centrecount_set.filter(year=1907).delete()
@@ -1139,6 +1149,13 @@ class GameViewTests(TestCase):
         self.assertFalse(self.g1.supplycentreownership_set.filter(year=1907, sc=sc).exists())
         sc = SupplyCentre.objects.get(name='Rumania')
         self.assertFalse(self.g1.supplycentreownership_set.filter(year=1907, sc=sc).exists())
+        owner_entries = LogEntry.objects.filter(user__username=self.USERNAME1)
+        self.assertTrue(any(entry.action_flag == CHANGE
+                    and {'changed': {'fields': ['Owner']}} in json.loads(entry.change_message)
+                    for entry in owner_entries))
+        self.assertTrue(any(entry.action_flag == DELETION
+                    and {'form': {'name': 'SCOwnerForm'}} in json.loads(entry.change_message)
+                    for entry in owner_entries))
         # Clean up
         self.g1.supplycentreownership_set.filter(year=1907).delete()
         self.g1.centrecount_set.filter(year=1907).delete()

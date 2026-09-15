@@ -22,6 +22,7 @@ import io
 
 import matplotlib.figure as figure
 
+from django.contrib.admin.models import ADDITION, CHANGE, DELETION
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -35,6 +36,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from tournament import backstabbr, webdip
+from tournament.audit import log_form_action, log_objects_action, log_objects_change
 from tournament.diplomacy import (FIRST_YEAR, TOTAL_SCS, GreatPower,
                                   SupplyCentre)
 from tournament.forms import (BaseSCCountFormset, BaseSCOwnerFormset,
@@ -321,6 +323,9 @@ def sc_owners(request, tournament_id, game_name):
         data.append(scs)
     formset = SCOwnerFormset(request.POST or None, initial=data)
     if formset.is_valid():
+        added_ownerships = []
+        changed_ownerships = []
+        deleted_ownerships = []
         for form in formset:
             if form.has_changed():
                 year = form.cleaned_data['year']
@@ -334,14 +339,24 @@ def sc_owners(request, tournament_id, game_name):
                             continue
                         if value is None:
                             # Dot is (now) neutral
+                            deleted_ownerships.extend(
+                                SupplyCentreOwnership.objects.filter(sc=dot,
+                                                                     game=g,
+                                                                     year=year)
+                            )
                             SupplyCentreOwnership.objects.filter(sc=dot,
                                                                  game=g,
                                                                  year=year).delete()
                         else:
-                            SupplyCentreOwnership.objects.update_or_create(sc=dot,
-                                                                           game=g,
-                                                                           year=year,
-                                                                           defaults={'owner': value})
+                            ownership, created = SupplyCentreOwnership.objects.update_or_create(
+                                sc=dot,
+                                game=g,
+                                year=year,
+                                defaults={'owner': value})
+                            if created:
+                                added_ownerships.append(ownership)
+                            else:
+                                changed_ownerships.append(ownership)
                     # Ensure that CentreCounts for this year match
                     try:
                         g.create_or_update_sc_counts_from_ownerships(year)
@@ -350,6 +365,12 @@ def sc_owners(request, tournament_id, game_name):
                         continue
         # Changes are likely to affect the scores
         g.update_scores()
+        log_objects_action(request.user, added_ownerships, ADDITION, [{'added': {}}],
+                   form_name='SCOwnerForm')
+        log_objects_change(request.user, changed_ownerships, ['Owner'],
+                   form_name='SCOwnerForm')
+        log_objects_action(request.user, deleted_ownerships, DELETION, [{'deleted': {}}],
+                   form_name='SCOwnerForm')
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_owners',
                                             args=(tournament_id, game_name)))
@@ -390,6 +411,8 @@ def sc_counts(request, tournament_id, game_name):
                                prefix='death',
                                initial=death_data)
     if formset.is_valid() and end_form.is_valid() and death_form.is_valid():
+        added_counts = []
+        changed_counts = []
         try:
             with transaction.atomic():
                 for form in formset:
@@ -416,6 +439,9 @@ def sc_counts(request, tournament_id, game_name):
                                                     game=g,
                                                     year=year,
                                                     count=value)
+                                    added_counts.append(i)
+                                else:
+                                    changed_counts.append(i)
                                 try:
                                     i.full_clean()
                                 except ValidationError as e:
@@ -443,6 +469,9 @@ def sc_counts(request, tournament_id, game_name):
                                             game=g,
                                             year=value,
                                             count=0)
+                            added_counts.append(i)
+                        else:
+                            changed_counts.append(i)
                         try:
                             if i.count != 0:
                                 raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d'),
@@ -469,11 +498,16 @@ def sc_counts(request, tournament_id, game_name):
             # Game is over if it reached the final year,
             # somebody won, or the checkbox was checked
             end_form.save()
+            log_form_action(request.user, end_form, g, CHANGE)
             if not end_form.cleaned_data['is_finished']:
                 # Game could still be finished for other reasons
                 g.set_is_finished()
         # Changes are likely to affect the scores
         g.update_scores()
+        log_objects_action(request.user, added_counts, ADDITION, [{'added': {}}],
+                   form_name='SCCountForm')
+        log_objects_change(request.user, changed_counts, ['Count'],
+                   form_name='SCCountForm')
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_chart',
                                             args=(tournament_id, game_name)))
