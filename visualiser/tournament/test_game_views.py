@@ -79,7 +79,9 @@ class GameViewTests(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(cls.t1.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.g1 = Game.objects.create(name='Game1',
                                      started_at=cls.r1.start,
                                      the_round=cls.r1,
@@ -89,7 +91,9 @@ class GameViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(cls.t1.start_date,
+                                                           dt.time(hour=17,
+                                                                   tzinfo=dt.timezone.utc)))
         cls.g2 = Game.objects.create(name='Game2',
                                      started_at=r.start,
                                      the_round=r,
@@ -107,7 +111,9 @@ class GameViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t2,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(cls.t2.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         cls.g3 = Game.objects.create(name='Game3',
                                      started_at=r.start,
                                      the_round=r,
@@ -116,7 +122,9 @@ class GameViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t2,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(cls.t2.start_date,
+                                                           dt.time(hour=17,
+                                                                   tzinfo=dt.timezone.utc)))
         cls.g4 = Game.objects.create(name='Game4',
                                      started_at=r.start,
                                      the_round=r,

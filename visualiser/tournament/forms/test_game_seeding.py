@@ -50,11 +50,15 @@ class GamePlayersFormTest(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(cls.t.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=dt.datetime.combine(cls.t.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(cls.t.start_date,
+                                                            dt.time(hour=17,
+                                                                    tzinfo=dt.timezone.utc)))
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
@@ -598,7 +602,9 @@ class BaseGamePlayersFormsetTest(TestCase):
         cls.r = Round.objects.create(tournament=t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                     start=dt.datetime.combine(t.start_date,
+                                                               dt.time(hour=8,
+                                                                       tzinfo=dt.timezone.utc)))
         # Seven Players, all of whom are playing this Round
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')

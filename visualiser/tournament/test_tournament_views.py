@@ -141,7 +141,9 @@ class TournamentViewTests(TestCase):
                               for award in (cls.a1, cls.a2, cls.a3)])
         cls.t1.save()
         Round.objects.create(tournament=cls.t1,
-                             start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                             start=dt.datetime.combine(cls.t1.start_date,
+                                                       dt.time(hour=8,
+                                                               tzinfo=dt.timezone.utc)),
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True)
         # Pre-generate a UUID for player prefs
@@ -161,7 +163,9 @@ class TournamentViewTests(TestCase):
                                            power_assignment=PowerAssignMethods.PREFERENCES,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
-                                       start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                       start=dt.datetime.combine(cls.t2.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g21 = Game.objects.create(name='Game1',

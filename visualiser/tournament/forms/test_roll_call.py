@@ -149,11 +149,15 @@ class BasePlayerRoundFormsetTest(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(cls.t1.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.r2 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(cls.t1.start_date,
+                                                                dt.time(hour=17,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=today,
                                            end_date=today + dt.timedelta(hours=24),
@@ -175,7 +179,9 @@ class BasePlayerRoundFormsetTest(TestCase):
         cls.r3 = Round.objects.create(tournament=cls.t3,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(cls.t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(cls.t3.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.g = Game.objects.create(name='Test Game',
                                     the_round=cls.r3,
                                     the_set=GameSet.objects.first(),

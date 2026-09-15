@@ -128,7 +128,9 @@ class TournamentPlayerViewTests(TestCase):
         ta1 = TournamentAward.objects.get(tournament=cls.t1, award=a1)
         ta2 = TournamentAward.objects.get(tournament=cls.t1, award=a2)
         Round.objects.create(tournament=cls.t1,
-                             start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                             start=dt.datetime.combine(cls.t1.start_date,
+                                                       dt.time(hour=8,
+                                                               tzinfo=dt.timezone.utc)),
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True)
         # Pre-generate a UUID for player prefs
@@ -153,7 +155,9 @@ class TournamentPlayerViewTests(TestCase):
                                            format=Formats.VFTF,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
-                                       start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                       start=dt.datetime.combine(cls.t2.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g21 = Game.objects.create(name='Game1',
@@ -228,7 +232,9 @@ class TournamentPlayerViewTests(TestCase):
                                            is_published=True,
                                            editable=False)
         cls.r41 = Round.objects.create(tournament=cls.t4,
-                                       start=dt.datetime.combine(cls.t4.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                       start=dt.datetime.combine(cls.t4.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g41 = Game.objects.create(name='Game1',
@@ -348,7 +354,9 @@ class TournamentPlayerViewTests(TestCase):
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
         cls.r51 = Round.objects.create(tournament=cls.t5,
-                                       start=dt.datetime.combine(cls.t5.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                       start=dt.datetime.combine(cls.t5.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True)
         # Pre-generate a UUID for player prefs

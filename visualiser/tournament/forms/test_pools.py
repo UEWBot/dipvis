@@ -47,7 +47,9 @@ class PoolFormTest(TestCase):
         cls.r = Round.objects.create(tournament=cls.t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                     start=dt.datetime.combine(cls.t.start_date,
+                                                               dt.time(hour=8,
+                                                                       tzinfo=dt.timezone.utc)))
         cls.pool1 = Pool.objects.create(the_round=cls.r,
                                         name='Fixed',
                                         board_count=1)

@@ -56,7 +56,9 @@ class AwardRecipientFormTest(TestCase):
         cls.r = Round.objects.create(tournament=cls.t,
                                      scoring_system=R_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                     start=dt.datetime.combine(cls.t.start_date,
+                                                               dt.time(hour=8,
+                                                                       tzinfo=dt.timezone.utc)))
         cls.g = Game.objects.create(name='g1',
                                     started_at=cls.r.start,
                                     the_round=cls.r,
@@ -83,7 +85,9 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=other_t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(other_t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                       start=dt.datetime.combine(other_t.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,
@@ -103,7 +107,9 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=self.t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(self.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
+                                       start=dt.datetime.combine(self.t.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,
@@ -120,7 +126,9 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=self.t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(self.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
+                                       start=dt.datetime.combine(self.t.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,
@@ -138,7 +146,9 @@ class AwardRecipientFormTest(TestCase):
         other_r = Round.objects.create(tournament=self.t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(self.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
+                                       start=dt.datetime.combine(self.t.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
         other_g = Game.objects.create(name='g2',
                                       started_at=other_r.start,
                                       the_round=other_r,

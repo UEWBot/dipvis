@@ -49,19 +49,27 @@ class GetSevenPlayersFormTest(TestCase):
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.r2 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(t.start_date, dt.time(hour=12, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date,
+                                                                dt.time(hour=12,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.r3 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(t.start_date, dt.time(hour=16, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date,
+                                                                dt.time(hour=16,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.r4 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(t.start_date, dt.time(hour=20, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date,
+                                                                dt.time(hour=20,
+                                                                        tzinfo=dt.timezone.utc)))
 
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')

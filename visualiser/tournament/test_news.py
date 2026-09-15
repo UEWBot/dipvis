@@ -68,7 +68,9 @@ class NewsTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=9, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=9,
+                                                                     tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -85,7 +87,9 @@ class NewsTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t3.start_date, dt.time(hour=9, tzinfo=dt.timezone.utc)),
+                                   start=dt.datetime.combine(t3.start_date,
+                                                             dt.time(hour=9,
+                                                                     tzinfo=dt.timezone.utc)),
                                    final_year=1907)
         r32 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,

@@ -57,7 +57,9 @@ class PowerAssignFormTest(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         cls.g = Game.objects.create(name='Test Game',
                                     the_round=r,
                                     the_set=GameSet.objects.first())
@@ -307,11 +309,15 @@ class BasePowerAssignFormsetTest(TestCase):
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.r2 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=dt.datetime.combine(t.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(t.start_date,
+                                                                dt.time(hour=17,
+                                                                        tzinfo=dt.timezone.utc)))
         # Deliberately not in alphabetical order
         g1 = Game.objects.create(name='Test Game 2',
                                  the_round=cls.r1,

@@ -159,11 +159,15 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
         r1 = Round.objects.create(tournament=cls.t1,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(cls.t1.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         Round.objects.create(tournament=cls.t1,
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True,
-                             start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=17, tzinfo=dt.timezone.utc)))
+                             start=dt.datetime.combine(cls.t1.start_date,
+                                                       dt.time(hour=17,
+                                                               tzinfo=dt.timezone.utc)))
         TournamentPlayer.objects.create(player=p1, tournament=cls.t1)
         TournamentPlayer.objects.create(player=p2, tournament=cls.t1)
         RoundPlayer.objects.create(player=p1, the_round=r1)
@@ -182,7 +186,9 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
         r3 = Round.objects.create(tournament=cls.t3,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=dt.datetime.combine(cls.t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(cls.t3.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         Game.objects.create(name='Test Game',
                             the_round=r3,
                             the_set=GameSet.objects.first(),

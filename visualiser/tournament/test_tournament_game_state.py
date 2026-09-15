@@ -55,19 +55,27 @@ class TournamentGameStateTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=12, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=12,
+                                                                     tzinfo=dt.timezone.utc)))
         r13 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=16, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=16,
+                                                                     tzinfo=dt.timezone.utc)))
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
                              dias=True,
-                             start=dt.datetime.combine(t1.start_date, dt.time(hour=20, tzinfo=dt.timezone.utc)))
+                             start=dt.datetime.combine(t1.start_date,
+                                                       dt.time(hour=20,
+                                                               tzinfo=dt.timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)

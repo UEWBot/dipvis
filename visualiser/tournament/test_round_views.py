@@ -102,7 +102,9 @@ class RoundViewTests(TestCase):
         cls.r11 = Round.objects.create(tournament=cls.t1,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(cls.t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                       start=dt.datetime.combine(cls.t1.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)))
         # Add TournamentPlayers
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t1)
@@ -157,7 +159,9 @@ class RoundViewTests(TestCase):
         cls.r21 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(cls.t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                       start=dt.datetime.combine(cls.t2.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)))
         cls.r22 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
@@ -214,7 +218,9 @@ class RoundViewTests(TestCase):
         cls.r31 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(cls.t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                       start=dt.datetime.combine(cls.t3.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)))
         cls.r32 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
@@ -284,7 +290,9 @@ class RoundViewTests(TestCase):
         cls.r41 = Round.objects.create(tournament=cls.t4,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(cls.t4.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                       start=dt.datetime.combine(cls.t4.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t4)
         TournamentPlayer.objects.create(player=cls.p2,
@@ -374,7 +382,9 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)),
                                  final_year=1905)
         Pool.objects.create(the_round=r,
                             name='Pool A',
@@ -402,9 +412,15 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
-                                 earliest_end_time=dt.datetime.combine(t.start_date, dt.time(hour=10, tzinfo=dt.timezone.utc)),
-                                 latest_end_time=dt.datetime.combine(t.start_date, dt.time(hour=12, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)),
+                                 earliest_end_time=dt.datetime.combine(t.start_date,
+                                                                       dt.time(hour=10,
+                                                                               tzinfo=dt.timezone.utc)),
+                                 latest_end_time=dt.datetime.combine(t.start_date,
+                                                                     dt.time(hour=12,
+                                                                             tzinfo=dt.timezone.utc)))
         g = Game.objects.create(name='detail-round-game',
                                 started_at=r.start,
                                 is_finished=True,
@@ -492,7 +508,9 @@ class RoundViewTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,

@@ -161,7 +161,9 @@ class RoundScoringTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
                                  dias=False,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         # Two finished Games
         g1 = Game.objects.create(name='g1',
                                  started_at=r.start,
@@ -265,7 +267,9 @@ class RoundScoringTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
                                  dias=False,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         # One finished Game
         g = Game.objects.create(name='g1',
                                 started_at=r.start,
@@ -334,7 +338,9 @@ class RoundScoringTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
@@ -434,7 +440,9 @@ class RoundScoringTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
                                  dias=False,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         # Two finished Games
         g1 = Game.objects.create(name='g1',
                                  started_at=r.start,
@@ -593,7 +601,9 @@ class TournamentScoringWDC2025Tests(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t,
                                       scoring_system=s,
                                       dias=False,
-                                      start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(cls.t.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.r2 = Round.objects.create(tournament=cls.t,
                                       scoring_system=s,
                                       dias=False,
@@ -898,7 +908,9 @@ class TournamentScoringAverageGamesTests(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t,
                                       scoring_system=s,
                                       dias=False,
-                                      start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                      start=dt.datetime.combine(cls.t.start_date,
+                                                                dt.time(hour=8,
+                                                                        tzinfo=dt.timezone.utc)))
         cls.r2 = Round.objects.create(tournament=cls.t,
                                       scoring_system=s,
                                       dias=False,
@@ -1097,7 +1109,9 @@ class TournamentScoringTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
@@ -1227,7 +1241,9 @@ class TournamentScoringTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
@@ -1475,7 +1491,9 @@ class TournamentScoringTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
@@ -1709,7 +1727,9 @@ class TournamentScoringTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
@@ -1966,7 +1986,9 @@ class TournamentScoringTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
@@ -2199,7 +2221,9 @@ class TournamentScoringTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
@@ -2541,7 +2565,9 @@ class AwardRecipientTests(TestCase):
         r = Round.objects.create(tournament=cls.t,
                                  scoring_system=R_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(cls.t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         cls.g = Game.objects.create(name='g1',
                                     started_at=r.start,
                                     the_round=r,
@@ -2549,7 +2575,9 @@ class AwardRecipientTests(TestCase):
         other_r = Round.objects.create(tournament=cls.other_t,
                                        scoring_system=R_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=dt.datetime.combine(cls.other_t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                       start=dt.datetime.combine(cls.other_t.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)))
         cls.other_g = Game.objects.create(name='g2',
                                           started_at=other_r.start,
                                           the_round=other_r,
@@ -2595,7 +2623,9 @@ class AwardRecipientTests(TestCase):
         r = Round.objects.create(tournament=self.t,
                                  scoring_system=R_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=dt.datetime.combine(self.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
+                                 start=dt.datetime.combine(self.t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)) + dt.timedelta(hours=1))
         g = Game.objects.create(name='g-to-delete',
                                 started_at=r.start,
                                 the_round=r,
@@ -2677,7 +2707,9 @@ class TeamTests(TestCase):
                                    scoring_system=s1,
                                    dias=True,
                                    is_team_round=True,
-                                   start=dt.datetime.combine(cls.t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(cls.t.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         # and one non-team round
         r12 = Round.objects.create(tournament=cls.t,
                                    scoring_system=s1,
@@ -4402,7 +4434,9 @@ class TournamentTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1, score=7, calculated_score=7)
         rp.save()
@@ -4471,7 +4505,9 @@ class TournamentTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1, score=7, calculated_score=7)
         rp.save()
@@ -4548,7 +4584,9 @@ class TournamentTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1, score=7, calculated_score=7)
         rp.save()
@@ -4615,7 +4653,9 @@ class TournamentTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         RoundPlayer.objects.create(the_round=r, player=self.p1, score=10.0, calculated_score=10.0)
         RoundPlayer.objects.create(the_round=r, player=self.p2, score=20.0, calculated_score=20.0)
         t.update_scores()
@@ -4661,7 +4701,9 @@ class TournamentTests(TestCase):
                                  scoring_system='Sum of Squares',
                                  dias=True,
                                  is_finished=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         RoundPlayer.objects.create(the_round=r, player=self.p1, score=7)
         RoundPlayer.objects.create(the_round=r, player=self.p2, score=6)
         RoundPlayer.objects.create(the_round=r, player=self.p3, score=5)
@@ -5350,7 +5392,9 @@ class TournamentTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s1,
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         r.save()
         self.assertIs(False, t.in_progress())
         # Clean-up
@@ -5775,7 +5819,9 @@ class TournamentPlayerTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -5793,7 +5839,9 @@ class TournamentPlayerTests(TestCase):
                                    scoring_system=s1,
                                    dias=True,
                                    is_finished=True,
-                                   start=dt.datetime.combine(t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                   start=dt.datetime.combine(t3.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)),
                                    final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
@@ -6544,7 +6592,9 @@ class RoundTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s2,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s2,
                                    dias=True,
@@ -6562,7 +6612,9 @@ class RoundTests(TestCase):
         r21 = Round.objects.create(tournament=t2,
                                    scoring_system=s1,
                                    dias=False,
-                                   start=dt.datetime.combine(t2.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t2.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         Round.objects.create(tournament=t2,
                                    scoring_system=s1,
                                    dias=False,
@@ -6572,7 +6624,9 @@ class RoundTests(TestCase):
                                    scoring_system=s1,
                                    dias=True,
                                    is_finished=True,
-                                   start=dt.datetime.combine(t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                   start=dt.datetime.combine(t3.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)),
                                    final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
@@ -6736,7 +6790,9 @@ class RoundTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
                                  dias=False,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         r2 = Round(tournament=t,
                    scoring_system=s,
                    dias=False,
@@ -6787,7 +6843,9 @@ class RoundTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         self.assertRaises(InvalidScoringSystem, r.update_scores)
 
     def test_round_update_scores(self):
@@ -6827,7 +6885,9 @@ class RoundTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1, score=40.0, calculated_score=40.0)
         rp.save()
@@ -6897,7 +6957,9 @@ class RoundTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         # p1 has a manually-set score (score != calculated_score)
         rp1 = RoundPlayer.objects.create(the_round=r, player=self.p1, score=99.0, calculated_score=0.0)
         # p2 has no manual override (score == calculated_score)
@@ -6972,7 +7034,9 @@ class RoundTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1, score=40.0, calculated_score=40.0)
         rp.save()
@@ -7298,7 +7362,9 @@ class RoundTests(TestCase):
     def test_round_clean_missing_earliest_end(self):
         t = Tournament.objects.get(name='t1')
         s1 = G_SCORING_SYSTEMS[0].name
-        start = dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc))
+        start = dt.datetime.combine(t.start_date,
+                                    dt.time(hour=8,
+                                            tzinfo=dt.timezone.utc))
         r = Round(tournament=t,
                   scoring_system=s1,
                   dias=True,
@@ -7309,7 +7375,9 @@ class RoundTests(TestCase):
     def test_round_clean_missing_latest_end(self):
         t = Tournament.objects.get(name='t1')
         s1 = G_SCORING_SYSTEMS[0].name
-        start = dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc))
+        start = dt.datetime.combine(t.start_date,
+                                    dt.time(hour=8,
+                                            tzinfo=dt.timezone.utc))
         r = Round(tournament=t,
                   scoring_system=s1,
                   dias=True,
@@ -7528,7 +7596,9 @@ class GameTests(TestCase):
         cls.r11 = Round.objects.create(tournament=t1,
                                        scoring_system=s1,
                                        dias=True,
-                                       start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                       start=dt.datetime.combine(t1.start_date,
+                                                                 dt.time(hour=8,
+                                                                         tzinfo=dt.timezone.utc)))
         cls.r12 = Round.objects.create(tournament=t1,
                                        scoring_system=s1,
                                        dias=True,
@@ -7545,7 +7615,9 @@ class GameTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                   start=dt.datetime.combine(t3.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)),
                                    final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
@@ -7809,7 +7881,9 @@ class GameTests(TestCase):
         r1 = Round(tournament=t,
                    scoring_system='Sum of Squares',
                    dias=True,
-                   start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                   start=dt.datetime.combine(t.start_date,
+                                             dt.time(hour=8,
+                                                     tzinfo=dt.timezone.utc)))
         r1.save()
         g1 = Game(name='newgame1',
                   started_at=r1.start,
@@ -8170,7 +8244,9 @@ class GameTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Invalid System',
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         g = Game.objects.create(name='gamey', started_at=r.start, the_round=r, the_set=self.set1)
         self.assertRaises(InvalidScoringSystem, g.update_scores)
 
@@ -8259,7 +8335,9 @@ class GameTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         RoundPlayer.objects.create(the_round=r, player=self.p1)
         RoundPlayer.objects.create(the_round=r, player=self.p2)
         RoundPlayer.objects.create(the_round=r, player=self.p3)
@@ -8802,7 +8880,9 @@ class GameTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1)
         rp.save()
@@ -8884,7 +8964,9 @@ class GameTests(TestCase):
         r1 = Round(tournament=t,
                    scoring_system='Sum of Squares',
                    dias=True,
-                   start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                   start=dt.datetime.combine(t.start_date,
+                                             dt.time(hour=8,
+                                                     tzinfo=dt.timezone.utc)))
         r1.save()
         rp = RoundPlayer(the_round=r1, player=self.p1)
         rp.save()
@@ -8903,7 +8985,9 @@ class GameTests(TestCase):
         r2 = Round(tournament=t,
                    scoring_system='Sum of Squares',
                    dias=True,
-                   start=dt.datetime.combine(t.start_date, dt.time(hour=16, tzinfo=dt.timezone.utc)))
+                   start=dt.datetime.combine(t.start_date,
+                                             dt.time(hour=16,
+                                                     tzinfo=dt.timezone.utc)))
         r2.save()
         g1 = Game(name='newgame1',
                   started_at=r1.start,
@@ -8969,7 +9053,9 @@ class GameTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1)
         rp.save()
@@ -9041,7 +9127,9 @@ class SupplyCentreOwnershipTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
 
         # Add Games to r11
         Game.objects.create(name='g11',
@@ -9087,7 +9175,9 @@ class DrawProposalTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -9104,7 +9194,9 @@ class DrawProposalTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                   start=dt.datetime.combine(t3.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)),
                                    final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
@@ -9826,7 +9918,9 @@ class RoundPlayerTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -10109,7 +10203,9 @@ class RoundPlayerTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s1,
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         g = Game.objects.create(name='g11',
                                 started_at=r.start,
                                 the_round=r,
@@ -10216,7 +10312,9 @@ class GamePlayerTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s2,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s2,
                                    dias=True,
@@ -10439,7 +10537,9 @@ class GamePlayerTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s2,
                                   dias=True,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s2,
                                   dias=True,
@@ -10486,7 +10586,9 @@ class GamePlayerTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s2,
                                   dias=True,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s2,
                                   dias=True,
@@ -10540,7 +10642,9 @@ class GamePlayerTests(TestCase):
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s2,
                                   dias=True,
-                                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s2,
                                   dias=True,
@@ -10642,7 +10746,9 @@ class GamePlayerTests(TestCase):
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
-                  start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                  start=dt.datetime.combine(t.start_date,
+                                            dt.time(hour=8,
+                                                    tzinfo=dt.timezone.utc)))
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1)
         rp.save()
@@ -10746,7 +10852,9 @@ class GamePlayerTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s2,
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         g = Game.objects.create(name='gp-result-draw',
                                 started_at=r.start,
                                 the_round=r,
@@ -10794,7 +10902,9 @@ class GamePlayerTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=s2,
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=8,
+                                                                   tzinfo=dt.timezone.utc)))
         g = Game.objects.create(name='gp-result-top',
                                 started_at=r.start,
                                 the_round=r,
@@ -10896,7 +11006,9 @@ class GameImageTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
 
         # Add Games to r11
         Game.objects.create(name='g11',
@@ -10965,7 +11077,9 @@ class CentreCountTests(TestCase):
         r = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t1.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                                   start=dt.datetime.combine(t1.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)))
         Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -10982,7 +11096,9 @@ class CentreCountTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=dt.datetime.combine(t3.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)),
+                                   start=dt.datetime.combine(t3.start_date,
+                                                             dt.time(hour=8,
+                                                                     tzinfo=dt.timezone.utc)),
                                    final_year=1907)
 
         # Add Games to r31
@@ -11086,7 +11202,9 @@ class CentreCountTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',
                                  dias=True,
-                                 start=dt.datetime.combine(t.start_date, dt.time(hour=10, tzinfo=dt.timezone.utc)),
+                                 start=dt.datetime.combine(t.start_date,
+                                                           dt.time(hour=10,
+                                                                   tzinfo=dt.timezone.utc)),
                                  final_year=1910)
         g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
         # TODO Remove reliance on primary keys

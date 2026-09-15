@@ -87,7 +87,9 @@ class ViewIndexTests(TestCase):
         Round.objects.create(tournament=t,
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=False,
-                             start=dt.datetime.combine(t.start_date, dt.time(hour=8, tzinfo=dt.timezone.utc)))
+                             start=dt.datetime.combine(t.start_date,
+                                                       dt.time(hour=8,
+                                                               tzinfo=dt.timezone.utc)))
         response = self.client.get(reverse('game_index',
                                            args=(t.id, 1)),
                                    secure=True)
