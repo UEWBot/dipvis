@@ -764,6 +764,31 @@ def _sc_counts_to_cc(game, year, sc_counts):
                                                  defaults={'count': v})
 
 
+def _log_scrape_changes(request, game, year, source, old_finished,
+                        old_ownerships, old_counts):
+    """Log rows changed by an external game-state import."""
+    ownerships = list(game.supplycentreownership_set.filter(year=year))
+    counts = list(game.centrecount_set.filter(year=year))
+    added_ownerships = [obj for obj in ownerships if obj.pk not in old_ownerships]
+    changed_ownerships = [obj for obj in ownerships
+                          if obj.pk in old_ownerships and old_ownerships[obj.pk] != obj.owner_id]
+    added_counts = [obj for obj in counts if obj.pk not in old_counts]
+    changed_counts = [obj for obj in counts
+                      if obj.pk in old_counts and old_counts[obj.pk] != obj.count]
+    form_name = f'{source} import'
+    log_objects_action(request.user, added_ownerships, ADDITION, [{'added': {}}],
+                       form_name=form_name)
+    log_objects_change(request.user, changed_ownerships, ['Owner'],
+                       form_name=form_name)
+    log_objects_action(request.user, added_counts, ADDITION, [{'added': {}}],
+                       form_name=form_name)
+    log_objects_change(request.user, changed_counts, ['Count'],
+                       form_name=form_name)
+    if old_finished != game.is_finished:
+        log_objects_change(request.user, [game], ['Is finished'],
+                           form_name=form_name)
+
+
 def _bs_orders_to_piffs(orders):
     """
     Extract a list of destroyed units from a backstabbr order set
@@ -791,6 +816,9 @@ def _bs_orders_to_piffs(orders):
 def _scrape_backstabbr(request, tournament, game, backstabbr_game):
     """Import CentreCounts and SupplyCentreOwnerships from Backstabbr"""
     bg = backstabbr_game
+    old_ownerships = dict(game.supplycentreownership_set.values_list('pk', 'owner_id'))
+    old_counts = dict(game.centrecount_set.values_list('pk', 'count'))
+    old_finished = game.is_finished
     # Figure out what year we have centre counts for
     if bg.season == backstabbr.SPRING:
         year = bg.year - 1
@@ -812,6 +840,8 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
         game.is_finished = True
         game.save(update_fields=['is_finished'])
     game.update_scores()
+    _log_scrape_changes(request, game, year, 'Backstabbr', old_finished,
+                        old_ownerships, old_counts)
     # Report what was done
     return render(request,
                   'games/scrape_external_site.html',
@@ -825,6 +855,9 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
 def _scrape_webdip(request, tournament, game, webdip_game):
     """Import CentreCounts from WebDiplomacy"""
     wg = webdip_game
+    old_ownerships = dict(game.supplycentreownership_set.values_list('pk', 'owner_id'))
+    old_counts = dict(game.centrecount_set.values_list('pk', 'count'))
+    old_finished = game.is_finished
     # Figure out what year we have centre counts for
     if wg.season == webdip.SPRING:
         year = wg.year - 1
@@ -840,6 +873,8 @@ def _scrape_webdip(request, tournament, game, webdip_game):
         game.is_finished = True
         game.save(update_fields=['is_finished'])
     game.update_scores()
+    _log_scrape_changes(request, game, year, 'WebDiplomacy', old_finished,
+                        old_ownerships, old_counts)
     # Report what was done
     return render(request,
                   'games/scrape_external_site.html',

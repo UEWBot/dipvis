@@ -2255,6 +2255,10 @@ class GameViewTests(TestCase):
         self.assertEqual(len(ccs), 7)
         scos = self.g1.supplycentreownership_set.filter(year=1912)
         self.assertEqual(len(scos), 34)
+        scrape_entries = LogEntry.objects.filter(user__username=self.USERNAME1)
+        self.assertTrue(any(entry.action_flag == ADDITION
+                    and {'form': {'name': 'Backstabbr import'}} in json.loads(entry.change_message)
+                    for entry in scrape_entries))
         # Clean up
         self.g1.external_url = ''
         ccs.delete()
@@ -2282,6 +2286,12 @@ class GameViewTests(TestCase):
         # This WebDip game is finished, so local game should be marked finished
         self.g1.refresh_from_db()
         self.assertIs(True, self.g1.is_finished)
+        scrape_entries = LogEntry.objects.filter(user__username=self.USERNAME1)
+        self.assertTrue(any(entry.action_flag == CHANGE
+                    and {'changed': {'fields': ['Is finished']}} in json.loads(entry.change_message)
+                    for entry in scrape_entries))
+        self.assertTrue(any({'form': {'name': 'WebDiplomacy import'}} in json.loads(entry.change_message)
+                    for entry in scrape_entries))
         # Clean up
         self.g1.external_url = ''
         self.g1.is_finished = False
