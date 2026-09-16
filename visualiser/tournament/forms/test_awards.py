@@ -77,6 +77,19 @@ class AwardRecipientFormTest(TestCase):
         self.assertIn(str(self.tp1.pk), player_pks)
         self.assertIn(str(self.tp3.pk), player_pks)
 
+    def test_power_specific_award_tournament_player_choices_restrict_to_that_power(self):
+        power = GreatPower.objects.get(abbreviation='A')
+        self.ta1.award.power = power
+        self.ta1.award.save(update_fields=['power'])
+        GamePlayer.objects.create(player=self.tp1.player, game=self.g, power=power)
+        GamePlayer.objects.create(player=self.tp3.player,
+                                  game=self.g,
+                                  power=GreatPower.objects.get(abbreviation='E'))
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        player_pks = {str(choice[0]) for choice in form.fields['tournament_player'].choices if choice[0]}
+        self.assertIn(str(self.tp1.pk), player_pks)
+        self.assertNotIn(str(self.tp3.pk), player_pks)
+
     def test_game_choices_restricted_to_tournament(self):
         other_t = Tournament.objects.create(name='t2',
                                             start_date=self.t.start_date,

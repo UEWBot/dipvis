@@ -42,6 +42,11 @@ class AwardRecipientForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         tournament = self.tournament_award.tournament
         self.fields['tournament_player'].queryset = tournament.tournamentplayer_set.filter(unranked=False)
+        if self.tournament_award.award.power is not None:
+            self.fields['tournament_player'].queryset = self.fields['tournament_player'].queryset.filter(
+                player__gameplayer__game__the_round__tournament=tournament,
+                player__gameplayer__power=self.tournament_award.award.power,
+            ).distinct()
         self.fields['game'].queryset = Game.objects.filter(the_round__tournament=tournament)
 
         selected_player = None
