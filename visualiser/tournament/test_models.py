@@ -15,6 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime as dt
+from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -49,7 +51,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                validate_no_newlines,
                                validate_round_scoring_system,
                                validate_tournament_scoring_system,
-                               validate_vote_count)
+                               validate_vote_count, game_image_location)
 from tournament.players import EventKinds, MASK_ALL_BG, MASK_SERIES_WINS, Player
 
 HOURS_8 = dt.timedelta(hours=8)
@@ -2510,7 +2512,16 @@ class ModelTests(TestCase):
     def test_validate__scoring_system_bad(self):
         self.assertRaises(ValidationError, validate_game_scoring_system, "Chris Wins")
 
-    # TODO game_image_location()
+    # game_image_location()
+    def test_game_image_location(self):
+        tournament = SimpleNamespace(name='Test Tournament',
+                                     start_date=dt.date(2026, 1, 2))
+        game = SimpleNamespace(name='Game 1',
+                               the_round=SimpleNamespace(tournament=tournament))
+        image = SimpleNamespace(game=game)
+        self.assertEqual(game_image_location(image, 'position.png'),
+                         Path('games', 'Test Tournament', '2026-01-02',
+                              'Game 1', 'position.png'))
 
     # scoring_systems_are_compatible()
     def test_scoring_systems_compatible_sum_1(self):
