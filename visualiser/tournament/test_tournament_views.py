@@ -2740,6 +2740,14 @@ class TournamentViewTests(TestCase):
     def test_enter_awards_post(self):
         # Give some awards to players beforehand
         tournament_awards = list(self.t1.tournamentaward_set.select_related('award').order_by('award__name'))
+        power_award = next(ta for ta in tournament_awards if ta.award.power_id)
+        game = Game.objects.create(name='award-test-game',
+                                   the_round=self.t1.round_set.first(),
+                                   started_at=self.t1.round_set.first().start,
+                                   the_set=GameSet.objects.first())
+        GamePlayer.objects.create(player=self.t1.tournamentplayer_set.first().player,
+                                  game=game,
+                                  power=power_award.award.power)
         ta_first = tournament_awards[0]
         ta_last = tournament_awards[-1]
         AwardRecipient.objects.create(tournament_award=ta_first,
