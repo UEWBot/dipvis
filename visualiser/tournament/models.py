@@ -977,6 +977,10 @@ class AwardRecipient(models.Model):
                                     name='unique_award_recipient'),
         ]
 
+    def __str__(self):
+        return _('%(player)s won %(award)s') % {'player': self.tournament_player,
+                                                'award': self.tournament_award}
+
     def clean(self):
         if self.tournament_player_id and self.tournament_award_id:
             if self.tournament_player.tournament_id != self.tournament_award.tournament_id:
@@ -998,10 +1002,6 @@ class AwardRecipient(models.Model):
     def is_shared(self):
         """Whether this TournamentAward has more than one AwardRecipient."""
         return self.tournament_award.awardrecipient_set.count() > 1
-
-    def __str__(self):
-        return _('%(player)s won %(award)s') % {'player': self.tournament_player,
-                                                 'award': self.tournament_award.award}
 
 
 class Tournament(models.Model):
