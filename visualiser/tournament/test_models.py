@@ -2633,7 +2633,7 @@ class AwardRecipientTests(TestCase):
 
     def test_award_recipient_str(self):
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp)
-        self.assertEqual(str(ar), f'{self.tp} won {self.a}')
+        self.assertEqual(str(ar), f'{self.tp} won {self.a} at {self.tp.tournament}')
 
     def test_award_recipient_player_in_other_tournament_invalid(self):
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.other_tp)

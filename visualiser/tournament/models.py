@@ -955,6 +955,10 @@ class TournamentAward(models.Model):
                                     name='unique_tournament_award'),
         ]
 
+    def __str__(self):
+        return _('%(award)s at %(tournament)s') % {'award': self.award,
+                                                   'tournament': self.tournament}
+
 
 class AwardRecipient(models.Model):
     """A TournamentPlayer who received a particular TournamentAward."""
