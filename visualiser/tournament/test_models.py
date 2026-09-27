@@ -6100,21 +6100,7 @@ class TournamentPlayerTests(TestCase):
         t.save()
 
     # TODO In an ongoing Tournament with show_current_scores False, if there are no finished rounds,
-    #       it should return zero
-
-    # TournamentPlayer.rank
-    def test_tournamentplayer_rank_finished(self):
-        t = Tournament.objects.get(name='t3')
-        tp1 = t.tournamentplayer_set.get(player=self.p5)
-        self.assertEqual(tp1.score, 147.3)
-        tp2 = t.tournamentplayer_set.get(player=self.p7)
-        self.assertEqual(tp2.score, 47.3)
-        tp1.calculated_rank = 1
-        tp1.save(update_fields=['calculated_rank'])
-        tp2.calculated_rank = 2
-        tp2.save(update_fields=['calculated_rank'])
-        self.assertEqual(tp1.rank, 1)
-        self.assertEqual(tp2.rank, 2)
+    #       score_to_show() should return zero
 
     # TournamentPlayer.team()
     def test_tournamentplayer_team(self):
@@ -6427,6 +6413,19 @@ class TournamentPlayerTests(TestCase):
     # TODO Existing TournamentPlayer should not have unranked set when saved
 
     # TournamentPlayer.rank
+    def test_tournamentplayer_rank_finished(self):
+        t = Tournament.objects.get(name='t3')
+        tp1 = t.tournamentplayer_set.get(player=self.p5)
+        self.assertEqual(tp1.score, 147.3)
+        tp2 = t.tournamentplayer_set.get(player=self.p7)
+        self.assertEqual(tp2.score, 47.3)
+        tp1.calculated_rank = 1
+        tp1.save(update_fields=['calculated_rank'])
+        tp2.calculated_rank = 2
+        tp2.save(update_fields=['calculated_rank'])
+        self.assertEqual(tp1.rank, 1)
+        self.assertEqual(tp2.rank, 2)
+
     def test_tournament_player_rank_uses_override_or_calculated_rank(self):
         tournament = Tournament.objects.get(name='t1')
         tp = tournament.tournamentplayer_set.get(player=self.p1)
