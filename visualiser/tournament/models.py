@@ -2056,7 +2056,7 @@ class TournamentPlayer(models.Model):
         if is_new:
             send_prefs_email(self)
             add_player_bg(self.player)
-        elif check_unranked_changed and (old_unranked != self.unranked):
+        if is_new or (check_unranked_changed and (old_unranked != self.unranked)):
             self.tournament.update_scores([self.player])
 
     def get_absolute_url(self):

@@ -6410,6 +6410,15 @@ class TournamentPlayerTests(TestCase):
         self.p3.backstabbr_username = ''
         self.p3.save(update_fields=['backstabbr_username'])
 
+    def test_save_tp_sets_rank(self):
+        """New TournamentPlayer's calculated_rank attribute should be set"""
+        t = Tournament.objects.get(name='t3')
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p1)
+        tp.save()
+        tp.refresh_from_db()
+        self.assertNotEqual(tp.calculated_rank, 0)
+
     # TODO New TournamentPlayer should be unranked if they're a manager
     # TODO New TournamentPlayer should not be unranked if they're not a manager
     # TODO Background objects should be generated for new TournamentPlayer
