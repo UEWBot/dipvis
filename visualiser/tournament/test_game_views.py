@@ -45,6 +45,8 @@ VALID_BS_URL = 'https://www.backstabbr.com/game/4917371326693376'
 VALID_WD_URL = 'https://webdiplomacy.net/board.php?gameID=340030'
 NOTE = 'Played on the wooden board'
 
+SMALL_JPEG = b'\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x01\x00H\x00H\x00\x00\xff\xdb\x00C\x00\x03\x02\x02\x02\x02\x02\x03\x02\x02\x02\x03\x03\x03\x03\x04\x06\x04\x04\x04\x04\x04\x08\x06\x06\x05\x06\t\x08\n\n\t\x08\t\t\n\x0c\x0f\x0c\n\x0b\x0e\x0b\t\t\r\x11\r\x0e\x0f\x10\x10\x11\x10\n\x0c\x12\x13\x12\x10\x13\x0f\x10\x10\x10\xff\xc9\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xcc\x00\x06\x00\x10\x10\x05\xff\xda\x00\x08\x01\x01\x00\x00?\x00\xd2\xcf \xff\xd9'
+
 
 class GameViewTests(TestCase):
     fixtures = ['game_sets.json']
@@ -1275,18 +1277,17 @@ class GameViewTests(TestCase):
 
     def test_add_position_post_logs_image(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        with open('media/games/starting_positions/ah_start_position.jpg', 'rb') as image_file:
-            data = {'game': str(self.g1.pk),
-                    'year': '1902',
-                    'season': Seasons.SPRING,
-                    'phase': 'M',
-                    'image': SimpleUploadedFile('position.jpg',
-                                                image_file.read(),
-                                                content_type='image/jpeg')}
-            response = self.client.post(reverse('add_game_image',
-                                                args=(self.t1.pk, self.g1.name)),
-                                        data,
-                                        secure=True)
+        data = {'game': str(self.g1.pk),
+                'year': '1902',
+                'season': Seasons.SPRING,
+                'phase': 'M',
+                'image': SimpleUploadedFile('position.jpg',
+                                            SMALL_JPEG,
+                                            content_type='image/jpeg')}
+        response = self.client.post(reverse('add_game_image',
+                                            args=(self.t1.pk, self.g1.name)),
+                                    data,
+                                    secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(any(entry.action_flag == ADDITION
                             and {'form': {'name': 'GameImageForm'}} in json.loads(entry.change_message)
