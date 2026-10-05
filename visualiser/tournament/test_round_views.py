@@ -35,6 +35,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
 from tournament.players import Player
 from tournament.round_views import (_generate_game_name,
                                     _group_seeded_games,
+                                    _claim_seed_generation,
                                     _send_board_call_to_discord)
 
 
@@ -71,6 +72,14 @@ class RoundViewTests(TestCase):
         ordered_games = _group_seeded_games([game_one, game_two, game_three])
 
         self.assertEqual(ordered_games, [game_one, game_three, game_two])
+
+    def test_claim_seed_generation_rejects_stale_generation(self):
+        generation = self.r11.seed_generation
+
+        self.assertTrue(_claim_seed_generation(self.r11, generation))
+        self.r11.refresh_from_db()
+        self.assertEqual(self.r11.seed_generation, generation + 1)
+        self.assertFalse(_claim_seed_generation(self.r11, generation))
 
     @classmethod
     def setUpTestData(cls):

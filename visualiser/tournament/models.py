@@ -2461,6 +2461,10 @@ class Round(models.Model):
                                       verbose_name=gettext_lazy('is finished'))
     is_team_round = models.BooleanField(default=False,
                                         verbose_name=gettext_lazy('is team round'))
+    seed_generation = models.PositiveIntegerField(
+        default=0,
+        verbose_name=gettext_lazy('seed generation'),
+        help_text=gettext_lazy('Internal generation used to prevent concurrent board seeding.'))
 
     class Meta:
         ordering = ['start']
