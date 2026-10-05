@@ -512,6 +512,26 @@ def _seed_games(tournament, the_round):
     return _seed_games_for_pool(seeder, tournament, the_round)
 
 
+def _group_seeded_games(games):
+    """Keep games sharing players adjacent, preserving their original order."""
+    groups = []
+    for game in games:
+        players = {tournament_player for tournament_player, _ in game[1]}
+        matching_groups = [group for group in groups
+                           if group[1] & players]
+        if not matching_groups:
+            groups.append(([game], players))
+            continue
+        first_group = matching_groups[0]
+        first_group[0].append(game)
+        first_group[1].update(players)
+        for group in matching_groups[1:]:
+            first_group[0].extend(group[0])
+            first_group[1].update(group[1])
+            groups.remove(group)
+    return [game for group, _ in groups for game in group]
+
+
 def _generate_game_name(round_num, pool, i):
     """Generate a default name for Game n in pool pool of round round_num"""
     if pool is not None and pool.board_count == 1:
@@ -672,7 +692,7 @@ def seed_games(request, tournament_id, round_num):
             default_set = GameSet.objects.get(pk=1)
         data = []
         # Generate a seeding, and assign powers if required
-        games = _seed_games(t, r)
+        games = _group_seeded_games(_seed_games(t, r))
         # Add the Games and GamePlayers to the database
         for n, (pool, g, i) in enumerate(games, start=1):
             new_game = Game.objects.create(name=_generate_game_name(round_num,

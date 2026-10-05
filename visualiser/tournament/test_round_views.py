@@ -34,6 +34,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                TournamentPlayer)
 from tournament.players import Player
 from tournament.round_views import (_generate_game_name,
+                                    _group_seeded_games,
                                     _send_board_call_to_discord)
 
 
@@ -51,6 +52,25 @@ class RoundViewTests(TestCase):
         name = _generate_game_name(12, pool, 1)
         self.assertEqual(name, 'a-pool-name-that-R12')
         self.assertLessEqual(len(name), Game.MAX_NAME_LENGTH)
+
+    def test_group_seeded_games_keeps_multiple_doublers_adjacent(self):
+        tournament_players = list(self.t1.tournamentplayer_set.all()[:4])
+        game_one = (None,
+                    {(tournament_players[0], None),
+                     (tournament_players[1], None)},
+                    [])
+        game_two = (None,
+                    {(tournament_players[2], None),
+                     (tournament_players[3], None)},
+                    [])
+        game_three = (None,
+                      {(tournament_players[0], None),
+                       (tournament_players[2], None)},
+                      [])
+
+        ordered_games = _group_seeded_games([game_one, game_two, game_three])
+
+        self.assertEqual(ordered_games, [game_one, game_three, game_two])
 
     @classmethod
     def setUpTestData(cls):
