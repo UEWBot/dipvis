@@ -491,7 +491,11 @@ def _seed_games(tournament, the_round):
 
 def _generate_game_name(round_num, pool, i):
     """Generate a default name for Game n in pool pool of round round_num"""
-    # TODO incorporate pool.slug into game name
+    if pool is not None and pool.board_count == 1:
+        round_name = f'-R{round_num}'
+        pool_name = pool.slug
+        pool_name = pool_name[:Game.MAX_NAME_LENGTH - len(round_name)]
+        return f'{pool_name}{round_name}'
     return f'R{round_num}G{chr(ord("A") + i - 1)}'
 
 

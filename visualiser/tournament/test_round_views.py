@@ -30,11 +30,24 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                PowerAssignMethods, Round, RoundPlayer,
                                SeederBias, Team, Tournament, TournamentPlayer)
 from tournament.players import Player
-from tournament.round_views import _send_board_call_to_discord
+from tournament.round_views import (_generate_game_name,
+                                    _send_board_call_to_discord)
 
 
 class RoundViewTests(TestCase):
     fixtures = ['game_sets.json']
+
+    def test_generate_game_name_uses_single_board_pool_name(self):
+        pool = Pool(name='Beginners Board', slug='beginner-board', board_count=1)
+        self.assertEqual(_generate_game_name(2, pool, 1), 'beginner-board-R2')
+
+    def test_generate_game_name_truncates_single_board_pool_name(self):
+        pool = Pool(name='Beginners Board',
+                    slug='a-pool-name-that-is-far-too-long',
+                    board_count=1)
+        name = _generate_game_name(12, pool, 1)
+        self.assertEqual(name, 'a-pool-name-that-R12')
+        self.assertLessEqual(len(name), Game.MAX_NAME_LENGTH)
 
     @classmethod
     def setUpTestData(cls):
@@ -1687,7 +1700,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         # Form should be for one game in each of the two pools
-        self.assertContains(response, 'R1GA')
+        self.assertContains(response, 'fixed-R1')
         self.assertContains(response, 'R1GB')
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Cleanup
@@ -1744,7 +1757,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         # Form should be for one game in each of the two pools
-        self.assertContains(response, 'R1GA')
+        self.assertContains(response, 'fixed-R1')
         self.assertContains(response, 'R1GB')
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Cleanup
