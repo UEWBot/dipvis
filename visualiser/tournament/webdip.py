@@ -48,6 +48,11 @@ class InvalidGameUrl(Exception):
     pass
 
 
+class FailedToParse(Exception):
+    """The WebDiplomacy page did not contain the expected game data."""
+    pass
+
+
 class UnsupportedVariant(Exception):
     """Only the standard map is supported."""
     pass
@@ -72,6 +77,9 @@ class Game():
     def __init__(self, url):
         """
         url is a link to a game on WebDiplomacy
+
+        May raise InvalidGameUrl, WebDipNotAccessible, FailedToParse,
+        UnsupportedVariant.
         """
         self.url = url
         self.parsed_url = urlparse(url)
@@ -144,6 +152,9 @@ class Game():
     def _parse_page(self):
         """
         Read the game page on WebDiplomacy and extract the interesting details
+
+        May raise InvalidGameUrl, WebDipNotAccessible, FailedToParse,
+        UnsupportedVariant.
         """
         soup = self._url_to_soup(self.url)
         self._parse_invariants_from_soup(soup)
@@ -164,6 +175,15 @@ class Game():
             self.result = f'{alive}-way draw'
 
     def _parse_invariants_from_soup(self, soup):
+        try:
+            return self._parse_invariants_from_soup_unchecked(soup)
+        except FailedToParse:
+            raise
+        except (AttributeError, IndexError, KeyError, SyntaxError, TypeError,
+                ValueError) as e:
+            raise FailedToParse(self.url) from e
+
+    def _parse_invariants_from_soup_unchecked(self, soup):
         """
         Read the fixed properties of the game from the soup.
 

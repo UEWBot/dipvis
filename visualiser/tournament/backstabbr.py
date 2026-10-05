@@ -98,6 +98,11 @@ class InvalidGameUrl(Exception):
     pass
 
 
+class FailedToParse(Exception):
+    """The Backstabbr page did not contain the expected game data."""
+    pass
+
+
 class NoSuchSeason(Exception):
     """The specified season isn't present in the game."""
     pass
@@ -125,7 +130,7 @@ class Game():
         attributes will be available/accurate. read_current_state() can
         be called later to populate these attributes.
 
-        May raise BackstabbrNotAccessible, InvalidGameUrl.
+        May raise BackstabbrNotAccessible, InvalidGameUrl, FailedToParse.
         """
         self.url = url
         self.parsed_url = urlparse(url)
@@ -175,7 +180,7 @@ class Game():
 
         Only needed if the Game was created with skip_read=True.
 
-        May raise BackstabbrNotAccessible, InvalidGameUrl.
+        May raise BackstabbrNotAccessible, InvalidGameUrl, FailedToParse.
         """
         self._parse_page()
         self._calculate_result()
@@ -226,7 +231,7 @@ class Game():
         """
         Open the specified URL, turn the web page into soup.
 
-        May raise BackstabbrNotAccessible, InvalidGameUrl.
+        May raise BackstabbrNotAccessible, InvalidGameUrl, FailedToParse.
         """
         tries = 0
         # Backstabbr has occasional problems. A retry usually works
@@ -268,7 +273,7 @@ class Game():
         orders is a dict, indexed by power, of dicts, indexed by province, of order dicts.
            The order dict may contain 'from', 'to', 'result', 'result_reason', 'type', 'to', and probably others.
 
-        May raise NoSuchSeason, BackstabbrNotAccessible, InvalidGameUrl.
+        May raise NoSuchSeason, BackstabbrNotAccessible, InvalidGameUrl, FailedToParse.
         """
         url = urljoin(self.url + '/', f'{year}/{season}')
         return self._parse_turn_page(url, season, year)
@@ -279,7 +284,7 @@ class Game():
 
         Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
 
-        May raise NoSuchSeason, BackstabbrNotAccessible, InvalidGameUrl.
+        May raise NoSuchSeason, BackstabbrNotAccessible, InvalidGameUrl, FailedToParse.
         """
         soup = self._url_to_soup(url)
         s, y = self._season_and_year(soup)
@@ -300,6 +305,15 @@ class Game():
         return season, year
 
     def _parse_invariants_from_soup(self, soup):
+        try:
+            return self._parse_invariants_from_soup_unchecked(soup)
+        except FailedToParse:
+            raise
+        except (AttributeError, IndexError, KeyError, SyntaxError, TypeError,
+                ValueError) as e:
+            raise FailedToParse(self.url) from e
+
+    def _parse_invariants_from_soup_unchecked(self, soup):
         """
         Read the fixed properties of the game from the soup.
 
@@ -341,6 +355,15 @@ class Game():
                         self.ongoing = False
 
     def _parse_turn_from_soup(self, soup):
+        try:
+            return self._parse_turn_from_soup_unchecked(soup)
+        except FailedToParse:
+            raise
+        except (AttributeError, IndexError, KeyError, SyntaxError, TypeError,
+                ValueError) as e:
+            raise FailedToParse(self.url) from e
+
+    def _parse_turn_from_soup_unchecked(self, soup):
         """
         Read the per-turn properties of the game from the soup.
 

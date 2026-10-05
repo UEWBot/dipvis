@@ -17,11 +17,12 @@
 from unittest.mock import Mock, patch
 from urllib.parse import urlencode, urlunparse
 import requests
+from bs4 import BeautifulSoup
 
 from django.test import TestCase, tag
 
 from tournament.webdip import (FALL, POWERS, SPRING, WEBDIPLOMACY_NETLOC, Game,
-                               InvalidGameUrl, UnsupportedVariant,
+                               FailedToParse, InvalidGameUrl, UnsupportedVariant,
                                WebDipNotAccessible)
 
 
@@ -245,6 +246,15 @@ class WebDiplomacyTests(TestCase):
 
 
 class WebDiplomacyUnitTests(TestCase):
+    def test_parse_malformed_game_page_raises_failed_to_parse(self):
+        g = Game.__new__(Game)
+        g.url = 'https://webdiplomacy.net/board.php?gameID=334382'
+        soup = BeautifulSoup(
+            '<span class="gamePotType"><a>Classic</a></span>',
+            'html.parser')
+        with self.assertRaises(FailedToParse):
+            g._parse_invariants_from_soup(soup)
+
     def test_url_to_soup_404_raises_invalid_game_url(self):
         g = Game.__new__(Game)
         response = Mock()
