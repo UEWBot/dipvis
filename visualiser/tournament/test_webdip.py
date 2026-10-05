@@ -23,7 +23,7 @@ from django.test import TestCase, tag
 
 from tournament.webdip import (FALL, POWERS, SPRING, WEBDIPLOMACY_NETLOC, Game,
                                FailedToParse, InvalidGameUrl, UnsupportedVariant,
-                               WebDipNotAccessible)
+                               WebDipNotAccessible, is_webdiplomacy_url)
 
 
 INVALID_GAME_ID = 1
@@ -39,6 +39,10 @@ DRAW_7_GAME_ID = 19
 
 
 class WebDiplomacyTests(TestCase):
+    def test_is_webdiplomacy_url(self):
+        self.assertTrue(is_webdiplomacy_url('https://webdiplomacy.net/board.php'))
+        self.assertFalse(is_webdiplomacy_url('https://example.com/board.php'))
+
     def test_webdip_game_non_wd_url(self):
         """Not a webdip URL."""
         path = 'board.php'
@@ -50,6 +54,13 @@ class WebDiplomacyTests(TestCase):
         """Invalid game id."""
         path = 'board.php'
         query = {'gameID': f'{INVALID_GAME_ID}'}
+        url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
+        self.assertRaises(InvalidGameUrl, Game, url)
+
+    def test_webdip_game_malformed_game_id(self):
+        """Malformed game id."""
+        path = 'board.php'
+        query = {'gameID': 'not-a-number'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
@@ -246,6 +257,14 @@ class WebDiplomacyTests(TestCase):
 
 
 class WebDiplomacyUnitTests(TestCase):
+    def test_parse_invariants_reraises_failed_to_parse(self):
+        g = Game.__new__(Game)
+        g.url = 'https://webdiplomacy.net/board.php?gameID=334382'
+        with patch.object(g, '_parse_invariants_from_soup_unchecked',
+                          side_effect=FailedToParse):
+            with self.assertRaises(FailedToParse):
+                g._parse_invariants_from_soup(BeautifulSoup('', 'html.parser'))
+
     def test_parse_malformed_game_page_raises_failed_to_parse(self):
         g = Game.__new__(Game)
         g.url = 'https://webdiplomacy.net/board.php?gameID=334382'
@@ -290,6 +309,18 @@ class WebDiplomacyUnitTests(TestCase):
             soup = g._url_to_soup('https://webdiplomacy.net/board.php?gameID=334382')
         self.assertEqual(get_mock.call_count, 2)
         self.assertEqual(soup.title.string, 'ok')
+
+    def test_url_to_soup_two_500s_raises_not_accessible(self):
+        g = Game.__new__(Game)
+        first = Mock()
+        first.status_code = 500
+        first.text = '<html></html>'
+        second = Mock()
+        second.status_code = 500
+        second.text = '<html></html>'
+        with patch('tournament.webdip.requests.get', side_effect=[first, second]) as get_mock:
+            self.assertRaises(WebDipNotAccessible, g._url_to_soup, 'https://webdiplomacy.net/board.php?gameID=334382')
+        self.assertEqual(get_mock.call_count, 2)
 
     def test_url_to_soup_forces_legacy_dropdown_view(self):
         g = Game.__new__(Game)

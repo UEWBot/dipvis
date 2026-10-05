@@ -16,13 +16,15 @@
 
 from urllib.parse import urlunparse
 from unittest.mock import Mock, patch
+import requests
+from bs4 import BeautifulSoup
 
 from django.test import TestCase, tag
 
 from tournament.backstabbr import (BACKSTABBR_NETLOC, BACKSTABBR_NETLOCS, FALL,
                                    POWERS, SPRING, WINTER, BackstabbrNotAccessible,
-                                   Game, InvalidGameUrl, NoSuchSeason,
-                                   is_backstabbr_url)
+                                   FailedToParse, Game, InvalidGameUrl,
+                                   NoSuchSeason, is_backstabbr_url)
 
 
 INVALID_GAME_NUMBER = 1
@@ -384,6 +386,48 @@ class BackstabbrTests(TestCase):
 
 
 class BackstabbrUnitTests(TestCase):
+    def test_parse_invariants_reraises_failed_to_parse(self):
+        g = Game.__new__(Game)
+        g.url = 'https://www.backstabbr.com/game/1'
+        with patch.object(g, '_parse_invariants_from_soup_unchecked',
+                          side_effect=FailedToParse):
+            with self.assertRaises(FailedToParse):
+                g._parse_invariants_from_soup(BeautifulSoup('', 'html.parser'))
+
+    def test_parse_turn_reraises_failed_to_parse(self):
+        g = Game.__new__(Game)
+        g.url = 'https://www.backstabbr.com/game/1'
+        with patch.object(g, '_parse_turn_from_soup_unchecked',
+                          side_effect=FailedToParse):
+            with self.assertRaises(FailedToParse):
+                g._parse_turn_from_soup(BeautifulSoup('', 'html.parser'))
+
+    def test_parse_malformed_invariants_raises_failed_to_parse(self):
+        g = Game.__new__(Game)
+        g.url = 'https://www.backstabbr.com/game/1'
+        with self.assertRaises(FailedToParse):
+            g._parse_invariants_from_soup(BeautifulSoup('<html></html>', 'html.parser'))
+
+    def test_parse_malformed_turn_raises_failed_to_parse(self):
+        g = Game.__new__(Game)
+        g.url = 'https://www.backstabbr.com/game/1'
+        soup = BeautifulSoup('<span><div>not a centre count</div></span>', 'html.parser')
+        with self.assertRaises(FailedToParse):
+            g._parse_turn_from_soup(soup)
+
+    def test_parse_missing_gamemaster_link_marks_game_finished(self):
+        g = Game.__new__(Game)
+        g.url = 'https://www.backstabbr.com/game/1'
+        g.gm = 'Unknown'
+        g.ongoing = True
+        soup = BeautifulSoup(
+            '<title>Game: test |  Backstabbr</title>'
+            '<h4>Gamemaster</h4><h6>No link</h6>',
+            'html.parser')
+        g._parse_invariants_from_soup(soup)
+        self.assertEqual(g.gm, 'Unknown')
+        self.assertFalse(g.ongoing)
+
     def test_url_to_soup_404_raises_invalid_game_url(self):
         g = Game.__new__(Game)
         response = Mock()
@@ -399,6 +443,13 @@ class BackstabbrUnitTests(TestCase):
         response.text = '<html></html>'
         with patch('tournament.backstabbr.requests.get', return_value=response):
             self.assertRaises(BackstabbrNotAccessible, g._url_to_soup, 'https://www.backstabbr.com/game/1')
+
+    def test_url_to_soup_retries_request_exception(self):
+        g = Game.__new__(Game)
+        with patch('tournament.backstabbr.requests.get',
+                   side_effect=requests.exceptions.Timeout) as get_mock:
+            self.assertRaises(BackstabbrNotAccessible, g._url_to_soup, 'https://www.backstabbr.com/game/1')
+        self.assertEqual(get_mock.call_count, 2)
 
     def test_url_to_soup_retries_after_500_then_succeeds(self):
         g = Game.__new__(Game)
