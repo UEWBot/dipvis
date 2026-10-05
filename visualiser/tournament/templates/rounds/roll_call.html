@@ -17,6 +17,8 @@
             <input type="checkbox" id="select-all-present" />
             {% trans "Mark all players as present" %}
         </label>
+        <br/>
+        <span>{% trans "Players present:" %} <span id="present-count" aria-live="polite">0</span></span>
     </p>
     {% csrf_token %}
     {{ formset.management_form }}
@@ -76,12 +78,23 @@
         return !playerField || playerField.value;
     });
 
+    const updatePresentCount = () => {
+        const presentCount = getPresentCheckboxes().filter((checkbox) => checkbox.checked).length;
+        document.getElementById('present-count').textContent = presentCount;
+    };
+
     selectAll.addEventListener('change', () => {
         const checked = selectAll.checked;
         getPresentCheckboxes().forEach((checkbox) => {
             checkbox.checked = checked;
         });
+        updatePresentCount();
     });
+
+    getPresentCheckboxes().forEach((checkbox) => {
+        checkbox.addEventListener('change', updatePresentCount);
+    });
+    updatePresentCount();
 })();
 </script>
 {% endblock script %}
