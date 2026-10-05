@@ -58,8 +58,7 @@
   <div id="footer">
     {% block footer %}<p>{% if not request.user.is_authenticated %}<a href="{% url 'login' %}?next={{ request.get_full_path }}">{% trans "login" %}</a>{% trans " Retrieved at " %}{% else %}{% blocktrans with user=request.user %}Retrieved by {{ user }} at {% endblocktrans %}{% endif %}{% now "SHORT_DATETIME_FORMAT" %}</p>{% endblock footer %}
   </div>
+  {% block script %}{% endblock script %}
 </body>
-
-{% block script %}{% endblock script %}
 
 </html>

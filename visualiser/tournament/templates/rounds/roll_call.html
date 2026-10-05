@@ -56,6 +56,10 @@
     </table>
     <input type="submit" value={% trans "Submit" %} />
 </form>
+
+{% endblock content %}
+
+{% block script %}
 <script>
 (() => {
     const selectAll = document.getElementById('select-all-present');
@@ -75,4 +79,4 @@
     });
 })();
 </script>
-{% endblock content %}
+{% endblock script %}
