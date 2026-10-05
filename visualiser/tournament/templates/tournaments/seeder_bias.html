@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Seeder Bias{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tournament=tournament %}{{ tournament }} Seeder Bias - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Game Seeder Bias" %}</h1>

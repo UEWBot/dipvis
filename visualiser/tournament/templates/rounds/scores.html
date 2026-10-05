@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 
-{% block title %}{% blocktrans with tournament=tournament round=round %}DipTV - {{ tournament }} Scores After Round {{ round }}{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tournament=tournament round=round %}Scores After Round {{ round }} of {{ tournament }} - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round %}Scores After Round {{ round }}{% endblocktrans %}</h1>

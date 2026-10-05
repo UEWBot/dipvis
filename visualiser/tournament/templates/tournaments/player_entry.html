@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Data Entry" %}{% endblock title %}
+{% block title %}{{ tournament }} {% trans "Player Data Entry" %} - {% trans "DipTV" %}{% endblock title %}
 
 {% block content %}
 <h1>{% blocktrans with tournament=tournament %} {{tournament}} Player Data Entry {% endblocktrans %}</h1>

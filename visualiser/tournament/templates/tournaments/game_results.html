@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Game Results{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tournament=tournament %}{{ tournament }} Game Results - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 {% if tournament.is_finished %}

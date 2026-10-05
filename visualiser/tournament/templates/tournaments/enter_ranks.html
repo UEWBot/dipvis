@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament entity=entity_name %}DipTV - {{ tournament }} {{ entity }} Ranks{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tournament=tournament entity=entity_name %}{{ tournament }} {{ entity }} Ranks - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ entity_name }} {% trans "Ranks" %}</h1>

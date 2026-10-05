@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Team Scores{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament %}{{ tournament }} Team Scores - DipTV{% endblocktrans %}{% endblock %}
 
 {% block content %}
 {% if tournament.team_rounds_finished %}

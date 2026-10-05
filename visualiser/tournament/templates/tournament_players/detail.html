@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 
-{% block title %}{% blocktrans with tp=player %}DipTV - {{ tp }}{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tp=player %}{{ tp }} - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>

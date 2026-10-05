@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Handicaps{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tournament=tournament %}{{ tournament }} Handicaps - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Handicaps" %}</h1>

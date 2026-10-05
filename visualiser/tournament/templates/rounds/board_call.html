@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Board Call{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}Round {{ round }} of {{ tournament }} Board Call - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round.number %}Round {{ round }} Board Call{% endblocktrans %}</h1>

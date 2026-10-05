@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Country Preferences" %}{% endblock title %}
+{% block title %}{{ tournament }} {% trans "Player Country Preferences" %} - {% trans "DipTV" %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Player Country Preferences" %}</h1>
