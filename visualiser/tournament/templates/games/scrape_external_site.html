@@ -5,6 +5,13 @@
 
 {% block content %}
 <h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> external site import{% endblocktrans %}</h1>
+{% if failure_reason %}
+<p>{{ failure_reason }}</p>
+<p>{% trans "URL accessed:" %}
+  {% if game.external_url %}{{ game.external_url|urlize }}{% else %}{% trans "No URL was provided." %}{% endif %}
+</p>
+<p><a href="{% url 'change_game' tournament.id game.name %}">{% trans "Modify Game" %}</a></p>
+{% else %}
 <p>{% blocktrans with year=year %}Imported centre counts for {{ year }}:{% endblocktrans %}</p>
 <ul>
   {% for cc in centrecounts %}
@@ -17,4 +24,5 @@
     <li>{{ sco.owner.name }}: {{ sco.sc.name }}</li>
   {% endfor %}
 </ul>
+{% endif %}
 {% endblock content %}

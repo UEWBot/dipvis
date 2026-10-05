@@ -2262,7 +2262,11 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('scrape_external_site',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'The URL is not for a supported external site.')
+        self.assertContains(response, 'No URL was provided.')
+        self.assertContains(response, reverse('change_game',
+                              args=(self.t1.pk, self.g1.name)))
 
     @tag('backstabbr')
     def test_scrape_backstabbr_success(self):
@@ -2335,7 +2339,9 @@ class GameViewTests(TestCase):
             response = self.client.get(reverse('scrape_external_site',
                                                args=(self.t1.pk, self.g1.name)),
                                        secure=True)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'WebDiplomacy could not be accessed.')
+        self.assertContains(response, VALID_WD_URL)
         # Cleanup
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
@@ -2349,7 +2355,9 @@ class GameViewTests(TestCase):
             response = self.client.get(reverse('scrape_external_site',
                                                args=(self.t1.pk, self.g1.name)),
                                        secure=True)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Backstabbr could not be accessed.')
+        self.assertContains(response, VALID_BS_URL)
         # Cleanup
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
@@ -2363,7 +2371,9 @@ class GameViewTests(TestCase):
             response = self.client.get(reverse('scrape_external_site',
                                                args=(self.t1.pk, self.g1.name)),
                                        secure=True)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'The Backstabbr URL is invalid.')
+        self.assertContains(response, VALID_BS_URL)
         # Cleanup
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
@@ -2377,8 +2387,58 @@ class GameViewTests(TestCase):
             response = self.client.get(reverse('scrape_external_site',
                                                args=(self.t1.pk, self.g1.name)),
                                        secure=True)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'The WebDiplomacy URL is invalid.')
+        self.assertContains(response, VALID_WD_URL)
         # Cleanup
+        self.g1.external_url = ''
+        self.g1.save(update_fields=['external_url'])
+        self.g1.refresh_from_db()
+
+    def test_scrape_backstabbr_parse_error(self):
+        self.g1.external_url = VALID_BS_URL
+        self.g1.save(update_fields=['external_url'])
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        with patch('tournament.models.Game.backstabbr_game',
+               side_effect=backstabbr.FailedToParse):
+            response = self.client.get(reverse('scrape_external_site',
+                                               args=(self.t1.pk, self.g1.name)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'The Backstabbr game page could not be parsed.')
+        self.assertContains(response, VALID_BS_URL)
+        self.g1.external_url = ''
+        self.g1.save(update_fields=['external_url'])
+        self.g1.refresh_from_db()
+
+    def test_scrape_webdip_parse_error(self):
+        self.g1.external_url = VALID_WD_URL
+        self.g1.save(update_fields=['external_url'])
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        with patch('tournament.models.Game.webdiplomacy_game',
+               side_effect=webdip.FailedToParse):
+            response = self.client.get(reverse('scrape_external_site',
+                                               args=(self.t1.pk, self.g1.name)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'The WebDiplomacy game page could not be parsed.')
+        self.assertContains(response, VALID_WD_URL)
+        self.g1.external_url = ''
+        self.g1.save(update_fields=['external_url'])
+        self.g1.refresh_from_db()
+
+    def test_scrape_webdip_unsupported_variant(self):
+        self.g1.external_url = VALID_WD_URL
+        self.g1.save(update_fields=['external_url'])
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        with patch('tournament.models.Game.webdiplomacy_game',
+                   side_effect=webdip.UnsupportedVariant):
+            response = self.client.get(reverse('scrape_external_site',
+                                               args=(self.t1.pk, self.g1.name)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'The WebDiplomacy game uses an unsupported variant.')
+        self.assertContains(response, VALID_WD_URL)
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()

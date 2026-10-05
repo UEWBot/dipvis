@@ -892,6 +892,15 @@ def _scrape_webdip(request, tournament, game, webdip_game):
                    'centrecounts': game.centrecount_set.filter(year=year).order_by('power')})
 
 
+def _scrape_failure(request, tournament, game, reason):
+    """Report why an external game import could not be completed."""
+    return render(request,
+                  'games/scrape_external_site.html',
+                  {'tournament': tournament,
+                   'game': game,
+                   'failure_reason': reason})
+
+
 @permission_required('tournament.add_centrecount')
 def scrape_external_site(request, tournament_id, game_name):
     """Import CentreCounts from another site"""
@@ -902,9 +911,14 @@ def scrape_external_site(request, tournament_id, game_name):
         try:
             bg = g.backstabbr_game()
         except backstabbr.BackstabbrNotAccessible:
-            pass
+            return _scrape_failure(request, t, g,
+                                   _('Backstabbr could not be accessed.'))
         except backstabbr.InvalidGameUrl:
-            pass
+            return _scrape_failure(request, t, g,
+                                   _('The Backstabbr URL is invalid.'))
+        except backstabbr.FailedToParse:
+            return _scrape_failure(request, t, g,
+                                   _('The Backstabbr game page could not be parsed.'))
         else:
             return _scrape_backstabbr(request, t, g, bg)
     # How about WebDiplomacy?
@@ -912,12 +926,21 @@ def scrape_external_site(request, tournament_id, game_name):
         try:
             wg = g.webdiplomacy_game()
         except webdip.WebDipNotAccessible:
-            pass
+            return _scrape_failure(request, t, g,
+                                   _('WebDiplomacy could not be accessed.'))
         except webdip.InvalidGameUrl:
-            pass
+            return _scrape_failure(request, t, g,
+                                   _('The WebDiplomacy URL is invalid.'))
+        except webdip.FailedToParse:
+            return _scrape_failure(request, t, g,
+                                   _('The WebDiplomacy game page could not be parsed.'))
+        except webdip.UnsupportedVariant:
+            return _scrape_failure(request, t, g,
+                                   _('The WebDiplomacy game uses an unsupported variant.'))
         else:
             return _scrape_webdip(request, t, g, wg)
-    raise Http404('External site is not backstabbr or webdiplomacy')
+    return _scrape_failure(request, t, g,
+                           _('The URL is not for a supported external site.'))
 
 
 def api(request, version, tournament_id, game_name):
