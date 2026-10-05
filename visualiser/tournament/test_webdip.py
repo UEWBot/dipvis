@@ -273,8 +273,10 @@ class WebDiplomacyUnitTests(TestCase):
 
     def test_url_to_soup_timeout_raises_not_accessible(self):
         g = Game.__new__(Game)
-        with patch('tournament.webdip.requests.get', side_effect=requests.exceptions.Timeout):
+        with patch('tournament.webdip.requests.get',
+                   side_effect=requests.exceptions.Timeout) as get:
             self.assertRaises(WebDipNotAccessible, g._url_to_soup, 'https://webdiplomacy.net/board.php?gameID=334382')
+        self.assertEqual(get.call_count, 2)
 
     def test_url_to_soup_retries_after_500_then_succeeds(self):
         g = Game.__new__(Game)

@@ -101,7 +101,11 @@ class Game():
         self._calculate_result()
 
     def _extract_game_id(self):
-        """Extracts the game id as an int from the URL"""
+        """
+        Extracts the game id as an int from the URL.
+
+        May raise InvalidGameUrl.
+        """
         query = self.parsed_url.query
         qs = parse_qs(query)
         num = qs['gameID'][0]
@@ -114,11 +118,16 @@ class Game():
                 else:
                     break
             num = ''.join(tmp)
-        return int(num)
+        try:
+            return int(num)
+        except ValueError as e:
+            raise InvalidGameUrl(self.url) from e
 
     def _url_to_soup(self, url):
         """
         Open the specified URL, turn the web page into soup.
+
+        May raise InvalidGameUrl, WebDipNotAccessible.
         """
         # The default board URL now serves a JS app shell. Force the legacy
         # dropdown view, which still exposes the server-rendered HTML that this
@@ -131,6 +140,7 @@ class Game():
                 parsed = parsed._replace(query=urlencode(qs, doseq=True))
                 url = urlunparse(parsed)
         last_status = None
+        last_error = None
         for _ in range(2):
             try:
                 page = requests.get(url,
@@ -139,7 +149,8 @@ class Game():
                                     allow_redirects=False,
                                     timeout=2.0)
             except requests.exceptions.RequestException as e:
-                raise WebDipNotAccessible(url) from e
+                last_error = e
+                continue
             if page.status_code == requests.codes.ok:
                 return BeautifulSoup(page.text, "html.parser")
             if page.status_code == requests.codes.not_found:
@@ -147,6 +158,8 @@ class Game():
             last_status = page.status_code
             if page.status_code != requests.codes.internal_server_error:
                 raise WebDipNotAccessible(f'{last_status} {url}')
+        if last_status is None:
+            raise WebDipNotAccessible(url) from last_error
         raise WebDipNotAccessible(f'{last_status} {url}')
 
     def _parse_page(self):

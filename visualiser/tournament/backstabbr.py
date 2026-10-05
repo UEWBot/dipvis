@@ -236,8 +236,14 @@ class Game():
         tries = 0
         # Backstabbr has occasional problems. A retry usually works
         while tries < 2:
-            page = requests.get(url,
-                                timeout=self.TIMEOUT)
+            try:
+                page = requests.get(url,
+                                    timeout=self.TIMEOUT)
+            except requests.exceptions.RequestException as e:
+                tries += 1
+                if tries >= 2:
+                    raise BackstabbrNotAccessible(url) from e
+                continue
             tries += 1
             if page.status_code == requests.codes.ok:
                 return BeautifulSoup(page.text, "html.parser")
