@@ -69,7 +69,12 @@
 
     const getPresentCheckboxes = () => Array.from(
         document.querySelectorAll('input[type="checkbox"][name$="-present"]')
-    );
+    ).filter((checkbox) => {
+        const playerField = checkbox.closest('tr').querySelector(
+            'select[name$="-player"], input[name$="-player"]'
+        );
+        return !playerField || playerField.value;
+    });
 
     selectAll.addEventListener('change', () => {
         const checked = selectAll.checked;
