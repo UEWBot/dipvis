@@ -977,7 +977,16 @@ def api(request, tournament_id, version):
     for tp in tournament_players:
         player = tp.player
         entry = {'player_name': str(player),
+                 'player_id': player.pk,
+                 'first_name': player.first_name,
+                 'last_name': player.last_name,
+                 'nationalities': [country.code for country in player.nationalities],
+                 'backstabbr_username': tp.backstabbr_username,
+                 'backstabbr_profile_url': player.backstabbr_profile_url,
+                 'player_url': request.build_absolute_uri(player.get_absolute_url()),
                  'player_wdr_id': player.wdr_player_id,
+                 'player_wdr_url': player.wdr_url(),
+                 'location': tp.location,
                  'ranking': tp.rank,
                  'score': tp.score,
                  'awards': [],

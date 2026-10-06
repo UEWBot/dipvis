@@ -2637,6 +2637,36 @@ class TournamentViewTests(TestCase):
                       if result['player_name'] == str(tp.player))
         self.assertEqual(result['ranking'], 1)
 
+    def test_api_includes_player_attributes(self):
+        tp = self.t4.tournamentplayer_set.select_related('player').first()
+        tp.backstabbr_username = 'ampersand'
+        tp.location = 'Cambridge'
+        tp.save(update_fields=['backstabbr_username', 'location'])
+        tp.player.backstabbr_profile_url = 'https://backstabbr.com/user/ampersand'
+        tp.player.nationalities = 'CA'
+        tp.player.save(update_fields=['backstabbr_profile_url', 'nationalities'])
+
+        response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                   secure=True)
+        result = next(result for result in response.json()['results']
+                      if result['player_id'] == tp.player.pk)
+        self.assertEqual({'player_name': str(tp.player),
+                          'player_id': tp.player.pk,
+                          'first_name': tp.player.first_name,
+                          'last_name': tp.player.last_name,
+                          'nationalities': ['CA'],
+                          'backstabbr_username': 'ampersand',
+                          'backstabbr_profile_url': 'https://backstabbr.com/user/ampersand',
+                          'player_url': 'https://testserver/players/%d/' % tp.player.pk,
+                          'player_wdr_id': tp.player.wdr_player_id,
+                          'player_wdr_url': tp.player.wdr_url(),
+                          'location': 'Cambridge'},
+                         {key: result[key] for key in (
+                             'player_name', 'player_id', 'first_name', 'last_name',
+                             'nationalities', 'backstabbr_username',
+                             'backstabbr_profile_url', 'player_url',
+                             'player_wdr_id', 'player_wdr_url', 'location')})
+
     def test_api2(self):
         # Change one of the games to not be finished
         r = self.t4.round_numbered(1)
