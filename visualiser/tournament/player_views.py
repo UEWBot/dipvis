@@ -94,7 +94,21 @@ def api_background(request, player_id, version):
     if event_kind is None and request.GET.get('event_kind') not in (None, '', 'all'):
         return HttpResponseBadRequest('Invalid event_kind')
     player = get_object_or_404(Player, pk=player_id)
-    return JsonResponse(player.background_data(event_kind=event_kind))
+    data = player.background_data(event_kind=event_kind)
+    data['player'] = {
+        'id': player.pk,
+        'name': str(player),
+        'first_name': player.first_name,
+        'last_name': player.last_name,
+        'nationalities': [country.code for country in player.nationalities],
+        'location': player.location,
+        'backstabbr_username': player.backstabbr_username,
+        'backstabbr_profile_url': player.backstabbr_profile_url,
+        'wdr_player_id': player.wdr_player_id,
+        'wdr_url': player.wdr_url(),
+        'url': request.build_absolute_uri(player.get_absolute_url()),
+    }
+    return JsonResponse(data)
 
 
 def player_versus(request, pk1, pk2):

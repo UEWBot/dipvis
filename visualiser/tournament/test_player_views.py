@@ -163,6 +163,8 @@ class PlayerViewTests(TestCase):
         PlayerAward.objects.create(player=self.p1,
                                    event_ranking=event,
                                    name='Best Attitude')
+        self.p1.nationalities = countries[0].code
+        self.p1.save(update_fields=['nationalities'])
 
         response = self.client.get(reverse('api_player_background', args=(1, self.p1.pk,)),
                                    secure=True)
@@ -170,6 +172,18 @@ class PlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
         data = response.json()
+        self.assertEqual({'id': self.p1.pk,
+                  'name': 'Angela Ampersand',
+                  'first_name': 'Angela',
+                  'last_name': 'Ampersand',
+                  'nationalities': [countries[0].code],
+                  'location': '',
+                  'backstabbr_username': '',
+                  'backstabbr_profile_url': '',
+                  'wdr_player_id': None,
+                  'wdr_url': '',
+                  'url': 'https://testserver/players/%d/' % self.p1.pk},
+                 data['player'])
         self.assertEqual([{'title': 'World Champion', 'years': [2024]}],
                          data['titles'])
         self.assertEqual(2, data['event_rankings']['played'])
