@@ -249,7 +249,7 @@ def populate_pools(request, tournament_id, round_num):
         # Everyone else goes in the unconstrained pool
         pool = pool_set.get(board_count__isnull=True)
         for rp in rps:
-            if rp.pool is None:
+            if rp not in form.cleaned_data.values():
                 rp.pool = pool
                 rp.save(update_fields=['pool'])
                 changed.append(rp)
