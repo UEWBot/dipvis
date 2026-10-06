@@ -958,8 +958,9 @@ def api(request, tournament_id, version):
             for gp in g.gameplayer_set.order_by('power'):
                 power_str = str(gp.power)
                 players[power_str] = {'name': str(gp.player),
-                                      'location': gp.player.location,
-                                      'wdr_id': gp.player.wdr_player_id}
+                                      'id': gp.player.pk,
+                                      'wdr_id': gp.player.wdr_player_id,
+                                      'location': gp.player.location}
                 if gp.score_is_final():
                     players[power_str]['score'] = gp.score
                     players[power_str]['final_scs'] = gp.final_sc_count()
@@ -977,6 +978,7 @@ def api(request, tournament_id, version):
     for tp in tournament_players:
         player = tp.player
         entry = {'player_name': str(player),
+                 'player_wdr_id': player.wdr_player_id,
                  'player_id': player.pk,
                  'first_name': player.first_name,
                  'last_name': player.last_name,
@@ -1023,6 +1025,7 @@ def api(request, tournament_id, version):
             print(f"User {u} does not have an associated Player")
         else:
             entry = {'name': str(player),
+                     'id': player.pk,
                      'wdr_id': player.wdr_player_id}
             managers.append(entry)
     data = {'name': t.name,

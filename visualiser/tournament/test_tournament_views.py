@@ -2621,6 +2621,12 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
+        game_player = g.gameplayer_set.order_by('power').first()
+        game_player_data = response.json()['rounds']['1']['games'][g.name]['players']
+        game_player_entry = game_player_data[str(game_player.power)]
+        self.assertEqual(game_player.player.pk, game_player_entry['id'])
+        self.assertEqual(game_player.player.wdr_player_id,
+                 game_player_entry['wdr_id'])
         # Cleanup
         g.is_finished = True
         g.save()
@@ -2709,6 +2715,10 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
+        manager = next(manager for manager in response.json()['managers']
+                if manager['name'] == str(self.p11))
+        self.assertEqual(self.p11.pk, manager['id'])
+        self.assertEqual(self.p11.wdr_player_id, manager['wdr_id'])
 
     def test_api_with_manager_without_player(self):
         u = User.objects.create_user(username='manager_without_player',

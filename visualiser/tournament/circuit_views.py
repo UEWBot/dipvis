@@ -112,6 +112,7 @@ def api(request, circuit_id, version):
     for player, (rank, score) in c.ranks_and_scores().items():
         # TODO add 'score_breakdown' array
         entry = {'player_name': str(player),
+                 'player_id': player.pk,
                  'player_wdr_id': player.wdr_player_id,
                  'ranking': rank,
                  'score': score}

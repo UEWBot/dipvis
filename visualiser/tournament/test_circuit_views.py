@@ -199,6 +199,10 @@ class CircuitViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
+        result = next(result for result in response.json()['results']
+                      if result['player_name'] == str(self.p1))
+        self.assertEqual(self.p1.pk, result['player_id'])
+        self.assertEqual(self.p1.wdr_player_id, result['player_wdr_id'])
 
     def test_api_invalid_version(self):
         response = self.client.get(reverse('api_circuit', args=(1000, self.circuit.pk,)),

@@ -174,6 +174,7 @@ class PlayerViewTests(TestCase):
         data = response.json()
         self.assertEqual({'id': self.p1.pk,
                   'name': 'Angela Ampersand',
+                  'wdr_id': None,
                   'first_name': 'Angela',
                   'last_name': 'Ampersand',
                   'nationalities': [countries[0].code],

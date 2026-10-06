@@ -98,6 +98,7 @@ def api_background(request, player_id, version):
     data['player'] = {
         'id': player.pk,
         'name': str(player),
+        'wdr_id': player.wdr_player_id,
         'first_name': player.first_name,
         'last_name': player.last_name,
         'nationalities': [country.code for country in player.nationalities],
