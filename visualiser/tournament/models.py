@@ -2727,7 +2727,7 @@ class Game(models.Model):
         """
         Save the object to the database.
 
-        Ensures that 1901 SC counts and ownership info exists.
+        Ensures that 1900 SC counts and ownership info exists.
         Ensures that S1901M image exists.
         If is_finished attribute may be changed, called Round.set_is_finished().
         """
