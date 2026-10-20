@@ -17,6 +17,7 @@
 """Forms for setting official tournament and team rank overrides."""
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from tournament.models import Team, TournamentPlayer
 
@@ -24,12 +25,13 @@ from tournament.models import Team, TournamentPlayer
 class RankOverrideForm(forms.ModelForm):
     """Base form displaying calculated rank information beside an override."""
 
-    name = forms.CharField(disabled=True)
-    score = forms.FloatField(disabled=True)
-    calculated_rank = forms.IntegerField(disabled=True)
+    name = forms.CharField(label=_('Name'), disabled=True)
+    score = forms.FloatField(label=_('Score'), disabled=True)
+    calculated_rank = forms.IntegerField(label=_('Calculated rank'), disabled=True)
 
     class Meta:
         fields = ('rank_override',)
+        labels = {'rank_override': _('Rank override')}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -20,7 +20,7 @@ Forms for roll call in the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.formsets import BaseFormSet
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tournament.players import Player
 
@@ -32,17 +32,21 @@ class PlayerRoundForm(forms.Form):
 
     # We want all Players to be available to be chosen,
     # as this provides an easy way to add TournamentPlayers
-    player = PlayerChoiceField(queryset=Player.objects.all())
-    present = forms.BooleanField(required=False,
+    player = PlayerChoiceField(label=_('Player'), queryset=Player.objects.all())
+    present = forms.BooleanField(label=_('Present'),
+                                 required=False,
                                  initial=False,
                                  widget=forms.CheckboxInput(attrs={'class': 'center-checkbox'}))
-    standby = forms.BooleanField(required=False,
+    standby = forms.BooleanField(label=_('Standby'),
+                                 required=False,
                                  initial=False,
                                  widget=forms.CheckboxInput(attrs={'class': 'center-checkbox'}))
-    sandboxer = forms.BooleanField(required=False,
+    sandboxer = forms.BooleanField(label=_('Sandboxer'),
+                                   required=False,
                                    initial=False,
                                    widget=forms.CheckboxInput(attrs={'class': 'center-checkbox'}))
-    rounds_played = forms.IntegerField(required=False,
+    rounds_played = forms.IntegerField(label=_('Rounds played'),
+                                       required=False,
                                        disabled=True,
                                        widget=forms.TextInput(attrs={'class': 'readonly-look'}),
                                        min_value=0)

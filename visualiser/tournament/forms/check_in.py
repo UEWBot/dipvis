@@ -20,7 +20,7 @@ Forms for check-in in the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.formsets import BaseFormSet
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 
 class SelfCheckInForm(forms.Form):

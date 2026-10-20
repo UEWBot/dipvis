@@ -20,6 +20,7 @@ Forms for Awards in the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.models import BaseInlineFormSet, inlineformset_factory
+from django.utils.translation import gettext_lazy as _
 
 from tournament.models import (AwardRecipient, Game, TournamentAward,
                                TournamentPlayer)
@@ -29,8 +30,9 @@ from .fields import GameChoiceField, TournamentPlayerChoiceField
 
 class AwardRecipientForm(forms.ModelForm):
     """Form to record one recipient of a TournamentAward, and optionally the Game it was for"""
-    tournament_player = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
-    game = GameChoiceField(queryset=Game.objects.none(), required=False)
+    tournament_player = TournamentPlayerChoiceField(label=_('Tournament player'),
+                                                    queryset=TournamentPlayer.objects.none())
+    game = GameChoiceField(label=_('Game'), queryset=Game.objects.none(), required=False)
 
     class Meta:
         model = AwardRecipient

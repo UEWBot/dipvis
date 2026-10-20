@@ -19,7 +19,7 @@ Forms for game ending in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tournament.models import Game
 

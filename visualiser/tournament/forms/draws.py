@@ -19,7 +19,7 @@ Forms for draws in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tournament.diplomacy import FIRST_YEAR, GreatPower
 from tournament.models import DrawSecrecy, Seasons

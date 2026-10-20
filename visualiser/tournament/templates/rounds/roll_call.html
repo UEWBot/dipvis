@@ -28,7 +28,7 @@
         {% if forloop.first %}
             <thead><tr>
             {% for field in form.visible_fields %}
-                <th>{% trans field.label %}</th>
+                <th>{{ field.label }}</th>
             {% endfor %}
             </tr></thead><tbody>
         {% endif %}

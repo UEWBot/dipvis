@@ -20,7 +20,7 @@ Forms for SupplyCentre ownership in the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.formsets import BaseFormSet
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tournament.diplomacy import FIRST_YEAR, GreatPower, SupplyCentre
 
@@ -28,7 +28,8 @@ from tournament.diplomacy import FIRST_YEAR, GreatPower, SupplyCentre
 class SCOwnerForm(forms.Form):
     """Form for Supply Centre ownership for one year"""
     # Allow for an initial game-start SC ownership
-    year = forms.IntegerField(min_value=FIRST_YEAR-1,
+    year = forms.IntegerField(label=_('Year'),
+                              min_value=FIRST_YEAR-1,
                               required=False,
                               widget=forms.TextInput(attrs={'size': '4'}))
 
@@ -39,6 +40,7 @@ class SCOwnerForm(forms.Form):
         # Create the right country fields
         for sc in SupplyCentre.objects.all():
             self.fields[sc.name] = forms.ModelChoiceField(GreatPower.objects.all(),
+                                                          label=_(sc.name),
                                                           required=False)
 
 

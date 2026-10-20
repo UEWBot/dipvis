@@ -20,7 +20,7 @@ Forms for SupplyCentre counts in the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.formsets import BaseFormSet
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tournament.diplomacy import FIRST_YEAR, TOTAL_SCS, GreatPower
 
@@ -28,7 +28,8 @@ from tournament.diplomacy import FIRST_YEAR, TOTAL_SCS, GreatPower
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count
-    year = forms.IntegerField(min_value=FIRST_YEAR-1,
+    year = forms.IntegerField(label=_('Year'),
+                              min_value=FIRST_YEAR-1,
                               widget=forms.TextInput(attrs={'size': '4'}))
 
     def __init__(self, *args, **kwargs):

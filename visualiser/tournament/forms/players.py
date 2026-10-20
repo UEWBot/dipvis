@@ -19,6 +19,7 @@ Forms for players in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from tournament.players import Player
 
@@ -27,7 +28,7 @@ from .fields import PlayerChoiceField
 
 class PlayerForm(forms.Form):
     """Form to pick a Player"""
-    player = PlayerChoiceField(queryset=Player.objects.all())
+    player = PlayerChoiceField(label=_('Player'), queryset=Player.objects.all())
 
     def __init__(self, *args, **kwargs):
         # Optional Tournament parameter

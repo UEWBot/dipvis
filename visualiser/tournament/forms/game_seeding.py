@@ -20,7 +20,7 @@ Forms for the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.formsets import BaseFormSet
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import Game, Team, validate_game_name
@@ -38,10 +38,11 @@ class GamePlayersForm(forms.Form):
                            widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
-    top_board = forms.BooleanField(required=False)
+    top_board = forms.BooleanField(label=_('Top board'), required=False)
     external_url = forms.URLField(label=_('URL'),
                                   required=False)
-    notes = forms.CharField(required=False,
+    notes = forms.CharField(label=_('Notes'),
+                            required=False,
                             max_length=Game.MAX_NOTES_LENGTH)
 
     def __init__(self, *args, **kwargs):

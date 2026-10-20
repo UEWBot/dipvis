@@ -20,7 +20,7 @@ Forms for teams in the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.models import BaseModelFormSet
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from tournament.models import Team
 from tournament.players import Player
@@ -34,6 +34,7 @@ class TeamForm(forms.ModelForm):
     class Meta:
         model = Team
         fields = ('name',)
+        labels = {'name': _('Name')}
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
@@ -53,7 +54,8 @@ class TeamForm(forms.ModelForm):
                          tournamentplayer__unranked=False).distinct()
         for n in range(self.tournament.team_size):
             # We allow Teams with as few as one player
-            self.fields[f'player_{n}'] = PlayerChoiceField(queryset=queryset,
+            self.fields[f'player_{n}'] = PlayerChoiceField(label=_('Player %(number)d') % {'number': n},
+                                                           queryset=queryset,
                                                            required=(n == 0))
 
         # Populate dynamic player initial values for existing teams.

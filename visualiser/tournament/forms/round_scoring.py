@@ -20,6 +20,7 @@ Forms for round scoring in the Diplomacy Tournament Visualiser.
 
 from django import forms
 from django.forms.formsets import BaseFormSet
+from django.utils.translation import gettext_lazy as _
 
 from tournament.models import TournamentPlayer
 from tournament.players import Player
@@ -31,7 +32,8 @@ class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
     tp = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
                                      widget=forms.HiddenInput())
-    player = forms.CharField(max_length=Player._meta.get_field('first_name').max_length + Player._meta.get_field('last_name').max_length + 1,
+    player = forms.CharField(label=_('Player'),
+                             max_length=Player._meta.get_field('first_name').max_length + Player._meta.get_field('last_name').max_length + 1,
                              disabled=True,
                              widget=forms.TextInput(attrs={'size': '20'}))
 
@@ -48,15 +50,18 @@ class PlayerRoundScoreForm(forms.Form):
             name = f'round_{i}'
             # Create an additional field to show the game scores for that round
             game_scores_name = f'game_scores_{i}'
-            self.fields[game_scores_name] = forms.CharField(max_length=10,
+            self.fields[game_scores_name] = forms.CharField(label=_('Game scores %(number)d') % {'number': i},
+                                                            max_length=10,
                                                             required=False,
                                                             disabled=True)
-            self.fields[name] = forms.FloatField(required=False,
+            self.fields[name] = forms.FloatField(label=_('Round %(number)d') % {'number': i},
+                                                 required=False,
                                                  widget=forms.TextInput(attrs={'size': '10',
                                                                                'maxlength': '40'}))
 
         # Last field is for the overall tournament score
-        self.fields['overall_score'] = forms.FloatField(required=False,
+        self.fields['overall_score'] = forms.FloatField(label=_('Overall score'),
+                                                        required=False,
                                                         widget=forms.TextInput(attrs={'size': '10',
                                                                                       'maxlength': '20'}))
 
