@@ -2831,6 +2831,31 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards_form.html')
+        # Each award has two blank rows, and row classes restart for each award
+        self.assertFalse(AwardRecipient.objects.filter(tournament_award__tournament=self.t1).exists())
+        award_count = self.t1.tournamentaward_set.count()
+        self.assertGreater(award_count, 1)
+        self.assertContains(response, '<tr class="odd_row">', count=award_count)
+        self.assertContains(response, '<tr class="even_row">', count=award_count)
+
+    def test_enter_awards_row_classes_restart(self):
+        """Each award's table should start with an odd row."""
+        ta = self.t1.tournamentaward_set.order_by('award__name').first()
+        # Give the first award three rows, so that its table ends with an odd row
+        ar = AwardRecipient.objects.create(tournament_award=ta,
+                                           tournament_player=self.t1.tournamentplayer_set.first())
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('enter_awards',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        tables = response.content.decode().split('<tbody>')[1:]
+        self.assertEqual(len(tables), self.t1.tournamentaward_set.count())
+        for table in tables:
+            first_row = table[table.index('<tr class="'):]
+            self.assertTrue(first_row.startswith('<tr class="odd_row">'))
+        # Cleanup
+        ar.delete()
 
     def test_enter_awards_post(self):
         # Give some awards to players beforehand

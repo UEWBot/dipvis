@@ -15,12 +15,12 @@
     <table class="form">
       <thead><tr>
         {% for field in formset.empty_form.visible_fields %}
-          <th>{{ field.label }}</th>
+          <th>{% trans field.label %}</th>
         {% endfor %}
       </tr></thead>
       <tbody>
         {% for form in formset.forms %}
-          <tr>
+          <tr class="{% cycle 'odd_row' 'even_row' %}">
             {% for field in form.visible_fields %}
               <td>
                 {% if forloop.first %}
@@ -38,6 +38,7 @@
             {% endif %}
           </tr>
         {% endfor %}
+        {% resetcycle %}
       </tbody>
     </table>
   {% endfor %}
