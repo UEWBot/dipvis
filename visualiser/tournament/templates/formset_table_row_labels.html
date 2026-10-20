@@ -1,0 +1,32 @@
+{% load i18n %}
+{% comment %}
+Formset table for forms with a single visible field, whose label varies from row to row.
+The label is shown as a row heading, with the field to its right.
+Any further visible fields are not rendered.
+{% endcomment %}
+{% csrf_token %}
+{{ formset.management_form }}
+{{ formset.non_form_errors.as_ul }}
+<table class="form">
+<tbody>
+{% for form in formset.forms %}
+    {% with field=form.visible_fields.0 %}
+    <tr class="{% cycle 'odd_row' 'even_row' %}">
+        <th scope="row">{{ field.label_tag }}</th>
+        <td>
+            {% for hidden in form.hidden_fields %}
+                {{ hidden.errors.as_ul }}
+                {{ hidden }}
+            {% endfor %}
+            {{ field.errors.as_ul }}
+            {{ field }}
+            {% if form.non_field_errors %}
+                {{ form.non_field_errors }}
+            {% endif %}
+        </td>
+    </tr>
+    {% endwith %}
+{% endfor %}
+</tbody>
+</table>
+<input type="submit" value={% trans "Submit" %} />

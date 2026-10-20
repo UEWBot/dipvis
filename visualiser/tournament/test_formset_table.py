@@ -29,16 +29,26 @@ class SimpleForm(forms.Form):
 
 
 class FormsetTableTests(SimpleTestCase):
-    def _render(self, num_forms, row_labels):
+    def _render(self, template, num_forms):
         formset = formset_factory(SimpleForm, extra=num_forms)()
-        return render_to_string('formset_table.html',
-                                {'formset': formset, 'row_labels': row_labels})
+        return render_to_string(template, {'formset': formset})
 
     def test_tbody_balanced(self):
-        for row_labels in [False, True]:
+        for template in ['formset_table.html', 'formset_table_row_labels.html']:
             for num_forms in [0, 1, 3]:
-                with self.subTest(row_labels=row_labels, num_forms=num_forms):
-                    html = self._render(num_forms, row_labels)
+                with self.subTest(template=template, num_forms=num_forms):
+                    html = self._render(template, num_forms)
                     self.assertEqual(html.count('<tbody>'), html.count('</tbody>'))
-                    self.assertEqual(html.count('<tbody>'), 1 if num_forms or row_labels else 0)
+                    expected = 1 if num_forms or template == 'formset_table_row_labels.html' else 0
+                    self.assertEqual(html.count('<tbody>'), expected)
                     self.assertEqual(html.count('<tr class='), num_forms)
+
+    def test_column_headings(self):
+        html = self._render('formset_table.html', 3)
+        self.assertEqual(html.count('<th>Value</th>'), 1)
+        self.assertNotIn('<th scope="row">', html)
+
+    def test_row_labels(self):
+        html = self._render('formset_table_row_labels.html', 3)
+        self.assertEqual(html.count('<th scope="row">'), 3)
+        self.assertNotIn('<thead>', html)
