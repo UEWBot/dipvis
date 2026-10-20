@@ -43,11 +43,13 @@
                 {% else %}
                     {{ form.player }}
                 {% endif %}
+                {% if form.player.help_text %}<br><span class="helptext"{% if form.player.auto_id %} id="{{ form.player.auto_id }}_helptext"{% endif %}>{{ form.player.help_text|safe }}</span>{% endif %}
             </th>
             {% for field in form.visible_fields|slice:"1:" %}
             <td>
                 {{ field.errors.as_ul }}
                 {{ field }}
+                {% if field.help_text %}<br><span class="helptext"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</span>{% endif %}
             </td>
             {% endfor %}
             {# Includes any hidden field errors #}

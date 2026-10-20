@@ -34,7 +34,8 @@
   {% for field in form.visible_fields %}
     <p>{{ field.errors }}
     {{ field.label_tag }}
-    {{ field }}</p>
+    {{ field }}
+    {% if field.help_text %}<span class="helptext"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</span>{% endif %}</p>
   {% endfor %}
   <input type="submit" value="{% trans "Seed Games" %}" />
 </form>

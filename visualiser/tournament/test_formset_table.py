@@ -24,6 +24,8 @@ from django.forms import formset_factory
 from django.template.loader import render_to_string
 from django.test import SimpleTestCase
 
+from tournament.test_form_templates import assert_aria_describedby_targets_exist
+
 
 class SimpleForm(forms.Form):
     value = forms.IntegerField()
@@ -37,6 +39,11 @@ class TwoFieldForm(forms.Form):
 class HiddenFieldForm(forms.Form):
     hidden_value = forms.IntegerField(widget=forms.HiddenInput())
     name = forms.CharField()
+
+
+class HelpTextForm(forms.Form):
+    name = forms.CharField(help_text='Some help')
+    value = forms.IntegerField(help_text='More help')
 
 
 class FormsetTableTests(SimpleTestCase):
@@ -85,6 +92,33 @@ class FormsetTableTests(SimpleTestCase):
         html = self._render('formset_table_row_labels.html', 3)
         self.assertEqual(html.count('<th scope="row">'), 3)
         self.assertNotIn('<thead>', html)
+
+    def test_help_text(self):
+        """Help text should be shown for each field in each row, and linked to its field."""
+        for template, fields in [('formset_table.html', {'name': 'Some help', 'value': 'More help'}),
+                                 ('formset_table_row_labels.html', {'name': 'Some help'})]:
+            with self.subTest(template=template):
+                html = self._render(template, 2, form=HelpTextForm)
+                for n in range(2):
+                    for name, text in fields.items():
+                        self.assertInHTML(f'<span class="helptext" id="id_form-{n}-{name}_helptext">{text}</span>',
+                                          html)
+                        self.assertIn(f'aria-describedby="id_form-{n}-{name}_helptext"', html)
+                assert_aria_describedby_targets_exist(self, html)
+
+    def test_errors_linked(self):
+        """Fields with errors refer to them with aria-describedby, so they must exist."""
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '0',
+                'form-0-name': '',
+                'form-0-value': 'not-a-number'}
+        for template in ['formset_table.html', 'formset_table_row_labels.html']:
+            with self.subTest(template=template):
+                formset = formset_factory(HelpTextForm)(data)
+                self.assertFalse(formset.is_valid())
+                html = render_to_string(template, {'formset': formset})
+                self.assertIn('id_form-0-name_error', html)
+                assert_aria_describedby_targets_exist(self, html)
 
     def test_row_labels_hidden_field_errors_after_field(self):
         """Hidden field errors should be identified, and shown after the field."""

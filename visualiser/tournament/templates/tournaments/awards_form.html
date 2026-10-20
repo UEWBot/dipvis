@@ -30,6 +30,7 @@
                 {% endif %}
                 {{ field.errors.as_ul }}
                 {{ field }}
+                {% if field.help_text %}<br><span class="helptext"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</span>{% endif %}
               </td>
             {% endfor %}
             {# Includes any hidden field errors #}

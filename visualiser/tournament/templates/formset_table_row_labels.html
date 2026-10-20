@@ -19,6 +19,7 @@ Any further visible fields are not rendered.
             {% endfor %}
             {{ field.errors.as_ul }}
             {{ field }}
+            {% if field.help_text %}<br><span class="helptext"{% if field.auto_id %} id="{{ field.auto_id }}_helptext"{% endif %}>{{ field.help_text|safe }}</span>{% endif %}
             {# Includes any hidden field errors #}
             {{ form.get_context.errors }}
         </td>

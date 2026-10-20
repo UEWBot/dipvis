@@ -31,6 +31,7 @@ from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
                                Round, RoundPlayer, Seasons, Tournament,
                                TournamentAward, TournamentPlayer)
 from tournament.players import Player
+from tournament.test_form_templates import assert_aria_describedby_targets_exist
 
 
 @override_settings(HOSTNAME='example.com')
@@ -717,6 +718,9 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournament_players/payments.html')
         self.assertContains(response, '<th scope="row">', count=len(players))
         self.assertContains(response, '<td>', count=len(players))
+        # Each checkbox should have its help text, which aria-describedby refers to
+        self.assertContains(response, '<span class="helptext"', count=len(players))
+        assert_aria_describedby_targets_exist(self, response.content.decode())
         self.u3.user_permissions.remove(perm)
         self.u3.save()
 

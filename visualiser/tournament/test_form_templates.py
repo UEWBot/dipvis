@@ -17,6 +17,7 @@
 """
 Form template Tests for the Diplomacy Tournament Visualiser.
 """
+import re
 import uuid
 from types import SimpleNamespace
 
@@ -25,10 +26,15 @@ from django.template.loader import render_to_string
 from django.test import SimpleTestCase
 
 
-class HiddenFieldForm(forms.Form):
-    hidden_value = forms.IntegerField(widget=forms.HiddenInput())
-    name = forms.CharField()
+def assert_aria_describedby_targets_exist(testcase, html):
+    """Check that every aria-describedby in html refers to an element that exists."""
+    ids = set(re.findall(r'\bid="([^"]+)"', html))
+    for value in re.findall(r'aria-describedby="([^"]+)"', html):
+        for target in value.split():
+            testcase.assertIn(target, ids, f'aria-describedby target {target} is missing')
 
+
+class GetSevenFormMixin:
     # Attributes used by rounds/get_seven.html
     all_standbys_needed = False
     sitters = 0
@@ -36,17 +42,42 @@ class HiddenFieldForm(forms.Form):
     standbys = 0
 
 
-class HelpTextForm(forms.Form):
+class HiddenFieldForm(GetSevenFormMixin, forms.Form):
+    hidden_value = forms.IntegerField(widget=forms.HiddenInput())
+    name = forms.CharField()
+
+
+class HelpTextForm(GetSevenFormMixin, forms.Form):
     name = forms.CharField(help_text='Some help')
+
+
+# Templates that render a form field-by-field, with the extra context they need
+FIELD_TEMPLATES = {
+    'backstabbr/enter_url.html': {},
+    'rounds/get_seven.html': {'tournament': SimpleNamespace(id=1),
+                              'round': SimpleNamespace(number=1),
+                              'playing': 7,
+                              'standbys': 0},
+    'games/vote.html': {'tournament': SimpleNamespace(id=1),
+                        'game': SimpleNamespace(name='G1', final_year=1905),
+                        'player_count': 3},
+    'tournaments/player_entry.html': {'tournament': SimpleNamespace(id=1),
+                                      'uuid': uuid.uuid4(),
+                                      'prefs_list': []},
+}
+
+
+def render_field_template(template, form, **extra):
+    return render_to_string(template, {'form': form, **FIELD_TEMPLATES[template], **extra})
 
 
 class HiddenFieldTemplateTests(SimpleTestCase):
     """Templates that render a form field-by-field should handle hidden fields."""
 
-    def _check(self, template, extra_context):
+    def _check(self, template, **extra):
         form = HiddenFieldForm({'hidden_value': 'not-a-number', 'name': 'Name'})
         self.assertFalse(form.is_valid())
-        html = render_to_string(template, {'form': form, **extra_context})
+        html = render_field_template(template, form, **extra)
         # The hidden field should be present, but without a label
         self.assertEqual(html.count('name="hidden_value"'), 1)
         self.assertNotIn('for="id_hidden_value"', html)
@@ -58,37 +89,36 @@ class HiddenFieldTemplateTests(SimpleTestCase):
         self.assertIn('<label for="id_name">', html)
 
     def test_enter_url(self):
-        self._check('backstabbr/enter_url.html', {})
+        self._check('backstabbr/enter_url.html')
 
     def test_get_seven(self):
-        self._check('rounds/get_seven.html',
-                    {'tournament': SimpleNamespace(id=1),
-                     'round': SimpleNamespace(number=1),
-                     'playing': 7,
-                     'standbys': 0})
+        self._check('rounds/get_seven.html')
 
     def test_vote(self):
         for concession in [False, True]:
             with self.subTest(concession=concession):
-                self._check('games/vote.html',
-                            {'tournament': SimpleNamespace(id=1),
-                             'game': SimpleNamespace(name='G1', final_year=1905),
-                             'player_count': 3,
-                             'concession': concession})
+                self._check('games/vote.html', concession=concession)
 
     def test_player_entry(self):
-        self._check('tournaments/player_entry.html',
-                    {'tournament': SimpleNamespace(id=1),
-                     'uuid': uuid.uuid4(),
-                     'prefs_list': []})
+        self._check('tournaments/player_entry.html')
 
-    def test_player_entry_help_text(self):
-        """Help text should be shown, and linked to its field."""
-        form = HelpTextForm()
-        html = render_to_string('tournaments/player_entry.html',
-                                {'form': form,
-                                 'tournament': SimpleNamespace(id=1),
-                                 'uuid': uuid.uuid4(),
-                                 'prefs_list': []})
-        self.assertInHTML('<p class="helptext" id="id_name_helptext">Some help</p>', html)
-        self.assertIn('aria-describedby="id_name_helptext"', html)
+
+class HelpTextTemplateTests(SimpleTestCase):
+    """Templates that render a form field-by-field should show help text, linked to its field."""
+
+    def test_help_text(self):
+        for template in FIELD_TEMPLATES:
+            with self.subTest(template=template):
+                html = render_field_template(template, HelpTextForm())
+                self.assertInHTML('<span class="helptext" id="id_name_helptext">Some help</span>', html)
+                self.assertIn('aria-describedby="id_name_helptext"', html)
+                assert_aria_describedby_targets_exist(self, html)
+
+    def test_errors_linked(self):
+        for template in FIELD_TEMPLATES:
+            with self.subTest(template=template):
+                form = HelpTextForm({'name': ''})
+                self.assertFalse(form.is_valid())
+                html = render_field_template(template, form)
+                self.assertIn('id_name_error', html)
+                assert_aria_describedby_targets_exist(self, html)
