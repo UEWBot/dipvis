@@ -53,8 +53,10 @@
         <td>{{ form.non_field_errors }}</td>
     {% endif %}
     </tr>
+    {% if forloop.last %}
+        </tbody>
+    {% endif %}
 {% endfor %}
-</tbody>
 </table>
 <input type="submit" value={% trans "Submit" %} />
 {% endif %}
