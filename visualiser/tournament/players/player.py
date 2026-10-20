@@ -32,7 +32,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Max, Min, Q
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 from django.utils.translation import ngettext
 
 from django_countries.fields import CountryField
@@ -83,12 +83,12 @@ class Player(models.Model):
     email = models.EmailField(blank=True)
     wdr_player_id = models.PositiveIntegerField(unique=True,
                                                 validators=[validate_wdr_player_id],
-                                                verbose_name=_(u'WDR player id'),
+                                                verbose_name=gettext_lazy(u'WDR player id'),
                                                 blank=True,
                                                 null=True)
     backstabbr_username = models.CharField(max_length=40,
                                            blank=True,
-                                           help_text=_('Username on the backstabbr website'))
+                                           help_text=gettext_lazy('Username on the backstabbr website'))
     backstabbr_profile_url = models.URLField(blank=True)
     picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
     location = models.CharField(max_length=60, blank=True)
@@ -98,7 +98,7 @@ class Player(models.Model):
                                 blank=True,
                                 null=True,
                                 on_delete=models.CASCADE,
-                                help_text=_('If the Player has an account on the site, record it here'))
+                                help_text=gettext_lazy('If the Player has an account on the site, record it here'))
 
     class Meta:
         ordering = ['last_name', 'first_name']

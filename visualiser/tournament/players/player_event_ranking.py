@@ -29,7 +29,7 @@ about a player and retrieving it as needed.
 from urllib.parse import urlencode, urlunparse
 
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from tournament.wdd import (WDD_BASE_RESULTS_PATH, WDD_NETLOC,
                             validate_wdd_tournament_id)
@@ -54,22 +54,22 @@ class PlayerEventRanking(models.Model):
     event_kind = models.CharField(max_length=1,
                                   choices=EventKinds.choices,
                                   default=EventKinds.TOURNAMENT,
-                                  help_text=_(u'Kind of event (tournament, league, circuit)'))
+                                  help_text=gettext_lazy(u'Kind of event (tournament, league, circuit)'))
     tournament_kind = models.CharField(max_length=20,
                                        blank=True,
                                        null=True,
-                                       help_text=_(u'Type of tournament on WDR/WDD'))
+                                       help_text=gettext_lazy(u'Type of tournament on WDR/WDD'))
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
-                                                    verbose_name=_(u'WDD tournament id'),
+                                                    verbose_name=gettext_lazy(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)
     wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
-                                                    verbose_name=_(u'WDR tournament id'),
+                                                    verbose_name=gettext_lazy(u'WDR tournament id'),
                                                     blank=True,
                                                     null=True)
     wpe_score = models.FloatField(blank=True,
                                   null=True,
-                                  help_text=_('World Performance Evaluation score'))
+                                  help_text=gettext_lazy('World Performance Evaluation score'))
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:

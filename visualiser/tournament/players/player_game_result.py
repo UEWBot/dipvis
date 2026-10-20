@@ -30,7 +30,7 @@ from urllib.parse import urlencode, urlunparse
 
 from django.db import models
 from django.db.models import Q
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from tournament.diplomacy import (FIRST_YEAR, TOTAL_SCS, GreatPower,
                                   validate_max_supplycentres, validate_year)
@@ -68,7 +68,7 @@ class PlayerGameResult(models.Model):
                                                        null=True,
                                                        validators=[validate_year])
     is_top_board = models.BooleanField(default=False,
-                                       help_text=_('Whether this game was on a top board'))
+                                       help_text=gettext_lazy('Whether this game was on a top board'))
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:

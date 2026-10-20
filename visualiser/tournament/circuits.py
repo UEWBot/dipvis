@@ -29,7 +29,7 @@ from django.db.models.signals import m2m_changed
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from tournament.models import (find_scoring_system, get_scoring_systems,
                                InvalidScoringSystem, NameSlugField, Tournament,
@@ -230,22 +230,22 @@ class Circuit(models.Model):
     scoring_system = models.CharField(validators=[validate_circuit_scoring_system],
                                       max_length=CircuitScoringSystem.MAX_NAME_LENGTH,
                                       choices=get_scoring_systems(C_SCORING_SYSTEMS),
-                                      help_text=_('How to combine tournament scores into a circuit score'))
+                                      help_text=gettext_lazy('How to combine tournament scores into a circuit score'))
     start_date = models.DateField()
     end_date = models.DateField()
     #managers = models.ManyToManyField(User,
     #                                  help_text=_(u'Which users can modify the circuit'))
     tournaments = models.ManyToManyField(Tournament, blank=True)
     wdd_circuit_id = models.PositiveIntegerField(validators=[validate_wdd_circuit_id],
-                                                 verbose_name=_("This circuit's id in the World Diplomacy Database"),
+                                                 verbose_name=gettext_lazy("This circuit's id in the World Diplomacy Database"),
                                                  blank=True,
                                                  null=True,
-                                                 help_text=_("Add this after the circuit has been added to the WDD"))
+                                                 help_text=gettext_lazy("Add this after the circuit has been added to the WDD"))
     wdr_circuit_id = models.PositiveIntegerField(validators=[validate_wdr_circuit_id],
-                                                 verbose_name=_("This circuit's id in the World Diplomacy Reference"),
+                                                 verbose_name=gettext_lazy("This circuit's id in the World Diplomacy Reference"),
                                                  blank=True,
                                                  null=True,
-                                                 help_text=_("Add this after the circuit has been added to the WDR"))
+                                                 help_text=gettext_lazy("Add this after the circuit has been added to the WDR"))
 
     class Meta:
         constraints = [

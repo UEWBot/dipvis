@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from .game_set import GameSet
 from .great_power import GreatPower
@@ -26,7 +26,7 @@ class SetPower(models.Model):
     A single GreatPower in a given GameSet.
     """
     the_set = models.ForeignKey(GameSet,
-                                verbose_name=_(u'set'),
+                                verbose_name=gettext_lazy(u'set'),
                                 on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
     colour = models.CharField(max_length=20)

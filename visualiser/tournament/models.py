@@ -40,7 +40,7 @@ from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.utils.text import slugify
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 from django.utils.translation import ngettext
 
 from tournament import backstabbr, webdip
@@ -63,16 +63,16 @@ from tournament.wdr import WDR_BASE_URL, validate_wdr_tournament_id
 
 class Seasons(models.TextChoices):
     """Game turn season"""
-    SPRING = 'S', _('spring')
-    FALL = 'F', _('fall')
+    SPRING = 'S', gettext_lazy('spring')
+    FALL = 'F', gettext_lazy('fall')
 
 
 class Phases(models.TextChoices):
     """Game turn phase"""
-    MOVEMENT = 'M', _('movement')
-    RETREATS = 'R', _('retreats')
+    MOVEMENT = 'M', gettext_lazy('movement')
+    RETREATS = 'R', gettext_lazy('retreats')
     # Use X for adjustments to simplify sorting
-    ADJUSTMENTS = 'X', _('adjustments')
+    ADJUSTMENTS = 'X', gettext_lazy('adjustments')
 
 
 # Map a PHASE to its human-readable form
@@ -85,27 +85,27 @@ PHASE_STR = {
 
 class DrawSecrecy(models.TextChoices):
     """What is revealed about draw votes"""
-    SECRET = 'S', _('Pass/Fail')
-    COUNTS = 'C', _('Numbers for and against')
+    SECRET = 'S', gettext_lazy('Pass/Fail')
+    COUNTS = 'C', gettext_lazy('Numbers for and against')
 
 
 class BestCountryCriteria(models.TextChoices):
     """How Best Country awards are determined"""
-    SCORE = 'S', _('Highest score')
-    DOTS = 'D', _('Highest centre count')
+    SCORE = 'S', gettext_lazy('Highest score')
+    DOTS = 'D', gettext_lazy('Highest centre count')
 
 
 class Formats(models.TextChoices):
     """Tournament formats"""
-    FTF = 'F', _('Face to Face')
-    VFTF = 'V', _('Virtual Face to Face')
+    FTF = 'F', gettext_lazy('Face to Face')
+    VFTF = 'V', gettext_lazy('Virtual Face to Face')
 
 
 class PowerAssignMethods(models.TextChoices):
     """How powers are assigned to players"""
-    AUTO = 'A', _('Minimising playing the same power')
-    MANUAL = 'M', _('Manually by TD or at the board')
-    PREFERENCES = 'P', _('Using player preferences and ranking')
+    AUTO = 'A', gettext_lazy('Minimising playing the same power')
+    MANUAL = 'M', gettext_lazy('Manually by TD or at the board')
+    PREFERENCES = 'P', gettext_lazy('Using player preferences and ranking')
 
 
 class InvalidScoringSystem(Exception):
@@ -934,7 +934,7 @@ class Award(models.Model):
                               blank=True,
                               null=True,
                               on_delete=models.CASCADE,
-                              help_text=_(u'Set if this award is associated with a specific power (e.g. "Best Italy")'))
+                              help_text=gettext_lazy(u'Set if this award is associated with a specific power (e.g. "Best Italy")'))
 
     class Meta:
         ordering = ['name']
@@ -969,7 +969,7 @@ class AwardRecipient(models.Model):
                              blank=True,
                              null=True,
                              on_delete=models.SET_NULL,
-                             help_text=_(u'Set if this award is for something that happened in a specific Game'))
+                             help_text=gettext_lazy(u'Set if this award is for something that happened in a specific Game'))
 
     class Meta:
         constraints = [
@@ -1029,77 +1029,77 @@ class Tournament(models.Model):
     tournament_scoring_system = models.CharField(validators=[validate_tournament_scoring_system],
                                                  max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
                                                  choices=get_scoring_systems(T_SCORING_SYSTEMS),
-                                                 help_text=_(u'How to combine round or game scores into a tournament score'))
+                                                 help_text=gettext_lazy(u'How to combine round or game scores into a tournament score'))
     handicaps = models.BooleanField(default=False,
-                                    help_text=_('Check to give each TournamentPlayer a predetermined score bonus'))
+                                    help_text=gettext_lazy('Check to give each TournamentPlayer a predetermined score bonus'))
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a RoundScoringSystem object
     round_scoring_system = models.CharField(validators=[validate_round_scoring_system],
                                             max_length=RoundScoringSystem.MAX_NAME_LENGTH,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS, include_none=True),
-                                            help_text=_(u'How to combine game scores into a round score'))
+                                            help_text=gettext_lazy(u'How to combine game scores into a round score'))
     non_player_round_score = models.FloatField(default=0.0,
                                                help_text='If a Player volunteers to sit out a round, what score do they get?')
     # Default of False here becaue it's less work and doesn't matter if non_player_round_score is the default value
     non_player_round_score_once = models.BooleanField(default=False,
                                                       help_text='Can a player only get the sitting out score for one round?')
     show_current_scores = models.BooleanField(default=True,
-                                              help_text=_('Show "if all games ended now" scores rather than after-last-round scores'))
+                                              help_text=gettext_lazy('Show "if all games ended now" scores rather than after-last-round scores'))
     draw_secrecy = models.CharField(max_length=1,
-                                    verbose_name=_(u'What players are told about failed draw votes'),
+                                    verbose_name=gettext_lazy(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
                                     default=DrawSecrecy.SECRET)
     is_finished = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False,
-                                       help_text=_(u'Whether the tournament is visible to all site visitors'))
+                                       help_text=gettext_lazy(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User,
-                                      help_text=_(u'Which users can modify the tournament,<br> and see it while it is unpublished.<br>'))
+                                      help_text=gettext_lazy(u'Which users can modify the tournament,<br> and see it while it is unpublished.<br>'))
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
-                                                    verbose_name=_("This tournament's id in the WDD"),
+                                                    verbose_name=gettext_lazy("This tournament's id in the WDD"),
                                                     blank=True,
                                                     null=True,
-                                                    help_text=_('Add this after the tournament is complete and results have been uploaded to the WDD'))
+                                                    help_text=gettext_lazy('Add this after the tournament is complete and results have been uploaded to the WDD'))
     wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
-                                                    verbose_name=_("This tournament's id in the WDR"),
+                                                    verbose_name=gettext_lazy("This tournament's id in the WDR"),
                                                     blank=True,
                                                     null=True,
-                                                    help_text=_('Add this after the tournament is complete and results have been uploaded to the WDR'))
+                                                    help_text=gettext_lazy('Add this after the tournament is complete and results have been uploaded to the WDR'))
     seed_games = models.BooleanField(default=True,
-                                     help_text=_('Check to let the software seed players to games'))
+                                     help_text=gettext_lazy('Check to let the software seed players to games'))
     power_assignment = models.CharField(max_length=1,
-                                        verbose_name=_('How powers are assigned'),
+                                        verbose_name=gettext_lazy('How powers are assigned'),
                                         choices=PowerAssignMethods.choices,
                                         default=PowerAssignMethods.AUTO)
     editable = models.BooleanField(default=True,
-                                   help_text=_('Uncheck to disallow any further changes to the tournament'))
+                                   help_text=gettext_lazy('Uncheck to disallow any further changes to the tournament'))
     best_country_criterion = models.CharField(max_length=1,
-                                              verbose_name=_(u'How Best Country awards are determined'),
+                                              verbose_name=gettext_lazy(u'How Best Country awards are determined'),
                                               choices=BestCountryCriteria.choices,
                                               default=BestCountryCriteria.SCORE)
     format = models.CharField(max_length=1,
                               choices=Formats.choices,
                               default=Formats.FTF)
     no_email = models.BooleanField(default=False,
-                                   help_text=_('Check to only generate email to tournament managers'))
+                                   help_text=gettext_lazy('Check to only generate email to tournament managers'))
     delay_game_url_publication = models.BooleanField(default=False,
-                                                     verbose_name=_('Delay publishing game URL'),
-                                                     help_text=_('Check to keep game URL secret until after the tournament completes'))
-    discord_url = models.URLField(verbose_name=_('Discord webhook URL'),
+                                                     verbose_name=gettext_lazy('Delay publishing game URL'),
+                                                     help_text=gettext_lazy('Check to keep game URL secret until after the tournament completes'))
+    discord_url = models.URLField(verbose_name=gettext_lazy('Discord webhook URL'),
                                   blank=True,
-                                  help_text=_('Board calls will be posted here'))
+                                  help_text=gettext_lazy('Board calls will be posted here'))
     team_size = models.PositiveSmallIntegerField(blank=True,
                                                  null=True,
                                                  validators=[MinValueValidator(2)],
-                                                 help_text=_('If there are teams, number of players per team'))
+                                                 help_text=gettext_lazy('If there are teams, number of players per team'))
     num_games_in_team_score = models.PositiveSmallIntegerField(blank=True,
                                                                null=True,
                                                                validators=[MinValueValidator(1)],
-                                                               help_text=_('The number of team round game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'))
+                                                               help_text=gettext_lazy('The number of team round game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'))
     default_game_set = models.ForeignKey(GameSet,
                                          on_delete=models.PROTECT,
                                          null=True,
                                          blank=True,
-                                         help_text=_('Default GameSet used when seeding games for rounds'))
+                                         help_text=gettext_lazy('Default GameSet used when seeding games for rounds'))
 
     class Meta:
         ordering = ['-start_date']
@@ -1777,7 +1777,7 @@ class DBNCoverage(models.Model):
     MAX_DESC_LENGTH = 80
 
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-    dbn_url = models.URLField(verbose_name=_('DBN URL on YouTube'))
+    dbn_url = models.URLField(verbose_name=gettext_lazy('DBN URL on YouTube'))
     description = models.CharField(max_length=MAX_DESC_LENGTH)
 
     class Meta:
@@ -1865,17 +1865,17 @@ class Team(models.Model):
     tournament = models.ForeignKey(Tournament,
                                    on_delete=models.CASCADE)
     name = models.CharField(max_length=MAX_NAME_LENGTH,
-                            help_text=_(u'Must be unique within the tournament'))
+                            help_text=gettext_lazy(u'Must be unique within the tournament'))
     score = models.FloatField(default=0.0,
-                              help_text=_('Score for the team'))
+                              help_text=gettext_lazy('Score for the team'))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=_('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'))
     calculated_rank = models.PositiveSmallIntegerField(default=0,
-                                                        help_text=_('Rank as calculated by the system'))
+                                                        help_text=gettext_lazy('Rank as calculated by the system'))
     rank_override = models.PositiveSmallIntegerField(null=True,
                                                       blank=True,
                                                       validators=[MaxValueValidator(Tournament.UNRANKED - 1)],
-                                                      help_text=_('Official rank override'))
+                                                      help_text=gettext_lazy('Official rank override'))
     players = models.ManyToManyField(Player)
 
     class Meta:
@@ -1999,27 +1999,27 @@ class TournamentPlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0,
-                              help_text=_("Player's score for the tournament as a whole"))
+                              help_text=gettext_lazy("Player's score for the tournament as a whole"))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=_('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'))
     calculated_rank = models.PositiveSmallIntegerField(default=0,
-                                                       help_text=_('Rank as calculated by the system'))
+                                                       help_text=gettext_lazy('Rank as calculated by the system'))
     rank_override = models.PositiveSmallIntegerField(null=True,
                                                      blank=True,
                                                      validators=[MaxValueValidator(Tournament.UNRANKED - 1)],
-                                                     help_text=_('Official rank override'))
+                                                     help_text=gettext_lazy('Official rank override'))
     handicap = models.FloatField(default=0.0,
-                                 help_text=_('Secret bonus score added after all games end. Only used if enabled for the Tournament'))
+                                 help_text=gettext_lazy('Secret bonus score added after all games end. Only used if enabled for the Tournament'))
     unranked = TPUnrankedField(default=False,
-                               verbose_name=_('Ineligible for awards'),
-                               help_text=_('Set this to ignore this player when determining rankings'))
+                               verbose_name=gettext_lazy('Ineligible for awards'),
+                               help_text=gettext_lazy('Set this to ignore this player when determining rankings'))
     uuid_str = models.CharField(max_length=36, blank=True)
     backstabbr_username = TPPlayerField(max_length=MAX_BACKSTABBR_USERNAME_LENGTH,
                                         blank=True,
-                                        help_text=_('Username on the backstabbr website'))
+                                        help_text=gettext_lazy('Username on the backstabbr website'))
     location = TPPlayerField(max_length=60, blank=True)
     paid = models.BooleanField(default=False,
-                               help_text=_('Have they paid any registration fee?'))
+                               help_text=gettext_lazy('Have they paid any registration fee?'))
 
     class Meta:
         ordering = ['player']
@@ -2300,10 +2300,10 @@ class Round(models.Model):
     # There have been tournaments using multiple scoring systems, one per round
     scoring_system = models.CharField(validators=[validate_game_scoring_system],
                                       max_length=GameScoringSystem.MAX_NAME_LENGTH,
-                                      verbose_name=_(u'Game scoring system'),
+                                      verbose_name=gettext_lazy(u'Game scoring system'),
                                       choices=get_scoring_systems(G_SCORING_SYSTEMS),
-                                      help_text=_(u'How to calculate a score for one game'))
-    dias = models.BooleanField(verbose_name=_(u'Draws Include All Survivors'))
+                                      help_text=gettext_lazy(u'How to calculate a score for one game'))
+    dias = models.BooleanField(verbose_name=gettext_lazy(u'Draws Include All Survivors'))
     start = models.DateTimeField()
     final_year = models.PositiveSmallIntegerField(blank=True,
                                                   null=True,
@@ -2311,7 +2311,7 @@ class Round(models.Model):
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
     enable_check_in = models.BooleanField(default=False,
-                                          verbose_name=_(u'Enable self-check-ins'))
+                                          verbose_name=gettext_lazy(u'Enable self-check-ins'))
     email_sent = models.BooleanField(default=False)
     is_finished = models.BooleanField(default=False)
     is_team_round = models.BooleanField(default=False)
@@ -2626,19 +2626,19 @@ class Pool(models.Model):
     board_count = models.PositiveSmallIntegerField(null=True,
                                                    blank=True,
                                                    validators=[MinValueValidator(1)],
-                                                   help_text=_('number of games to be played in this pool. Must be set for all pools except one in a round'))
+                                                   help_text=gettext_lazy('number of games to be played in this pool. Must be set for all pools except one in a round'))
     power_assignment = models.CharField(max_length=1,
                                         blank=True,
-                                        verbose_name=_('How powers are assigned'),
+                                        verbose_name=gettext_lazy('How powers are assigned'),
                                         choices=PowerAssignMethods.choices,
-                                        help_text=_('overrides tournament setting if set'))
+                                        help_text=gettext_lazy('overrides tournament setting if set'))
     determines_top_rankings = models.PositiveSmallIntegerField(null=True,
                                                                blank=True,
                                                                validators=[MinValueValidator(1)],
-                                                               help_text=_('this specifies how many best rankings will come from the pool. For a top board pool where the pool winner wins the tournament, set this'))
+                                                               help_text=gettext_lazy('this specifies how many best rankings will come from the pool. For a top board pool where the pool winner wins the tournament, set this'))
     game_score_multiplier = models.FloatField(null=True,
                                               blank=True,
-                                              help_text=_('game score in this pool will be multiplied by this value, if specified'))
+                                              help_text=gettext_lazy('game score in this pool will be multiplied by this value, if specified'))
     # TODO Add more attributes, possibly including:
     # - seeding_ignores_previous_rounds
     # - power_assignment_ignores_previous_rounds
@@ -2699,20 +2699,24 @@ class Game(models.Model):
 
     name = models.CharField(max_length=MAX_NAME_LENGTH,
                             validators=[validate_game_name],
-                            help_text=_(u'Must be unique within the tournament. No spaces'))
+                            help_text=gettext_lazy(u'Must be unique within the tournament. No spaces'))
     started_at = models.DateTimeField(default=django_timezone.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
-    the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
+    the_round = models.ForeignKey(Round,
+                                  verbose_name=gettext_lazy(u'round'),
+                                  on_delete=models.CASCADE)
     pool = models.ForeignKey(Pool, blank=True, null=True, on_delete=models.SET_NULL)
-    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
+    the_set = models.ForeignKey(GameSet,
+                                verbose_name=gettext_lazy(u'set'),
+                                on_delete=models.CASCADE)
     # Note that we don't check for a URL we can parse - any valid URL is fine
     external_url = models.URLField(blank=True,
-                                   verbose_name=_('External site URL'),
-                                   help_text=_('Will be included in board call emails and game page'))
+                                   verbose_name=gettext_lazy('External site URL'),
+                                   help_text=gettext_lazy('Will be included in board call emails and game page'))
     notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
-                             help_text=_('Will be included in board call emails and game page'))
+                             help_text=gettext_lazy('Will be included in board call emails and game page'))
 
     objects = GameManager()
 
@@ -3312,28 +3316,30 @@ class RoundPlayer(models.Model):
     A person who played a round in a tournament
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
+    the_round = models.ForeignKey(Round,
+                                  verbose_name=gettext_lazy(u'round'),
+                                  on_delete=models.CASCADE)
     pool = models.ForeignKey(Pool, blank=True, null=True, on_delete=models.SET_NULL)
     standby = models.BooleanField(default=False,
-                                  help_text=_('check if the player would prefer not to play this round'))
+                                  help_text=gettext_lazy('check if the player would prefer not to play this round'))
     # This score is only used if either:
     #  - the tournament scoring system needs round scores or
     #  - there's a sitting-out bonus
     # Otherwise it will always be zero and should never be used or seen
     score = models.FloatField(default=0.0,
-                              help_text=_("If the tournament doesn't use round scores, this stores any sitting-out bonus for the round"))
+                              help_text=gettext_lazy("If the tournament doesn't use round scores, this stores any sitting-out bonus for the round"))
     score_dropped = models.BooleanField(default=False,
-                                        help_text=_('Set if this score does not contribute towards the tournament score'))
+                                        help_text=gettext_lazy('Set if this score does not contribute towards the tournament score'))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=_('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'))
     game_count = models.PositiveIntegerField(default=1,
-                                             help_text=_('number of games to play this round'))
+                                             help_text=gettext_lazy('number of games to play this round'))
     sandboxer = models.BooleanField(default=False,
-                                    help_text=_('set if the player is willing to record a game this round'))
+                                    help_text=gettext_lazy('set if the player is willing to record a game this round'))
     # This attribute records the player's tournament score after this round
     # If the round is still in progress, it represents the "if all games ended now" score
     tournament_score = models.FloatField(default=0.0,
-                                         help_text=_('Tournament score after the round'))
+                                         help_text=gettext_lazy('Tournament score after the round'))
 
     class Meta:
         ordering = ['player', 'the_round__start']
@@ -3419,15 +3425,15 @@ class GamePlayer(models.Model):
     tie_break_rank = models.PositiveSmallIntegerField(blank=True,
                                                       null=True,
                                                       validators=[MinValueValidator(1)],
-                                                      help_text=_("If all players have the same score, what rank does this player get?"))
+                                                      help_text=gettext_lazy("If all players have the same score, what rank does this player get?"))
     score = models.FloatField(default=0.0,
-                              help_text=_("Player's score for this game"))
+                              help_text=gettext_lazy("Player's score for this game"))
     score_dropped = models.BooleanField(default=False,
-                                        help_text=_('Set if this score does not contribute towards the round score'))
+                                        help_text=gettext_lazy('Set if this score does not contribute towards the round score'))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=_('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'))
     after_action_report = models.TextField(blank=True,
-                                           help_text=_("This player's account of the game"))
+                                           help_text=gettext_lazy("This player's account of the game"))
 
     class Meta:
         ordering = ['game', 'power']
