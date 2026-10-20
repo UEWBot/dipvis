@@ -44,7 +44,11 @@
         {% resetcycle %}
       </tbody>
     </table>
+  {% empty %}
+    <p>{% trans "This tournament has no awards." %}</p>
   {% endfor %}
+  {% if award_formsets %}
   <input type="submit" value="{% trans "Submit" %}" />
+  {% endif %}
 </form>
 {% endblock content %}

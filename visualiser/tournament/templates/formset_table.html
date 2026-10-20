@@ -1,16 +1,20 @@
 {% load i18n %}
+{% comment %}
+Formset table with one column per field, headed by the field labels.
+Set empty_message to replace the default message shown when there are no forms.
+{% endcomment %}
 {% csrf_token %}
 {{ formset.management_form }}
 {{ formset.non_form_errors.as_ul }}
+{% if formset.forms %}
 <table class="form">
+<thead><tr>
+{% for field in formset.forms.0.visible_fields %}
+    <th scope="col">{{ field.label }}</th>
+{% endfor %}
+</tr></thead>
+<tbody>
 {% for form in formset.forms %}
-    {% if forloop.first %}
-        <thead><tr>
-        {% for field in form.visible_fields %}
-            <th scope="col">{{ field.label }}</th>
-        {% endfor %}
-        </tr></thead><tbody>
-    {% endif %}
     <tr class="{% cycle 'odd_row' 'even_row' %}">
     {% for field in form.visible_fields %}
         {% if forloop.first %}
@@ -37,9 +41,10 @@
         {% endif %}
     {% endwith %}
     </tr>
-    {% if forloop.last %}
-        </tbody>
-    {% endif %}
 {% endfor %}
+</tbody>
 </table>
 <input type="submit" value="{% trans "Submit" %}" />
+{% else %}
+<p>{{ empty_message|default:_("There is nothing to enter.") }}</p>
+{% endif %}

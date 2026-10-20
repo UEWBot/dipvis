@@ -6,6 +6,6 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Games" %}</h1>
 <form method="post" action="{% url 'game_scores' tournament.id round %}">
-    {% include "formset_table.html" %}
+    {% include "formset_table.html" with empty_message=_("There are no games in this round.") %}
 </form>
 {% endblock content %}

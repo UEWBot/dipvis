@@ -806,6 +806,7 @@ def enter_player_ranks(request, tournament_id):
                   {'tournament': tournament,
                    'formset': formset,
                    'entity_name': _('Player'),
+                   'empty_message': _('No players are registered for this tournament.'),
                    'post_url': request.path_info})
 
 
@@ -829,6 +830,7 @@ def enter_team_ranks(request, tournament_id):
                   {'tournament': tournament,
                    'formset': formset,
                    'entity_name': _('Team'),
+                   'empty_message': _('There are no teams in this tournament.'),
                    'post_url': request.path_info})
 
 

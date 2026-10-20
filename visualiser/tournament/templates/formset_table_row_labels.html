@@ -3,10 +3,12 @@
 Formset table for forms with a single visible field, whose label varies from row to row.
 The label is shown as a row heading, with the field to its right.
 Any further visible fields are not rendered.
+Set empty_message to replace the default message shown when there are no forms.
 {% endcomment %}
 {% csrf_token %}
 {{ formset.management_form }}
 {{ formset.non_form_errors.as_ul }}
+{% if formset.forms %}
 <table class="form">
 <tbody>
 {% for form in formset.forms %}
@@ -29,3 +31,6 @@ Any further visible fields are not rendered.
 </tbody>
 </table>
 <input type="submit" value="{% trans "Submit" %}" />
+{% else %}
+<p>{{ empty_message|default:_("There is nothing to enter.") }}</p>
+{% endif %}

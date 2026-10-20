@@ -13,6 +13,7 @@
   {% csrf_token %}
   {{ formset.management_form }}
   {{ formset.non_form_errors.as_ul }}
+  {% if formset.forms %}
   <table class="form">
     <tbody>
       {% for form in formset.forms %}
@@ -41,6 +42,11 @@
     </tbody>
   </table>
   <input type="submit" value="{% trans "Submit" %}" />
+  {% else %}
+  <p>{% trans "There are no games in this round." %}</p>
+  {% endif %}
 </form>
+{% if formset.forms %}
 <p>{% trans "* = Sandboxer" %}</p>
+{% endif %}
 {% endblock content %}

@@ -57,9 +57,26 @@ class FormsetTableTests(SimpleTestCase):
                 with self.subTest(template=template, num_forms=num_forms):
                     html = self._render(template, num_forms)
                     self.assertEqual(html.count('<tbody>'), html.count('</tbody>'))
-                    expected = 1 if num_forms or template == 'formset_table_row_labels.html' else 0
-                    self.assertEqual(html.count('<tbody>'), expected)
+                    self.assertEqual(html.count('<tbody>'), 1 if num_forms else 0)
                     self.assertEqual(html.count('<tr class='), num_forms)
+
+    def test_empty_message(self):
+        """With no forms, a message should be shown instead of the table and submit button."""
+        for template in ['formset_table.html', 'formset_table_row_labels.html']:
+            with self.subTest(template=template):
+                html = self._render(template, 0)
+                self.assertIn('<p>There is nothing to enter.</p>', html)
+                self.assertNotIn('<table', html)
+                self.assertNotIn('type="submit"', html)
+                # The management form is still needed for any POST
+                self.assertIn('name="form-TOTAL_FORMS"', html)
+                html = render_to_string(template,
+                                        {'formset': formset_factory(SimpleForm, extra=0)(),
+                                         'empty_message': 'No players.'})
+                self.assertIn('<p>No players.</p>', html)
+                html = self._render(template, 1)
+                self.assertNotIn('There is nothing to enter.', html)
+                self.assertIn('type="submit"', html)
 
     def test_column_headings(self):
         html = self._render('formset_table.html', 3, form=TwoFieldForm)

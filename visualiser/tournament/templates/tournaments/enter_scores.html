@@ -10,6 +10,6 @@
 <p>{% trans "Game scores can be modified from the round details page" %}</p>
 
 <form method="post" action="{% url 'enter_scores' tournament.id %}">
-    {% include "formset_table.html" %}
+    {% include "formset_table.html" with empty_message=_("No players are registered for this tournament.") %}
 </form>
 {% endblock content %}

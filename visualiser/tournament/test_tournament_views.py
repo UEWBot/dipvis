@@ -1524,6 +1524,20 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
+    def test_enter_team_ranks_no_teams_yet(self):
+        """A team tournament with no teams should say so"""
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.assertFalse(self.t1.team_set.exists())
+        self.t1.team_size = 2
+        self.t1.save(update_fields=['team_size'])
+        response = self.client.get(reverse('enter_team_ranks', args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<p>There are no teams in this tournament.</p>', html=True)
+        self.assertNotContains(response, 'type="submit"')
+        self.t1.team_size = None
+        self.t1.save(update_fields=['team_size'])
+
     def test_enter_player_ranks_not_logged_in(self):
         response = self.client.get(reverse('enter_player_ranks', args=(self.t1.pk,)),
                                    secure=True)

@@ -122,3 +122,34 @@ class HelpTextTemplateTests(SimpleTestCase):
                 html = render_field_template(template, form)
                 self.assertIn('id_name_error', html)
                 assert_aria_describedby_targets_exist(self, html)
+
+
+class EmptyFormsetTemplateTests(SimpleTestCase):
+    """Pages with formsets should explain when there is nothing to enter."""
+
+    def test_empty_messages(self):
+        tournament = SimpleNamespace(id=1, pk=1)
+        round_ = SimpleNamespace(number=1)
+        no_players = 'No players are registered for this tournament.'
+        cases = [
+            ('tournament_players/payments.html', {}, no_players),
+            ('tournaments/enter_handicaps.html', {}, no_players),
+            ('tournaments/enter_prefs.html', {}, no_players),
+            ('tournaments/enter_scores.html', {}, no_players),
+            ('tournaments/enter_ranks.html', {'post_url': '/', 'empty_message': 'No teams.'}, 'No teams.'),
+            ('rounds/create_games.html', {'round': round_}, 'There are no games to create in this round.'),
+            ('rounds/seeded_games.html', {'round': round_}, 'There are no games in this round.'),
+        ]
+        for template, extra, message in cases:
+            with self.subTest(template=template):
+                formset = forms.formset_factory(HelpTextForm, extra=0)()
+                html = render_to_string(template, {'tournament': tournament, 'formset': formset, **extra})
+                self.assertIn(f'<p>{message}</p>', html)
+                self.assertNotIn('<table', html)
+                self.assertNotIn('type="submit"', html)
+
+    def test_no_awards(self):
+        html = render_to_string('tournaments/awards_form.html',
+                                {'tournament': SimpleNamespace(id=1), 'award_formsets': []})
+        self.assertIn('<p>This tournament has no awards.</p>', html)
+        self.assertNotIn('type="submit"', html)
