@@ -928,16 +928,22 @@ class Award(models.Model):
     MAX_NAME_LENGTH = 40
     MAX_DESCRIPTION_LENGTH = 200
 
-    name = models.CharField(max_length=MAX_NAME_LENGTH, unique=True)
-    description = models.CharField(max_length=MAX_DESCRIPTION_LENGTH)
+    name = models.CharField(max_length=MAX_NAME_LENGTH,
+                            unique=True,
+                            verbose_name=gettext_lazy('name'))
+    description = models.CharField(max_length=MAX_DESCRIPTION_LENGTH,
+                                   verbose_name=gettext_lazy('description'))
     power = models.ForeignKey(GreatPower,
                               blank=True,
                               null=True,
                               on_delete=models.CASCADE,
-                              help_text=gettext_lazy(u'Set if this award is associated with a specific power (e.g. "Best Italy")'))
+                              help_text=gettext_lazy(u'Set if this award is associated with a specific power (e.g. "Best Italy")'),
+                              verbose_name=gettext_lazy('power'))
 
     class Meta:
         ordering = ['name']
+        verbose_name = gettext_lazy('award')
+        verbose_name_plural = gettext_lazy('awards')
 
     def __str__(self):
         return _(f'{self.name}')
@@ -946,14 +952,20 @@ class Award(models.Model):
 class TournamentAward(models.Model):
     """An Award that may be given out at a particular Tournament."""
 
-    tournament = models.ForeignKey('Tournament', on_delete=models.CASCADE)
-    award = models.ForeignKey(Award, on_delete=models.CASCADE)
+    tournament = models.ForeignKey('Tournament',
+                                   on_delete=models.CASCADE,
+                                   verbose_name=gettext_lazy('tournament'))
+    award = models.ForeignKey(Award,
+                              on_delete=models.CASCADE,
+                              verbose_name=gettext_lazy('award'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['tournament', 'award'],
                                     name='unique_tournament_award'),
         ]
+        verbose_name = gettext_lazy('tournament award')
+        verbose_name_plural = gettext_lazy('tournament awards')
 
     def __str__(self):
         return _('%(award)s at %(tournament)s') % {'award': self.award,
@@ -963,19 +975,26 @@ class TournamentAward(models.Model):
 class AwardRecipient(models.Model):
     """A TournamentPlayer who received a particular TournamentAward."""
 
-    tournament_award = models.ForeignKey(TournamentAward, on_delete=models.CASCADE)
-    tournament_player = models.ForeignKey('TournamentPlayer', on_delete=models.CASCADE)
+    tournament_award = models.ForeignKey(TournamentAward,
+                                         on_delete=models.CASCADE,
+                                         verbose_name=gettext_lazy('tournament award'))
+    tournament_player = models.ForeignKey('TournamentPlayer',
+                                          on_delete=models.CASCADE,
+                                          verbose_name=gettext_lazy('tournament player'))
     game = models.ForeignKey('Game',
                              blank=True,
                              null=True,
                              on_delete=models.SET_NULL,
-                             help_text=gettext_lazy(u'Set if this award is for something that happened in a specific Game'))
+                             help_text=gettext_lazy(u'Set if this award is for something that happened in a specific Game'),
+                             verbose_name=gettext_lazy('game'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['tournament_award', 'tournament_player'],
                                     name='unique_award_recipient'),
         ]
+        verbose_name = gettext_lazy('award recipient')
+        verbose_name_plural = gettext_lazy('award recipients')
 
     def __str__(self):
         return _('%(player)s won %(award)s') % {'player': self.tournament_player,
@@ -1020,40 +1039,52 @@ class Tournament(models.Model):
 
     name = models.CharField(max_length=MAX_NAME_LENGTH,
                             validators=[validate_no_newlines],
-                            help_text='Year will be appended based on start date')
-    start_date = models.DateField()
-    end_date = models.DateField()
-    location = models.CharField(max_length=300, blank=True)
+                            help_text=gettext_lazy('Year will be appended based on start date'),
+                            verbose_name=gettext_lazy('name'))
+    start_date = models.DateField(verbose_name=gettext_lazy('start date'))
+    end_date = models.DateField(verbose_name=gettext_lazy('end date'))
+    location = models.CharField(max_length=300,
+                                blank=True,
+                                verbose_name=gettext_lazy('location'))
     # How do we combine round scores to get an overall player tournament score ?
     # This is the name of a TournamentScoringSystem object
     tournament_scoring_system = models.CharField(validators=[validate_tournament_scoring_system],
                                                  max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
                                                  choices=get_scoring_systems(T_SCORING_SYSTEMS),
-                                                 help_text=gettext_lazy(u'How to combine round or game scores into a tournament score'))
+                                                 help_text=gettext_lazy(u'How to combine round or game scores into a tournament score'),
+                                                 verbose_name=gettext_lazy('tournament scoring system'))
     handicaps = models.BooleanField(default=False,
-                                    help_text=gettext_lazy('Check to give each TournamentPlayer a predetermined score bonus'))
+                                    help_text=gettext_lazy('Check to give each TournamentPlayer a predetermined score bonus'),
+                                    verbose_name=gettext_lazy('handicaps'))
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a RoundScoringSystem object
     round_scoring_system = models.CharField(validators=[validate_round_scoring_system],
                                             max_length=RoundScoringSystem.MAX_NAME_LENGTH,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS, include_none=True),
-                                            help_text=gettext_lazy(u'How to combine game scores into a round score'))
+                                            help_text=gettext_lazy(u'How to combine game scores into a round score'),
+                                            verbose_name=gettext_lazy('round scoring system'))
     non_player_round_score = models.FloatField(default=0.0,
-                                               help_text='If a Player volunteers to sit out a round, what score do they get?')
+                                               help_text=gettext_lazy('If a Player volunteers to sit out a round, what score do they get?'),
+                                               verbose_name=gettext_lazy('non player round score'))
     # Default of False here becaue it's less work and doesn't matter if non_player_round_score is the default value
     non_player_round_score_once = models.BooleanField(default=False,
-                                                      help_text='Can a player only get the sitting out score for one round?')
+                                                      help_text=gettext_lazy('Can a player only get the sitting out score for one round?'),
+                                                      verbose_name=gettext_lazy('non player round score once'))
     show_current_scores = models.BooleanField(default=True,
-                                              help_text=gettext_lazy('Show "if all games ended now" scores rather than after-last-round scores'))
+                                              help_text=gettext_lazy('Show "if all games ended now" scores rather than after-last-round scores'),
+                                              verbose_name=gettext_lazy('show current scores'))
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=gettext_lazy(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
                                     default=DrawSecrecy.SECRET)
-    is_finished = models.BooleanField(default=False)
+    is_finished = models.BooleanField(default=False,
+                                      verbose_name=gettext_lazy('is finished'))
     is_published = models.BooleanField(default=False,
-                                       help_text=gettext_lazy(u'Whether the tournament is visible to all site visitors'))
+                                       help_text=gettext_lazy(u'Whether the tournament is visible to all site visitors'),
+                                       verbose_name=gettext_lazy('is published'))
     managers = models.ManyToManyField(User,
-                                      help_text=gettext_lazy(u'Which users can modify the tournament,<br> and see it while it is unpublished.<br>'))
+                                      help_text=gettext_lazy(u'Which users can modify the tournament,<br> and see it while it is unpublished.<br>'),
+                                      verbose_name=gettext_lazy('managers'))
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=gettext_lazy("This tournament's id in the WDD"),
                                                     blank=True,
@@ -1065,22 +1096,26 @@ class Tournament(models.Model):
                                                     null=True,
                                                     help_text=gettext_lazy('Add this after the tournament is complete and results have been uploaded to the WDR'))
     seed_games = models.BooleanField(default=True,
-                                     help_text=gettext_lazy('Check to let the software seed players to games'))
+                                     help_text=gettext_lazy('Check to let the software seed players to games'),
+                                     verbose_name=gettext_lazy('seed games'))
     power_assignment = models.CharField(max_length=1,
                                         verbose_name=gettext_lazy('How powers are assigned'),
                                         choices=PowerAssignMethods.choices,
                                         default=PowerAssignMethods.AUTO)
     editable = models.BooleanField(default=True,
-                                   help_text=gettext_lazy('Uncheck to disallow any further changes to the tournament'))
+                                   help_text=gettext_lazy('Uncheck to disallow any further changes to the tournament'),
+                                   verbose_name=gettext_lazy('editable'))
     best_country_criterion = models.CharField(max_length=1,
                                               verbose_name=gettext_lazy(u'How Best Country awards are determined'),
                                               choices=BestCountryCriteria.choices,
                                               default=BestCountryCriteria.SCORE)
     format = models.CharField(max_length=1,
                               choices=Formats.choices,
-                              default=Formats.FTF)
+                              default=Formats.FTF,
+                              verbose_name=gettext_lazy('format'))
     no_email = models.BooleanField(default=False,
-                                   help_text=gettext_lazy('Check to only generate email to tournament managers'))
+                                   help_text=gettext_lazy('Check to only generate email to tournament managers'),
+                                   verbose_name=gettext_lazy('no email'))
     delay_game_url_publication = models.BooleanField(default=False,
                                                      verbose_name=gettext_lazy('Delay publishing game URL'),
                                                      help_text=gettext_lazy('Check to keep game URL secret until after the tournament completes'))
@@ -1090,16 +1125,19 @@ class Tournament(models.Model):
     team_size = models.PositiveSmallIntegerField(blank=True,
                                                  null=True,
                                                  validators=[MinValueValidator(2)],
-                                                 help_text=gettext_lazy('If there are teams, number of players per team'))
+                                                 help_text=gettext_lazy('If there are teams, number of players per team'),
+                                                 verbose_name=gettext_lazy('team size'))
     num_games_in_team_score = models.PositiveSmallIntegerField(blank=True,
                                                                null=True,
                                                                validators=[MinValueValidator(1)],
-                                                               help_text=gettext_lazy('The number of team round game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'))
+                                                               help_text=gettext_lazy('The number of team round game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'),
+                                                               verbose_name=gettext_lazy('num games in team score'))
     default_game_set = models.ForeignKey(GameSet,
                                          on_delete=models.PROTECT,
                                          null=True,
                                          blank=True,
-                                         help_text=gettext_lazy('Default GameSet used when seeding games for rounds'))
+                                         help_text=gettext_lazy('Default GameSet used when seeding games for rounds'),
+                                         verbose_name=gettext_lazy('default game set'))
 
     class Meta:
         ordering = ['-start_date']
@@ -1119,6 +1157,8 @@ class Tournament(models.Model):
             models.UniqueConstraint(fields=['name', 'start_date'],
                                     name='unique_name_date'),
         ]
+        verbose_name = gettext_lazy('tournament')
+        verbose_name_plural = gettext_lazy('tournaments')
 
     def __str__(self):
         return f'{self.name} {self.start_date.year}'
@@ -1776,12 +1816,16 @@ class DBNCoverage(models.Model):
     """
     MAX_DESC_LENGTH = 80
 
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament,
+                                   on_delete=models.CASCADE,
+                                   verbose_name=gettext_lazy('tournament'))
     dbn_url = models.URLField(verbose_name=gettext_lazy('DBN URL on YouTube'))
-    description = models.CharField(max_length=MAX_DESC_LENGTH)
+    description = models.CharField(max_length=MAX_DESC_LENGTH,
+                                   verbose_name=gettext_lazy('description'))
 
     class Meta:
-        verbose_name = 'DBN coverage'
+        verbose_name = gettext_lazy('DBN coverage')
+        verbose_name_plural = gettext_lazy('DBN coverages')
 
     def __str__(self):
         return f'{self.tournament} {self.description}'
@@ -1811,14 +1855,18 @@ class Series(models.Model):
     """
     MAX_NAME_LENGTH = 60
 
-    name = models.CharField(max_length=MAX_NAME_LENGTH, unique=True)
-    description = models.TextField(blank=True)
-    tournaments = models.ManyToManyField(Tournament)
-    slug = NameSlugField(unique=True)
+    name = models.CharField(max_length=MAX_NAME_LENGTH,
+                            unique=True,
+                            verbose_name=gettext_lazy('name'))
+    description = models.TextField(blank=True, verbose_name=gettext_lazy('description'))
+    tournaments = models.ManyToManyField(Tournament,
+                                         verbose_name=gettext_lazy('tournaments'))
+    slug = NameSlugField(unique=True, verbose_name=gettext_lazy('slug'))
 
     class Meta:
         ordering = ['name']
-        verbose_name_plural = 'Series'
+        verbose_name_plural = gettext_lazy('Series')
+        verbose_name = gettext_lazy('series')
 
     def __str__(self):
         return f'{self.name}'
@@ -1863,20 +1911,26 @@ class Team(models.Model):
     MAX_NAME_LENGTH = 20
 
     tournament = models.ForeignKey(Tournament,
-                                   on_delete=models.CASCADE)
+                                   on_delete=models.CASCADE,
+                                   verbose_name=gettext_lazy('tournament'))
     name = models.CharField(max_length=MAX_NAME_LENGTH,
-                            help_text=gettext_lazy(u'Must be unique within the tournament'))
+                            help_text=gettext_lazy(u'Must be unique within the tournament'),
+                            verbose_name=gettext_lazy('name'))
     score = models.FloatField(default=0.0,
-                              help_text=gettext_lazy('Score for the team'))
+                              help_text=gettext_lazy('Score for the team'),
+                              verbose_name=gettext_lazy('score'))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=gettext_lazy('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'),
+                                         verbose_name=gettext_lazy('calculated score'))
     calculated_rank = models.PositiveSmallIntegerField(default=0,
-                                                        help_text=gettext_lazy('Rank as calculated by the system'))
+                                                        help_text=gettext_lazy('Rank as calculated by the system'),
+                                                       verbose_name=gettext_lazy('calculated rank'))
     rank_override = models.PositiveSmallIntegerField(null=True,
                                                       blank=True,
                                                       validators=[MaxValueValidator(Tournament.UNRANKED - 1)],
-                                                      help_text=gettext_lazy('Official rank override'))
-    players = models.ManyToManyField(Player)
+                                                      help_text=gettext_lazy('Official rank override'),
+                                                     verbose_name=gettext_lazy('rank override'))
+    players = models.ManyToManyField(Player, verbose_name=gettext_lazy('players'))
 
     class Meta:
         ordering = ['name']
@@ -1885,6 +1939,8 @@ class Team(models.Model):
             models.UniqueConstraint(fields=['tournament', 'name'],
                                     name='unique_tournament_name'),
         ]
+        verbose_name = gettext_lazy('team')
+        verbose_name_plural = gettext_lazy('teams')
 
     def __str__(self):
         return _("%(team)s at %(tourney)s") % {'team': self.name,
@@ -1996,30 +2052,45 @@ class TournamentPlayer(models.Model):
     """
     MAX_BACKSTABBR_USERNAME_LENGTH = 40
 
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    tournament = models.ForeignKey(Tournament,
+                                   on_delete=models.CASCADE,
+                                   verbose_name=gettext_lazy('tournament'))
     score = models.FloatField(default=0.0,
-                              help_text=gettext_lazy("Player's score for the tournament as a whole"))
+                              help_text=gettext_lazy("Player's score for the tournament as a whole"),
+                              verbose_name=gettext_lazy('score'))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=gettext_lazy('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'),
+                                         verbose_name=gettext_lazy('calculated score'))
     calculated_rank = models.PositiveSmallIntegerField(default=0,
-                                                       help_text=gettext_lazy('Rank as calculated by the system'))
+                                                       help_text=gettext_lazy('Rank as calculated by the system'),
+                                                       verbose_name=gettext_lazy('calculated rank'))
     rank_override = models.PositiveSmallIntegerField(null=True,
                                                      blank=True,
                                                      validators=[MaxValueValidator(Tournament.UNRANKED - 1)],
-                                                     help_text=gettext_lazy('Official rank override'))
+                                                     help_text=gettext_lazy('Official rank override'),
+                                                     verbose_name=gettext_lazy('rank override'))
     handicap = models.FloatField(default=0.0,
-                                 help_text=gettext_lazy('Secret bonus score added after all games end. Only used if enabled for the Tournament'))
+                                 help_text=gettext_lazy('Secret bonus score added after all games end. Only used if enabled for the Tournament'),
+                                 verbose_name=gettext_lazy('handicap'))
     unranked = TPUnrankedField(default=False,
                                verbose_name=gettext_lazy('Ineligible for awards'),
                                help_text=gettext_lazy('Set this to ignore this player when determining rankings'))
-    uuid_str = models.CharField(max_length=36, blank=True)
+    uuid_str = models.CharField(max_length=36,
+                                blank=True,
+                                verbose_name=gettext_lazy('uuid str'))
     backstabbr_username = TPPlayerField(max_length=MAX_BACKSTABBR_USERNAME_LENGTH,
                                         blank=True,
-                                        help_text=gettext_lazy('Username on the backstabbr website'))
-    location = TPPlayerField(max_length=60, blank=True)
+                                        help_text=gettext_lazy('Username on the backstabbr website'),
+                                        verbose_name=gettext_lazy('backstabbr username'))
+    location = TPPlayerField(max_length=60,
+                             blank=True,
+                             verbose_name=gettext_lazy('location'))
     paid = models.BooleanField(default=False,
-                               help_text=gettext_lazy('Have they paid any registration fee?'))
+                               help_text=gettext_lazy('Have they paid any registration fee?'),
+                               verbose_name=gettext_lazy('paid'))
 
     class Meta:
         ordering = ['player']
@@ -2028,6 +2099,8 @@ class TournamentPlayer(models.Model):
             models.UniqueConstraint(fields=['player', 'tournament'],
                                     name='unique_player_tournament'),
         ]
+        verbose_name = gettext_lazy('tournament player')
+        verbose_name_plural = gettext_lazy('tournament players')
 
     def __str__(self):
         return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
@@ -2223,13 +2296,15 @@ class SeederBias(models.Model):
     Tell the game seeder to avoid putting two players in the same game.
     """
     player1 = models.ForeignKey(TournamentPlayer,
-                                on_delete=models.CASCADE)
+                                on_delete=models.CASCADE,
+                                verbose_name=gettext_lazy('player1'))
     player2 = models.ForeignKey(TournamentPlayer,
                                 on_delete=models.CASCADE,
-                                related_name='second_seederbias_set')
+                                related_name='second_seederbias_set',
+                                verbose_name=gettext_lazy('player2'))
 
     class Meta:
-        verbose_name_plural = 'Seeder biases'
+        verbose_name_plural = gettext_lazy('Seeder biases')
         # Only one weighting per pair of players
         constraints = [
             models.UniqueConstraint(fields=['player1', 'player2'],
@@ -2237,6 +2312,7 @@ class SeederBias(models.Model):
             models.CheckConstraint(check=~models.Q(player1=models.F("player2")),
                                    name='players_must_differ'),
         ]
+        verbose_name = gettext_lazy('seeder bias')
 
     def __str__(self):
         return _("%(p1)s and %(p2)s at %(tourney)s") % {'p1': self.player1.player,
@@ -2267,10 +2343,15 @@ class Preference(models.Model):
     """
     How much a player wants to play a particular power.
     """
-    player = models.ForeignKey(TournamentPlayer, on_delete=models.CASCADE)
-    power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
+    player = models.ForeignKey(TournamentPlayer,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    power = models.ForeignKey(GreatPower,
+                              on_delete=models.CASCADE,
+                              verbose_name=gettext_lazy('power'))
     ranking = models.PositiveSmallIntegerField(validators=[MinValueValidator(1),
-                                                           validate_max_greatpowers])
+                                                           validate_max_greatpowers],
+                                               verbose_name=gettext_lazy('ranking'))
 
     class Meta:
         constraints = [
@@ -2283,6 +2364,8 @@ class Preference(models.Model):
         ]
         # Highest-rank first
         ordering = ['ranking']
+        verbose_name = gettext_lazy('preference')
+        verbose_name_plural = gettext_lazy('preferences')
 
     def __str__(self):
         return _('%(player)s ranks %(power)s at %(rank)d') % {'player': self.player,
@@ -2294,7 +2377,9 @@ class Round(models.Model):
     """
     A single round of a Tournament
     """
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament,
+                                   on_delete=models.CASCADE,
+                                   verbose_name=gettext_lazy('tournament'))
     # How do we score games in this round ?
     # This is the name of a GameScoringSystem object
     # There have been tournaments using multiple scoring systems, one per round
@@ -2304,17 +2389,24 @@ class Round(models.Model):
                                       choices=get_scoring_systems(G_SCORING_SYSTEMS),
                                       help_text=gettext_lazy(u'How to calculate a score for one game'))
     dias = models.BooleanField(verbose_name=gettext_lazy(u'Draws Include All Survivors'))
-    start = models.DateTimeField()
+    start = models.DateTimeField(verbose_name=gettext_lazy('start'))
     final_year = models.PositiveSmallIntegerField(blank=True,
                                                   null=True,
-                                                  validators=[validate_year])
-    earliest_end_time = models.DateTimeField(blank=True, null=True)
-    latest_end_time = models.DateTimeField(blank=True, null=True)
+                                                  validators=[validate_year],
+                                                  verbose_name=gettext_lazy('final year'))
+    earliest_end_time = models.DateTimeField(blank=True,
+                                             null=True,
+                                             verbose_name=gettext_lazy('earliest end time'))
+    latest_end_time = models.DateTimeField(blank=True,
+                                           null=True,
+                                           verbose_name=gettext_lazy('latest end time'))
     enable_check_in = models.BooleanField(default=False,
                                           verbose_name=gettext_lazy(u'Enable self-check-ins'))
-    email_sent = models.BooleanField(default=False)
-    is_finished = models.BooleanField(default=False)
-    is_team_round = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False, verbose_name=gettext_lazy('email sent'))
+    is_finished = models.BooleanField(default=False,
+                                      verbose_name=gettext_lazy('is finished'))
+    is_team_round = models.BooleanField(default=False,
+                                        verbose_name=gettext_lazy('is team round'))
 
     class Meta:
         ordering = ['start']
@@ -2327,6 +2419,8 @@ class Round(models.Model):
             models.UniqueConstraint(fields=['tournament', 'start'],
                                     name='unique_tournament_start'),
         ]
+        verbose_name = gettext_lazy('round')
+        verbose_name_plural = gettext_lazy('rounds')
 
     def __str__(self):
         if self.pk is None:
@@ -2620,13 +2714,16 @@ class Pool(models.Model):
     """
     MAX_NAME_LENGTH = 20
 
-    the_round = models.ForeignKey(Round, on_delete=models.CASCADE)
-    name = models.CharField(max_length=MAX_NAME_LENGTH)
-    slug = NameSlugField()
+    the_round = models.ForeignKey(Round,
+                                  on_delete=models.CASCADE,
+                                  verbose_name=gettext_lazy('the round'))
+    name = models.CharField(max_length=MAX_NAME_LENGTH, verbose_name=gettext_lazy('name'))
+    slug = NameSlugField(verbose_name=gettext_lazy('slug'))
     board_count = models.PositiveSmallIntegerField(null=True,
                                                    blank=True,
                                                    validators=[MinValueValidator(1)],
-                                                   help_text=gettext_lazy('number of games to be played in this pool. Must be set for all pools except one in a round'))
+                                                   help_text=gettext_lazy('number of games to be played in this pool. Must be set for all pools except one in a round'),
+                                                   verbose_name=gettext_lazy('board count'))
     power_assignment = models.CharField(max_length=1,
                                         blank=True,
                                         verbose_name=gettext_lazy('How powers are assigned'),
@@ -2635,10 +2732,12 @@ class Pool(models.Model):
     determines_top_rankings = models.PositiveSmallIntegerField(null=True,
                                                                blank=True,
                                                                validators=[MinValueValidator(1)],
-                                                               help_text=gettext_lazy('this specifies how many best rankings will come from the pool. For a top board pool where the pool winner wins the tournament, set this'))
+                                                               help_text=gettext_lazy('this specifies how many best rankings will come from the pool. For a top board pool where the pool winner wins the tournament, set this'),
+                                                               verbose_name=gettext_lazy('determines top rankings'))
     game_score_multiplier = models.FloatField(null=True,
                                               blank=True,
-                                              help_text=gettext_lazy('game score in this pool will be multiplied by this value, if specified'))
+                                              help_text=gettext_lazy('game score in this pool will be multiplied by this value, if specified'),
+                                              verbose_name=gettext_lazy('game score multiplier'))
     # TODO Add more attributes, possibly including:
     # - seeding_ignores_previous_rounds
     # - power_assignment_ignores_previous_rounds
@@ -2654,6 +2753,8 @@ class Pool(models.Model):
             models.CheckConstraint(check=Q(power_assignment='') | Q(power_assignment__in=PowerAssignMethods.values),
                                    name='%(class)s_power_assignment_valid'),
         ]
+        verbose_name = gettext_lazy('pool')
+        verbose_name_plural = gettext_lazy('pools')
 
     # TODO get_absolute_url() ?
 
@@ -2699,14 +2800,22 @@ class Game(models.Model):
 
     name = models.CharField(max_length=MAX_NAME_LENGTH,
                             validators=[validate_game_name],
-                            help_text=gettext_lazy(u'Must be unique within the tournament. No spaces'))
-    started_at = models.DateTimeField(default=django_timezone.now)
-    is_finished = models.BooleanField(default=False)
-    is_top_board = models.BooleanField(default=False)
+                            help_text=gettext_lazy(u'Must be unique within the tournament. No spaces'),
+                            verbose_name=gettext_lazy('name'))
+    started_at = models.DateTimeField(default=django_timezone.now,
+                                      verbose_name=gettext_lazy('started at'))
+    is_finished = models.BooleanField(default=False,
+                                      verbose_name=gettext_lazy('is finished'))
+    is_top_board = models.BooleanField(default=False,
+                                       verbose_name=gettext_lazy('is top board'))
     the_round = models.ForeignKey(Round,
                                   verbose_name=gettext_lazy(u'round'),
                                   on_delete=models.CASCADE)
-    pool = models.ForeignKey(Pool, blank=True, null=True, on_delete=models.SET_NULL)
+    pool = models.ForeignKey(Pool,
+                             blank=True,
+                             null=True,
+                             on_delete=models.SET_NULL,
+                             verbose_name=gettext_lazy('pool'))
     the_set = models.ForeignKey(GameSet,
                                 verbose_name=gettext_lazy(u'set'),
                                 on_delete=models.CASCADE)
@@ -2716,12 +2825,15 @@ class Game(models.Model):
                                    help_text=gettext_lazy('Will be included in board call emails and game page'))
     notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
-                             help_text=gettext_lazy('Will be included in board call emails and game page'))
+                             help_text=gettext_lazy('Will be included in board call emails and game page'),
+                             verbose_name=gettext_lazy('notes'))
 
     objects = GameManager()
 
     class Meta:
         ordering = ['name']
+        verbose_name = gettext_lazy('game')
+        verbose_name_plural = gettext_lazy('games')
 
     def __str__(self):
         return _('%(game)s at %(tourney)s') % {'game': self.name,
@@ -3143,10 +3255,17 @@ class SupplyCentreOwnership(models.Model):
     Record of which GreatPower owned a given SupplyCentre
     at the end of a particular game year in a Game.
     """
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    year = models.PositiveSmallIntegerField(validators=[validate_year_including_start])
-    sc = models.ForeignKey(SupplyCentre, on_delete=models.CASCADE)
-    owner = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game,
+                             on_delete=models.CASCADE,
+                             verbose_name=gettext_lazy('game'))
+    year = models.PositiveSmallIntegerField(validators=[validate_year_including_start],
+                                            verbose_name=gettext_lazy('year'))
+    sc = models.ForeignKey(SupplyCentre,
+                           on_delete=models.CASCADE,
+                           verbose_name=gettext_lazy('sc'))
+    owner = models.ForeignKey(GreatPower,
+                              on_delete=models.CASCADE,
+                              verbose_name=gettext_lazy('owner'))
 
     class Meta:
         constraints = [
@@ -3155,6 +3274,8 @@ class SupplyCentreOwnership(models.Model):
             models.UniqueConstraint(fields=['sc', 'game', 'year'],
                                     name='unique_sc_game_year'),
         ]
+        verbose_name = gettext_lazy('supply centre ownership')
+        verbose_name_plural = gettext_lazy('supply centre ownerships')
 
     def __str__(self):
         return _("%(dot)s in %(game)s was owned by %(power)s at the end of %(year)d") % {'dot': self.sc,
@@ -3182,20 +3303,29 @@ class DrawProposal(models.Model):
     """
     A single draw or concession proposal in a game
     """
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    year = models.PositiveSmallIntegerField(validators=[validate_year])
-    season = models.CharField(max_length=1, choices=Seasons.choices)
-    passed = DPPassedField(blank=True, null=True)
+    game = models.ForeignKey(Game,
+                             on_delete=models.CASCADE,
+                             verbose_name=gettext_lazy('game'))
+    year = models.PositiveSmallIntegerField(validators=[validate_year],
+                                            verbose_name=gettext_lazy('year'))
+    season = models.CharField(max_length=1,
+                              choices=Seasons.choices,
+                              verbose_name=gettext_lazy('season'))
+    passed = DPPassedField(blank=True, null=True, verbose_name=gettext_lazy('passed'))
     proposer = models.ForeignKey(GreatPower,
                                  blank=True,
                                  null=True,
                                  related_name='+',
-                                 on_delete=models.CASCADE)
-    drawing_powers = models.ManyToManyField(GreatPower, related_name='+')
+                                 on_delete=models.CASCADE,
+                                 verbose_name=gettext_lazy('proposer'))
+    drawing_powers = models.ManyToManyField(GreatPower,
+                                            related_name='+',
+                                            verbose_name=gettext_lazy('drawing powers'))
     votes_in_favour = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
                                                        validators=[MinValueValidator(0),
-                                                                   validate_max_greatpowers])
+                                                                   validate_max_greatpowers],
+                                                       verbose_name=gettext_lazy('votes in favour'))
 
     class Meta:
         constraints = [
@@ -3207,6 +3337,8 @@ class DrawProposal(models.Model):
                                     condition=models.Q(passed=True),
                                     name='only one passed'),
         ]
+        verbose_name = gettext_lazy('draw proposal')
+        verbose_name_plural = gettext_lazy('draw proposals')
 
     def __str__(self):
         return f'{self.game} {self.year}{self.season}'
@@ -3315,31 +3447,44 @@ class RoundPlayer(models.Model):
     """
     A person who played a round in a tournament
     """
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
     the_round = models.ForeignKey(Round,
                                   verbose_name=gettext_lazy(u'round'),
                                   on_delete=models.CASCADE)
-    pool = models.ForeignKey(Pool, blank=True, null=True, on_delete=models.SET_NULL)
+    pool = models.ForeignKey(Pool,
+                             blank=True,
+                             null=True,
+                             on_delete=models.SET_NULL,
+                             verbose_name=gettext_lazy('pool'))
     standby = models.BooleanField(default=False,
-                                  help_text=gettext_lazy('check if the player would prefer not to play this round'))
+                                  help_text=gettext_lazy('check if the player would prefer not to play this round'),
+                                  verbose_name=gettext_lazy('standby'))
     # This score is only used if either:
     #  - the tournament scoring system needs round scores or
     #  - there's a sitting-out bonus
     # Otherwise it will always be zero and should never be used or seen
     score = models.FloatField(default=0.0,
-                              help_text=gettext_lazy("If the tournament doesn't use round scores, this stores any sitting-out bonus for the round"))
+                              help_text=gettext_lazy("If the tournament doesn't use round scores, this stores any sitting-out bonus for the round"),
+                              verbose_name=gettext_lazy('score'))
     score_dropped = models.BooleanField(default=False,
-                                        help_text=gettext_lazy('Set if this score does not contribute towards the tournament score'))
+                                        help_text=gettext_lazy('Set if this score does not contribute towards the tournament score'),
+                                        verbose_name=gettext_lazy('score dropped'))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=gettext_lazy('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'),
+                                         verbose_name=gettext_lazy('calculated score'))
     game_count = models.PositiveIntegerField(default=1,
-                                             help_text=gettext_lazy('number of games to play this round'))
+                                             help_text=gettext_lazy('number of games to play this round'),
+                                             verbose_name=gettext_lazy('game count'))
     sandboxer = models.BooleanField(default=False,
-                                    help_text=gettext_lazy('set if the player is willing to record a game this round'))
+                                    help_text=gettext_lazy('set if the player is willing to record a game this round'),
+                                    verbose_name=gettext_lazy('sandboxer'))
     # This attribute records the player's tournament score after this round
     # If the round is still in progress, it represents the "if all games ended now" score
     tournament_score = models.FloatField(default=0.0,
-                                         help_text=gettext_lazy('Tournament score after the round'))
+                                         help_text=gettext_lazy('Tournament score after the round'),
+                                         verbose_name=gettext_lazy('tournament score'))
 
     class Meta:
         ordering = ['player', 'the_round__start']
@@ -3347,6 +3492,8 @@ class RoundPlayer(models.Model):
             models.UniqueConstraint(fields=['player', 'the_round'],
                                     name='unique_player_round'),
         ]
+        verbose_name = gettext_lazy('round player')
+        verbose_name_plural = gettext_lazy('round players')
 
     def __str__(self):
         return _(u'%(player)s in %(round)s') % {'player': self.player,
@@ -3415,25 +3562,35 @@ class GamePlayer(models.Model):
     """
     A person who played a Great Power in a Game
     """
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    game = models.ForeignKey(Game,
+                             on_delete=models.CASCADE,
+                             verbose_name=gettext_lazy('game'))
     power = models.ForeignKey(GreatPower,
                               null=True,
                               blank=True,
                               related_name='+',
-                              on_delete=models.CASCADE)
+                              on_delete=models.CASCADE,
+                              verbose_name=gettext_lazy('power'))
     tie_break_rank = models.PositiveSmallIntegerField(blank=True,
                                                       null=True,
                                                       validators=[MinValueValidator(1)],
-                                                      help_text=gettext_lazy("If all players have the same score, what rank does this player get?"))
+                                                      help_text=gettext_lazy("If all players have the same score, what rank does this player get?"),
+                                                      verbose_name=gettext_lazy('tie break rank'))
     score = models.FloatField(default=0.0,
-                              help_text=gettext_lazy("Player's score for this game"))
+                              help_text=gettext_lazy("Player's score for this game"),
+                              verbose_name=gettext_lazy('score'))
     score_dropped = models.BooleanField(default=False,
-                                        help_text=gettext_lazy('Set if this score does not contribute towards the round score'))
+                                        help_text=gettext_lazy('Set if this score does not contribute towards the round score'),
+                                        verbose_name=gettext_lazy('score dropped'))
     calculated_score = models.FloatField(default=0.0,
-                                         help_text=gettext_lazy('Score as calculated by the system'))
+                                         help_text=gettext_lazy('Score as calculated by the system'),
+                                         verbose_name=gettext_lazy('calculated score'))
     after_action_report = models.TextField(blank=True,
-                                           help_text=gettext_lazy("This player's account of the game"))
+                                           help_text=gettext_lazy("This player's account of the game"),
+                                           verbose_name=gettext_lazy('after action report'))
 
     class Meta:
         ordering = ['game', 'power']
@@ -3445,6 +3602,8 @@ class GamePlayer(models.Model):
             models.UniqueConstraint(fields=['game', 'tie_break_rank'],
                                     name='unique_game_tie_break'),
         ]
+        verbose_name = gettext_lazy('game player')
+        verbose_name_plural = gettext_lazy('game players')
 
     def __str__(self):
         if self.power:
@@ -3728,11 +3887,21 @@ class GameImage(models.Model):
     The year, season, and phase together indicate the phase that is about to
     be played.
     """
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    year = models.PositiveSmallIntegerField(validators=[validate_year])
-    season = models.CharField(max_length=1, choices=Seasons.choices, default=Seasons.SPRING)
-    phase = models.CharField(max_length=1, choices=Phases.choices, default=Phases.MOVEMENT)
-    image = models.ImageField(upload_to=game_image_location)
+    game = models.ForeignKey(Game,
+                             on_delete=models.CASCADE,
+                             verbose_name=gettext_lazy('game'))
+    year = models.PositiveSmallIntegerField(validators=[validate_year],
+                                            verbose_name=gettext_lazy('year'))
+    season = models.CharField(max_length=1,
+                              choices=Seasons.choices,
+                              default=Seasons.SPRING,
+                              verbose_name=gettext_lazy('season'))
+    phase = models.CharField(max_length=1,
+                             choices=Phases.choices,
+                             default=Phases.MOVEMENT,
+                             verbose_name=gettext_lazy('phase'))
+    image = models.ImageField(upload_to=game_image_location,
+                              verbose_name=gettext_lazy('image'))
 
     class Meta:
         constraints = [
@@ -3747,6 +3916,8 @@ class GameImage(models.Model):
             models.CheckConstraint(check=~(Q(season=Seasons.SPRING) & Q(phase=Phases.ADJUSTMENTS)),
                                    name="phase_season_combo_valid"),
         ]
+        verbose_name = gettext_lazy('game image')
+        verbose_name_plural = gettext_lazy('game images')
 
     def __str__(self):
         return _(u'%(game)s %(turn)s image') % {'game': self.game,
@@ -3771,10 +3942,17 @@ class CentreCount(models.Model):
     """
     The number of centres owned by one power at the end of a given game year
     """
-    power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    year = models.PositiveSmallIntegerField(validators=[validate_year_including_start])
-    count = models.PositiveSmallIntegerField(validators=[validate_max_supplycentres])
+    power = models.ForeignKey(GreatPower,
+                              related_name='+',
+                              on_delete=models.CASCADE,
+                              verbose_name=gettext_lazy('power'))
+    game = models.ForeignKey(Game,
+                             on_delete=models.CASCADE,
+                             verbose_name=gettext_lazy('game'))
+    year = models.PositiveSmallIntegerField(validators=[validate_year_including_start],
+                                            verbose_name=gettext_lazy('year'))
+    count = models.PositiveSmallIntegerField(validators=[validate_max_supplycentres],
+                                             verbose_name=gettext_lazy('count'))
 
     class Meta:
         constraints = [
@@ -3786,6 +3964,8 @@ class CentreCount(models.Model):
                                     name='unique_power_game_year'),
         ]
         ordering = ['game', 'year']
+        verbose_name = gettext_lazy('centre count')
+        verbose_name_plural = gettext_lazy('centre counts')
 
     def __str__(self):
         return f'{self.game} {self.year} {_(self.power.abbreviation)}'

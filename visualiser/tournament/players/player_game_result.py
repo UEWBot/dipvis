@@ -51,25 +51,41 @@ class PlayerGameResult(models.Model):
     """
     event_ranking = models.ForeignKey(PlayerEventRanking,
                                       on_delete=models.CASCADE,
+                                      verbose_name=gettext_lazy('event ranking'),
                                       )
-    round_number = models.PositiveSmallIntegerField()
-    game_number = models.PositiveSmallIntegerField()
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
+    round_number = models.PositiveSmallIntegerField(verbose_name=gettext_lazy('round number'))
+    game_number = models.PositiveSmallIntegerField(verbose_name=gettext_lazy('game number'))
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    power = models.ForeignKey(GreatPower,
+                              related_name='+',
+                              on_delete=models.CASCADE,
+                              verbose_name=gettext_lazy('power'))
     # WDR sometimes identifies the player and power but has no usable board rank.
-    rank = models.PositiveSmallIntegerField(blank=True, null=True)
-    rank_equals = models.PositiveSmallIntegerField(blank=True, null=True)
-    score = models.FloatField(blank=True, null=True)
+    rank = models.PositiveSmallIntegerField(blank=True,
+                                            null=True,
+                                            verbose_name=gettext_lazy('rank'))
+    rank_equals = models.PositiveSmallIntegerField(blank=True,
+                                                   null=True,
+                                                   verbose_name=gettext_lazy('rank equals'))
+    score = models.FloatField(blank=True, null=True, verbose_name=gettext_lazy('score'))
     final_sc_count = models.PositiveSmallIntegerField(blank=True,
                                                       null=True,
-                                                      validators=[validate_max_supplycentres])
-    result = models.CharField(max_length=2, choices=GameResults.choices, blank=True)
+                                                      validators=[validate_max_supplycentres],
+                                                      verbose_name=gettext_lazy('final sc count'))
+    result = models.CharField(max_length=2,
+                              choices=GameResults.choices,
+                              blank=True,
+                              verbose_name=gettext_lazy('result'))
     year_eliminated = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
-                                                       validators=[validate_year])
+                                                       validators=[validate_year],
+                                                       verbose_name=gettext_lazy('year eliminated'))
     is_top_board = models.BooleanField(default=False,
-                                       help_text=gettext_lazy('Whether this game was on a top board'))
-    updated = models.DateTimeField(auto_now=True)
+                                       help_text=gettext_lazy('Whether this game was on a top board'),
+                                       verbose_name=gettext_lazy('is top board'))
+    updated = models.DateTimeField(auto_now=True, verbose_name=gettext_lazy('updated'))
 
     class Meta:
         constraints = [
@@ -82,6 +98,8 @@ class PlayerGameResult(models.Model):
             models.UniqueConstraint(fields=['event_ranking', 'round_number', 'game_number', 'player', 'power'],
                                     name='unique_eventranking_player_power'),
         ]
+        verbose_name = gettext_lazy('player game result')
+        verbose_name_plural = gettext_lazy('player game results')
 
     def __str__(self):
         return _(u'%(player)s played %(power)s in R %(r_num)d B %(g_num)d at %(event)s') % {'player': self.player,

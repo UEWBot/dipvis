@@ -19,6 +19,7 @@ Forms for game images in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from tournament.models import Game, GameImage
 
@@ -28,6 +29,11 @@ class GameImageForm(forms.ModelForm):
     class Meta:
         model = GameImage
         fields = ('game', 'year', 'season', 'phase', 'image')
+        labels = {'game': _('Game'),
+                  'year': _('Year'),
+                  'season': _('Season'),
+                  'phase': _('Phase'),
+                  'image': _('Image')}
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list

@@ -62,12 +62,17 @@ class WDDPlayer(models.Model):
     wdd_player_id = WDDPlayerIdField(unique=True,
                                      validators=[validate_wdd_player_id],
                                      verbose_name=_(u'WDD player id'))
-    _wdd_firstname = models.CharField(max_length=40, blank=True)
-    _wdd_lastname = models.CharField(max_length=40, blank=True)
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    _wdd_firstname = models.CharField(max_length=40,
+                                      blank=True,
+                                      verbose_name=_('WDD first name'))
+    _wdd_lastname = models.CharField(max_length=40,
+                                     blank=True,
+                                     verbose_name=_('WDD last name'))
+    player = models.ForeignKey(Player, on_delete=models.CASCADE, verbose_name=_('player'))
 
     class Meta:
-        verbose_name = 'WDD player'
+        verbose_name = _('WDD player')
+        verbose_name_plural = _('WDD players')
 
     def __str__(self):
         return f'{self.player} {self.wdd_player_id}'

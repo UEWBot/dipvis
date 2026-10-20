@@ -27,7 +27,7 @@ about a player and retrieving it as needed.
 """
 
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from .player import Player
 from .player_event_ranking import PlayerEventRanking
@@ -39,21 +39,26 @@ class PlayerTitle(models.Model):
 
     Used to import background information from external sites.
     """
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    title = models.CharField(max_length=50)
-    year = models.PositiveSmallIntegerField()
-    updated = models.DateTimeField(auto_now=True)
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    title = models.CharField(max_length=50, verbose_name=gettext_lazy('title'))
+    year = models.PositiveSmallIntegerField(verbose_name=gettext_lazy('year'))
+    updated = models.DateTimeField(auto_now=True, verbose_name=gettext_lazy('updated'))
     # Cross-reference to more information about the tournament where the title was won
     ranking = models.ForeignKey(PlayerEventRanking,
                                 on_delete=models.SET_NULL,
                                 blank=True,
-                                null=True)
+                                null=True,
+                                verbose_name=gettext_lazy('ranking'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['player', 'title', 'year'],
                                     name='unique_player_title_year'),
         ]
+        verbose_name = gettext_lazy('player title')
+        verbose_name_plural = gettext_lazy('player titles')
 
     def __str__(self):
         s = _(u'%(player)s won %(title)s in %(year)s') % {'player': self.player,

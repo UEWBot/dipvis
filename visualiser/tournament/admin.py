@@ -16,6 +16,7 @@
 
 from django.contrib import admin
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 from tournament.circuits import Circuit, CircuitPlayer, CircuitSeries
 from tournament.diplomacy import GameSet, GreatPower, SetPower, SupplyCentre
@@ -320,7 +321,7 @@ class RoundInline(admin.StackedInline):
         (None, {
             'fields': ['start', 'scoring_system', 'dias', 'is_team_round']
         }),
-        ('Round end options', {
+        (_('Round end options'), {
             'classes': ['collapse'],
             'fields': ['final_year', 'earliest_end_time', 'latest_end_time']
         }),

@@ -28,13 +28,17 @@ class SetPower(models.Model):
     the_set = models.ForeignKey(GameSet,
                                 verbose_name=gettext_lazy(u'set'),
                                 on_delete=models.CASCADE)
-    power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
-    colour = models.CharField(max_length=20)
+    power = models.ForeignKey(GreatPower,
+                              on_delete=models.CASCADE,
+                              verbose_name=gettext_lazy('power'))
+    colour = models.CharField(max_length=20, verbose_name=gettext_lazy('colour'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['the_set', 'power'], name='unique_set_power')
         ]
+        verbose_name = gettext_lazy('set power')
+        verbose_name_plural = gettext_lazy('set powers')
 
     def __str__(self):
         return _(u'%(power)s in %(the_set)s') % {'power': self.power.name,

@@ -47,18 +47,24 @@ class PlayerEventRanking(models.Model):
 
     Used to import background information from external sites.
     """
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    event_name = models.CharField(max_length=100)
-    rank = models.PositiveSmallIntegerField(blank=True, null=True)
-    date = models.DateField()
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    event_name = models.CharField(max_length=100, verbose_name=gettext_lazy('event name'))
+    rank = models.PositiveSmallIntegerField(blank=True,
+                                            null=True,
+                                            verbose_name=gettext_lazy('rank'))
+    date = models.DateField(verbose_name=gettext_lazy('date'))
     event_kind = models.CharField(max_length=1,
                                   choices=EventKinds.choices,
                                   default=EventKinds.TOURNAMENT,
-                                  help_text=gettext_lazy(u'Kind of event (tournament, league, circuit)'))
+                                  help_text=gettext_lazy(u'Kind of event (tournament, league, circuit)'),
+                                  verbose_name=gettext_lazy('event kind'))
     tournament_kind = models.CharField(max_length=20,
                                        blank=True,
                                        null=True,
-                                       help_text=gettext_lazy(u'Type of tournament on WDR/WDD'))
+                                       help_text=gettext_lazy(u'Type of tournament on WDR/WDD'),
+                                       verbose_name=gettext_lazy('tournament kind'))
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=gettext_lazy(u'WDD tournament id'),
                                                     blank=True,
@@ -69,14 +75,17 @@ class PlayerEventRanking(models.Model):
                                                     null=True)
     wpe_score = models.FloatField(blank=True,
                                   null=True,
-                                  help_text=gettext_lazy('World Performance Evaluation score'))
-    updated = models.DateTimeField(auto_now=True)
+                                  help_text=gettext_lazy('World Performance Evaluation score'),
+                                  verbose_name=gettext_lazy('wpe score'))
+    updated = models.DateTimeField(auto_now=True, verbose_name=gettext_lazy('updated'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['player', 'event_name', 'date'],
                                     name='unique_player_event_name_date'),
         ]
+        verbose_name = gettext_lazy('player event ranking')
+        verbose_name_plural = gettext_lazy('player event rankings')
 
     def __str__(self):
         if self.rank is None:

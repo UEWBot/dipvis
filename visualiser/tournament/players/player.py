@@ -78,9 +78,9 @@ class Player(models.Model):
     """
     A person who played Diplomacy
     """
-    first_name = models.CharField(max_length=40)
-    last_name = models.CharField(max_length=40)
-    email = models.EmailField(blank=True)
+    first_name = models.CharField(max_length=40, verbose_name=gettext_lazy('first name'))
+    last_name = models.CharField(max_length=40, verbose_name=gettext_lazy('last name'))
+    email = models.EmailField(blank=True, verbose_name=gettext_lazy('email'))
     wdr_player_id = models.PositiveIntegerField(unique=True,
                                                 validators=[validate_wdr_player_id],
                                                 verbose_name=gettext_lazy(u'WDR player id'),
@@ -88,20 +88,32 @@ class Player(models.Model):
                                                 null=True)
     backstabbr_username = models.CharField(max_length=40,
                                            blank=True,
-                                           help_text=gettext_lazy('Username on the backstabbr website'))
-    backstabbr_profile_url = models.URLField(blank=True)
-    picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
-    location = models.CharField(max_length=60, blank=True)
-    nationalities = CountryField(multiple=True, blank=True)
+                                           help_text=gettext_lazy('Username on the backstabbr website'),
+                                           verbose_name=gettext_lazy('backstabbr username'))
+    backstabbr_profile_url = models.URLField(blank=True,
+                                             verbose_name=gettext_lazy('backstabbr profile url'))
+    picture = models.ImageField(upload_to=player_picture_location,
+                                blank=True,
+                                null=True,
+                                verbose_name=gettext_lazy('picture'))
+    location = models.CharField(max_length=60,
+                                blank=True,
+                                verbose_name=gettext_lazy('location'))
+    nationalities = CountryField(multiple=True,
+                                 blank=True,
+                                 verbose_name=gettext_lazy('nationalities'))
     # Cache of the player's name in the WDD
     user = models.OneToOneField(User,
                                 blank=True,
                                 null=True,
                                 on_delete=models.CASCADE,
-                                help_text=gettext_lazy('If the Player has an account on the site, record it here'))
+                                help_text=gettext_lazy('If the Player has an account on the site, record it here'),
+                                verbose_name=gettext_lazy('user'))
 
     class Meta:
         ordering = ['last_name', 'first_name']
+        verbose_name = gettext_lazy('player')
+        verbose_name_plural = gettext_lazy('players')
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'

@@ -29,7 +29,7 @@ about a player and retrieving it as needed.
 from urllib.parse import urlencode, urlunparse
 
 from django.db import models
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from tournament.wdd import WDD_BASE_RANKING_PATH, WDD_NETLOC
 from tournament.wdr import WDR_BASE_URL
@@ -44,18 +44,24 @@ class PlayerRanking(models.Model):
 
     Used to import background information.
     """
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    system = models.CharField(max_length=50)
-    score = models.FloatField(blank=True, null=True)
-    international_rank = models.CharField(max_length=20)
-    national_rank = models.CharField(max_length=20)
-    updated = models.DateTimeField(auto_now=True)
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    system = models.CharField(max_length=50, verbose_name=gettext_lazy('system'))
+    score = models.FloatField(blank=True, null=True, verbose_name=gettext_lazy('score'))
+    international_rank = models.CharField(max_length=20,
+                                          verbose_name=gettext_lazy('international rank'))
+    national_rank = models.CharField(max_length=20,
+                                     verbose_name=gettext_lazy('national rank'))
+    updated = models.DateTimeField(auto_now=True, verbose_name=gettext_lazy('updated'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['player', 'system'],
                                     name='unique_player_system'),
         ]
+        verbose_name = gettext_lazy('player ranking')
+        verbose_name_plural = gettext_lazy('player rankings')
 
     def __str__(self):
         s = _('%(player)s is ranked %(ranking)s internationally in the %(system)s') % {'player': self.player,

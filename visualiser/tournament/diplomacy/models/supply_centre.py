@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from django.db import models
+from django.utils.translation import gettext_lazy
 
 from .great_power import GreatPower
 
@@ -22,15 +23,20 @@ class SupplyCentre(models.Model):
     """
     A supply centre on the Diplomacy board.
     """
-    name = models.CharField(max_length=20, unique=True)
-    abbreviation = models.CharField(max_length=4, unique=True)
+    name = models.CharField(max_length=20, unique=True, verbose_name=gettext_lazy('name'))
+    abbreviation = models.CharField(max_length=4,
+                                    unique=True,
+                                    verbose_name=gettext_lazy('abbreviation'))
     initial_owner = models.ForeignKey(GreatPower,
                                       on_delete=models.CASCADE,
                                       null=True,
-                                      blank=True)
+                                      blank=True,
+                                      verbose_name=gettext_lazy('initial owner'))
 
     class Meta:
         ordering = ['name']
+        verbose_name = gettext_lazy('supply centre')
+        verbose_name_plural = gettext_lazy('supply centres')
 
     def __str__(self):
         return self.name

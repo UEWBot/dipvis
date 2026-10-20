@@ -226,16 +226,19 @@ class Circuit(models.Model):
     """
     MAX_NAME_LENGTH = 60
 
-    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    name = models.CharField(max_length=MAX_NAME_LENGTH, verbose_name=gettext_lazy('name'))
     scoring_system = models.CharField(validators=[validate_circuit_scoring_system],
                                       max_length=CircuitScoringSystem.MAX_NAME_LENGTH,
                                       choices=get_scoring_systems(C_SCORING_SYSTEMS),
-                                      help_text=gettext_lazy('How to combine tournament scores into a circuit score'))
-    start_date = models.DateField()
-    end_date = models.DateField()
+                                      help_text=gettext_lazy('How to combine tournament scores into a circuit score'),
+                                      verbose_name=gettext_lazy('scoring system'))
+    start_date = models.DateField(verbose_name=gettext_lazy('start date'))
+    end_date = models.DateField(verbose_name=gettext_lazy('end date'))
     #managers = models.ManyToManyField(User,
     #                                  help_text=_(u'Which users can modify the circuit'))
-    tournaments = models.ManyToManyField(Tournament, blank=True)
+    tournaments = models.ManyToManyField(Tournament,
+                                         blank=True,
+                                         verbose_name=gettext_lazy('tournaments'))
     wdd_circuit_id = models.PositiveIntegerField(validators=[validate_wdd_circuit_id],
                                                  verbose_name=gettext_lazy("This circuit's id in the World Diplomacy Database"),
                                                  blank=True,
@@ -254,6 +257,8 @@ class Circuit(models.Model):
             models.CheckConstraint(check=Q(end_date__gte=F('start_date')),
                                    name='%(class)s_starts_before_end'),
         ]
+        verbose_name = gettext_lazy('circuit')
+        verbose_name_plural = gettext_lazy('circuits')
 
     def __str__(self):
         return '%s %d' % (self.name, self.start_date.year)
@@ -425,12 +430,17 @@ class CircuitPlayer(models.Model):
     """
     A person who played in a Circuit.
     """
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    circuit = models.ForeignKey(Circuit, on_delete=models.CASCADE)
-    score = models.FloatField(default=0.0)
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
+    circuit = models.ForeignKey(Circuit,
+                                on_delete=models.CASCADE,
+                                verbose_name=gettext_lazy('circuit'))
+    score = models.FloatField(default=0.0, verbose_name=gettext_lazy('score'))
     tournamentplayers = models.ManyToManyField(TournamentPlayer,
                                                through='CircuitTournamentResult',
-                                               blank=True)
+                                               blank=True,
+                                               verbose_name=gettext_lazy('tournamentplayers'))
 
     class Meta:
         # Each player can only be in each circuit once
@@ -439,6 +449,8 @@ class CircuitPlayer(models.Model):
                                     name='unique_player_circuit'),
             # Ideally we'd check the tournamentplayers here
         ]
+        verbose_name = gettext_lazy('circuit player')
+        verbose_name_plural = gettext_lazy('circuit players')
 
     def __str__(self):
         return _('%(player)s in %(circuit)s') % {'player': self.player,
@@ -454,18 +466,23 @@ class CircuitTournamentResult(models.Model):
     """A TournamentPlayer's contribution to one CircuitPlayer's score."""
     circuit_player = models.ForeignKey(CircuitPlayer,
                                        related_name='tournament_results',
-                                       on_delete=models.CASCADE)
+                                       on_delete=models.CASCADE,
+                                       verbose_name=gettext_lazy('circuit player'))
     tournament_player = models.ForeignKey(TournamentPlayer,
                                           related_name='+',
-                                          on_delete=models.CASCADE)
-    score = models.FloatField(default=0.0)
-    score_dropped = models.BooleanField(default=False)
+                                          on_delete=models.CASCADE,
+                                          verbose_name=gettext_lazy('tournament player'))
+    score = models.FloatField(default=0.0, verbose_name=gettext_lazy('score'))
+    score_dropped = models.BooleanField(default=False,
+                                        verbose_name=gettext_lazy('score dropped'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['circuit_player', 'tournament_player'],
                                     name='unique_circuit_tournament_result'),
         ]
+        verbose_name = gettext_lazy('circuit tournament result')
+        verbose_name_plural = gettext_lazy('circuit tournament results')
 
 
 class CircuitSeries(models.Model):
@@ -475,13 +492,20 @@ class CircuitSeries(models.Model):
     MAX_NAME_LENGTH = 60
     MAX_DESC_LENGTH = 2000
 
-    name = models.CharField(max_length=MAX_NAME_LENGTH, unique=True)
-    description = models.CharField(max_length=MAX_DESC_LENGTH, null=True)
-    circuits = models.ManyToManyField(Circuit, blank=True)
-    slug = NameSlugField(unique=True)
+    name = models.CharField(max_length=MAX_NAME_LENGTH,
+                            unique=True,
+                            verbose_name=gettext_lazy('name'))
+    description = models.CharField(max_length=MAX_DESC_LENGTH,
+                                   null=True,
+                                   verbose_name=gettext_lazy('description'))
+    circuits = models.ManyToManyField(Circuit,
+                                      blank=True,
+                                      verbose_name=gettext_lazy('circuits'))
+    slug = NameSlugField(unique=True, verbose_name=gettext_lazy('slug'))
 
     class Meta:
-        verbose_name_plural = 'Circuit Series'
+        verbose_name_plural = gettext_lazy('Circuit Series')
+        verbose_name = gettext_lazy('circuit series')
 
     def __str__(self):
         return '%s' % (self.name)

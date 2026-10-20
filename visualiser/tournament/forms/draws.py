@@ -27,9 +27,10 @@ from tournament.models import DrawSecrecy, Seasons
 
 class DrawForm(forms.Form):
     """Form for a draw vote"""
-    year = forms.IntegerField(min_value=FIRST_YEAR)
-    season = forms.ChoiceField(choices=Seasons.choices)
-    proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
+    year = forms.IntegerField(label=_('Year'), min_value=FIRST_YEAR)
+    season = forms.ChoiceField(label=_('Season'), choices=Seasons.choices)
+    proposer = forms.ModelChoiceField(label=_('Proposer'),
+                                      queryset=GreatPower.objects.all(),
                                       required=False,
                                       to_field_name='name')
 
@@ -46,14 +47,17 @@ class DrawForm(forms.Form):
                                                            label=_('Concede to'),
                                                            to_field_name='name')
         elif not is_dias:
-            self.fields['powers'] = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
+            self.fields['powers'] = forms.ModelMultipleChoiceField(label=_('Powers'),
+                                                                   queryset=GreatPower.objects.all(),
                                                                    to_field_name='name',
                                                                    widget=forms.SelectMultiple(attrs={'size': '7'}))
         if secrecy == DrawSecrecy.SECRET:
-            self.fields['passed'] = forms.BooleanField(initial=False,
+            self.fields['passed'] = forms.BooleanField(label=_('Passed'),
+                                                       initial=False,
                                                        required=False)
         elif secrecy == DrawSecrecy.COUNTS:
-            self.fields['votes_in_favour'] = forms.IntegerField(min_value=0,
+            self.fields['votes_in_favour'] = forms.IntegerField(label=_('Votes in favour'),
+                                                                min_value=0,
                                                                 max_value=GreatPower.objects.count())
         else:
             raise AssertionError(f'Unexpected draw secrecy value {secrecy}')

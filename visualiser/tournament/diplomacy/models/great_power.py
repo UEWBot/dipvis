@@ -15,17 +15,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.db import models
+from django.utils.translation import gettext_lazy
 
 
 class GreatPower(models.Model):
     """
     One of the seven great powers that can be played
     """
-    name = models.CharField(max_length=20, unique=True)
-    abbreviation = models.CharField(max_length=1, unique=True)
+    name = models.CharField(max_length=20, unique=True, verbose_name=gettext_lazy('name'))
+    abbreviation = models.CharField(max_length=1,
+                                    unique=True,
+                                    verbose_name=gettext_lazy('abbreviation'))
 
     class Meta:
         ordering = ['name']
+        verbose_name = gettext_lazy('great power')
+        verbose_name_plural = gettext_lazy('great powers')
 
     def __str__(self):
         return self.name

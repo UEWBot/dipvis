@@ -42,3 +42,7 @@ class FormLabelTests(SimpleTestCase):
                 with self.subTest(form=cls.__name__, field=name):
                     if field.label is not None:
                         self.assertIsInstance(field.label, Promise)
+            meta = getattr(cls, '_meta', None)
+            for name, label in (getattr(meta, 'labels', None) or {}).items():
+                with self.subTest(form=cls.__name__, meta_label=name):
+                    self.assertIsInstance(label, Promise)

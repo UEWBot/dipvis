@@ -19,6 +19,7 @@ Forms for seeder bias in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from tournament.models import SeederBias, TournamentPlayer
 
@@ -27,8 +28,8 @@ from .fields import TournamentPlayerChoiceField
 
 class SeederBiasForm(forms.ModelForm):
     """Form to create/update a SeederBias object"""
-    player1 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
-    player2 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
+    player1 = TournamentPlayerChoiceField(label=_('Player 1'), queryset=TournamentPlayer.objects.none())
+    player2 = TournamentPlayerChoiceField(label=_('Player 2'), queryset=TournamentPlayer.objects.none())
 
     class Meta:
         model = SeederBias

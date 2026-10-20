@@ -37,7 +37,8 @@ class PoolForm(forms.Form):
         r = self.pool.the_round
         queryset = r.roundplayer_set.order_by('player')
         for n in range(self.pool.board_count * GreatPower.objects.count()):
-            self.fields[f'player_{n+1}'] = RoundPlayerChoiceField(queryset=queryset)
+            self.fields[f'player_{n+1}'] = RoundPlayerChoiceField(label=_('Player %(number)d') % {'number': n+1},
+                                                                  queryset=queryset)
 
     def clean(self):
         """

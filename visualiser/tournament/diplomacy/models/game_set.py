@@ -16,6 +16,7 @@
 
 
 from django.db import models
+from django.utils.translation import gettext_lazy
 
 from ..utils.game_image_location import game_image_location
 
@@ -28,8 +29,13 @@ class GameSet(models.Model):
     The main purpose of separating this out is so that we can display SC
     counts with power colours matching those of any photos of the board.
     """
-    name = models.CharField(max_length=20, unique=True)
-    initial_image = models.ImageField(upload_to=game_image_location)
+    name = models.CharField(max_length=20, unique=True, verbose_name=gettext_lazy('name'))
+    initial_image = models.ImageField(upload_to=game_image_location,
+                                      verbose_name=gettext_lazy('initial image'))
+
+    class Meta:
+        verbose_name = gettext_lazy('game set')
+        verbose_name_plural = gettext_lazy('game sets')
 
     def __str__(self):
         return self.name

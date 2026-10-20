@@ -30,7 +30,7 @@ from urllib.parse import urlencode, urlunparse
 
 from django.db import models
 from django.db.models import Q
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from tournament.diplomacy import TOTAL_SCS, GreatPower
 from tournament.wdd import (WDD_BASE_RESULTS_PATH, WDD_NETLOC,
@@ -47,19 +47,25 @@ class PlayerAward(models.Model):
 
     Used to import background information.
     """
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player,
+                               on_delete=models.CASCADE,
+                               verbose_name=gettext_lazy('player'))
     event_ranking = models.ForeignKey(PlayerEventRanking,
                                       on_delete=models.CASCADE,
+                                      verbose_name=gettext_lazy('event ranking'),
                                       )
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, verbose_name=gettext_lazy('name'))
     power = models.ForeignKey(GreatPower,
                               related_name='+',
                               on_delete=models.CASCADE,
                               blank=True,
-                              null=True)
-    score = models.FloatField(blank=True, null=True)
-    final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
-    updated = models.DateTimeField(auto_now=True)
+                              null=True,
+                              verbose_name=gettext_lazy('power'))
+    score = models.FloatField(blank=True, null=True, verbose_name=gettext_lazy('score'))
+    final_sc_count = models.PositiveSmallIntegerField(blank=True,
+                                                      null=True,
+                                                      verbose_name=gettext_lazy('final sc count'))
+    updated = models.DateTimeField(auto_now=True, verbose_name=gettext_lazy('updated'))
 
     class Meta:
         constraints = [
@@ -68,6 +74,8 @@ class PlayerAward(models.Model):
             models.UniqueConstraint(fields=['player', 'event_ranking', 'name'],
                                     name='unique_player_eventranking_name'),
         ]
+        verbose_name = gettext_lazy('player award')
+        verbose_name_plural = gettext_lazy('player awards')
 
     def __str__(self):
         return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
