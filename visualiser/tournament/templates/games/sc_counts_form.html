@@ -15,21 +15,27 @@
             {% if forloop.first %}
                 <thead><tr>
                     {% for field in form.visible_fields %}
-                        <th>{{ field.label }}</th>
+                        <th scope="col">{{ field.label }}</th>
                     {% endfor %}
                 </tr></thead><tbody>
             {% endif %}
             <tr class="{% cycle 'odd_row' 'even_row' as rowclass %}">
             {% for field in form.visible_fields %}
+                {% if forloop.first %}
+                <th scope="row">
+                    {% for hidden in form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                {% else %}
                 <td>
-                    {% if forloop.first %}
-                        {% for hidden in form.hidden_fields %}
-                            {{ hidden }}
-                        {% endfor %}
-                    {% endif %}
+                {% endif %}
                     {{ field.errors.as_ul }}
                     {{ field }}
+                {% if forloop.first %}
+                </th>
+                {% else %}
                 </td>
+                {% endif %}
             {% endfor %}
             {# Includes any hidden field errors #}
             {% with errors=form.get_context.errors %}
@@ -42,15 +48,21 @@
 
         <tr class="{% cycle rowclass %}">
             {% for field in death_form.visible_fields %}
+                {% if forloop.first %}
+                <th scope="row">
+                    {% for hidden in death_form.hidden_fields %}
+                        {{ hidden }}
+                    {% endfor %}
+                {% else %}
                 <td>
-                    {% if forloop.first %}
-                        {% for hidden in death_form.hidden_fields %}
-                            {{ hidden }}
-                        {% endfor %}
-                    {% endif %}
+                {% endif %}
                     {{ field.errors.as_ul }}
                     {{ field }}
+                {% if forloop.first %}
+                </th>
+                {% else %}
                 </td>
+                {% endif %}
             {% endfor %}
             {% with errors=death_form.get_context.errors %}
                 {% if errors %}

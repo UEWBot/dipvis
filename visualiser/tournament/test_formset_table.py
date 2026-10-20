@@ -29,14 +29,19 @@ class SimpleForm(forms.Form):
     value = forms.IntegerField()
 
 
+class TwoFieldForm(forms.Form):
+    name = forms.CharField()
+    value = forms.IntegerField()
+
+
 class HiddenFieldForm(forms.Form):
     hidden_value = forms.IntegerField(widget=forms.HiddenInput())
     name = forms.CharField()
 
 
 class FormsetTableTests(SimpleTestCase):
-    def _render(self, template, num_forms):
-        formset = formset_factory(SimpleForm, extra=num_forms)()
+    def _render(self, template, num_forms, form=SimpleForm):
+        formset = formset_factory(form, extra=num_forms)()
         return render_to_string(template, {'formset': formset})
 
     def test_tbody_balanced(self):
@@ -50,12 +55,20 @@ class FormsetTableTests(SimpleTestCase):
                     self.assertEqual(html.count('<tr class='), num_forms)
 
     def test_column_headings(self):
-        html = self._render('formset_table.html', 3)
-        self.assertEqual(html.count('<th>Value</th>'), 1)
-        self.assertNotIn('<th scope="row">', html)
+        html = self._render('formset_table.html', 3, form=TwoFieldForm)
+        self.assertEqual(html.count('<th scope="col">Name</th>'), 1)
+        self.assertEqual(html.count('<th scope="col">Value</th>'), 1)
+        self.assertNotIn('<th>', html)
+
+    def test_first_column_is_row_heading(self):
+        html = self._render('formset_table.html', 3, form=TwoFieldForm)
+        self.assertEqual(html.count('<th scope="row">'), 3)
+        self.assertEqual(html.count('<td>'), 3)
+        self.assertEqual(len(re.findall(r'<th[ >]', html)), html.count('</th>'))
+        self.assertEqual(len(re.findall(r'<td[ >]', html)), html.count('</td>'))
 
     def test_hidden_field_errors_in_error_cell(self):
-        """Hidden field errors should be in the trailing error cell, not the first cell."""
+        """Hidden field errors should be in the trailing error cell, not the row heading."""
         data = {'form-TOTAL_FORMS': '1',
                 'form-INITIAL_FORMS': '0',
                 'form-0-hidden_value': 'not-a-number',
@@ -63,8 +76,8 @@ class FormsetTableTests(SimpleTestCase):
         formset = formset_factory(HiddenFieldForm)(data)
         self.assertFalse(formset.is_valid())
         html = render_to_string('formset_table.html', {'formset': formset})
-        first_cell = re.search(r'<td>(.*?)</td>', html, re.DOTALL).group(1)
-        self.assertNotIn('errorlist', first_cell)
+        row_heading = re.search(r'<th scope="row">(.*?)</th>', html, re.DOTALL).group(1)
+        self.assertNotIn('errorlist', row_heading)
         self.assertInHTML('<td><ul class="errorlist nonfield"><li>(Hidden field hidden_value) Enter a whole number.</li></ul></td>',
                           html)
 

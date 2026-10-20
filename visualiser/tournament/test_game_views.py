@@ -567,6 +567,10 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'games/sc_counts_form.html')
+        # The year cell of each row, and the "eliminated" label, should be row headings
+        formset = response.context['formset']
+        self.assertContains(response, '<th scope="row">', count=formset.total_form_count() + 1)
+        self.assertContains(response, '<th scope="col">', count=len(formset.forms[0].visible_fields()))
 
     def test_post_enter_scs(self):
         self.assertIs(False, self.g1.is_finished)

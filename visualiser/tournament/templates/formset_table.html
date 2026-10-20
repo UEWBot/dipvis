@@ -7,21 +7,27 @@
     {% if forloop.first %}
         <thead><tr>
         {% for field in form.visible_fields %}
-            <th>{{ field.label }}</th>
+            <th scope="col">{{ field.label }}</th>
         {% endfor %}
         </tr></thead><tbody>
     {% endif %}
     <tr class="{% cycle 'odd_row' 'even_row' %}">
     {% for field in form.visible_fields %}
-        <td>
         {% if forloop.first %}
+        <th scope="row">
             {% for hidden in form.hidden_fields %}
                 {{ hidden }}
             {% endfor %}
+        {% else %}
+        <td>
         {% endif %}
         {{ field.errors.as_ul }}
         {{ field }}
+        {% if forloop.first %}
+        </th>
+        {% else %}
         </td>
+        {% endif %}
     {% endfor %}
     {# Includes any hidden field errors #}
     {% with errors=form.get_context.errors %}

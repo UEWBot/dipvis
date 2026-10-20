@@ -28,12 +28,12 @@
         {% if forloop.first %}
             <thead><tr>
             {% for field in form.visible_fields %}
-                <th>{{ field.label }}</th>
+                <th scope="col">{{ field.label }}</th>
             {% endfor %}
             </tr></thead><tbody>
         {% endif %}
         <tr class="{% cycle 'odd_row' 'even_row' %}">
-            <td>
+            <th scope="row">
                 {% for hidden in form.hidden_fields %}
                     {{ hidden }}
                 {% endfor %}
@@ -43,7 +43,7 @@
                 {% else %}
                     {{ form.player }}
                 {% endif %}
-            </td>
+            </th>
             {% for field in form.visible_fields|slice:"1:" %}
             <td>
                 {{ field.errors.as_ul }}

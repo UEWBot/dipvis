@@ -698,6 +698,10 @@ class RoundViewTests(TestCase):
         import re
         selects = re.findall(r'id="id_form-\d+-player"', content)
         self.assertEqual(2, len(selects))
+        # The player column should be a row heading, and the other headings column headings
+        formset = response.context['formset']
+        self.assertEqual(content.count('<th scope="row">'), formset.total_form_count())
+        self.assertEqual(content.count('<th scope="col">'), len(formset.forms[0].visible_fields()))
 
     def test_roll_call_post_current_round_no_seeding(self):
         """roll_call() POST for t1, which only has a single Round"""
