@@ -24,7 +24,7 @@
     {{ formset.management_form }}
     {{ formset.non_form_errors.as_ul }}
     <table class="form">
-    {% for form in formset.forms %}
+      {% for form in formset.forms %}
         {% if forloop.first %}
             <thead><tr>
             {% for field in form.visible_fields %}
@@ -51,10 +51,12 @@
                 {{ field }}
             </td>
             {% endfor %}
-            <td>{{ form.non_field_errors }}</td>
+            {% if form.non_field_errors %}
+                <td>{{ form.non_field_errors }}</td>
+            {% endif %}
         </tr>
-    {% endfor %}
-    </tbody>
+      {% endfor %}
+      </tbody>
     </table>
     <input type="submit" value={% trans "Submit" %} />
 </form>
