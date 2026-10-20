@@ -59,6 +59,12 @@ class TeamFormTest(TestCase):
         for i in range(1, self.t.team_size):
             self.assertIs(False, form.fields[f'player_{i}'].required)
 
+    def test_team_form_player_labels(self):
+        """Player fields should be numbered from 1"""
+        form = TeamForm(tournament=self.t)
+        for i in range(self.t.team_size):
+            self.assertEqual(str(form.fields[f'player_{i}'].label), f'Player {i + 1}')
+
     def test_team_form_players_optional(self):
         """One player should be required, others optional"""
         form = TeamForm(tournament=self.t, data={'name': 'Sausages',

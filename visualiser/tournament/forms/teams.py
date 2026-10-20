@@ -54,7 +54,7 @@ class TeamForm(forms.ModelForm):
                          tournamentplayer__unranked=False).distinct()
         for n in range(self.tournament.team_size):
             # We allow Teams with as few as one player
-            self.fields[f'player_{n}'] = PlayerChoiceField(label=_('Player %(number)d') % {'number': n},
+            self.fields[f'player_{n}'] = PlayerChoiceField(label=_('Player %(number)d') % {'number': n + 1},
                                                            queryset=queryset,
                                                            required=(n == 0))
 
