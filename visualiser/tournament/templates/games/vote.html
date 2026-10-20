@@ -22,8 +22,12 @@
   <form action="{% url 'draw_vote' tournament.id game.name %}" method="post">
 {% endif %}
   {% csrf_token %}
-  {{ form.non_field_errors }}
-  {% for field in form %}
+  {# Includes any hidden field errors #}
+  {{ form.get_context.errors }}
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+  {% for field in form.visible_fields %}
     {{ field.errors }}
     {{ field.label_tag }} {{ field }}
   {% endfor %}

@@ -8,8 +8,12 @@
 
 <form method="post" action="{% url 'enter_url' %}">
   {% csrf_token %}
-  {{ form.non_field_errors }}
-  {% for field in form %}
+  {# Includes any hidden field errors #}
+  {{ form.get_context.errors }}
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+  {% for field in form.visible_fields %}
     <p>{{ field.errors }}
     {{ field.label_tag }}
     {{ field }}</p>

@@ -8,7 +8,8 @@
 
 <form method="post" action="{% url 'get_seven' tournament.id round.number %}">
   {% csrf_token %}
-  {{ form.non_field_errors }}
+  {# Includes any hidden field errors #}
+  {{ form.get_context.errors }}
   <p>{% blocktrans with n_players=playing n_standbys=standbys %}You have {{ n_players }} players wanting to play plus {{ n_standbys }} available if needed.{% endblocktrans %}</p>
   {% if form.all_standbys_needed %}
     <p>{% trans "You need all your standby players to play." %}
@@ -27,7 +28,10 @@
       {% blocktrans count n_players=form.sitters %}<b>or</b> one player to sit out the round.{% plural %}<b>or</b> {{ n_players }} players to sit out the round.{%endblocktrans %}
     </p>
   {% endif %}
-  {% for field in form %}
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+  {% for field in form.visible_fields %}
     <p>{{ field.errors }}
     {{ field.label_tag }}
     {{ field }}</p>
