@@ -20,9 +20,7 @@ Any further visible fields are not rendered.
             {% endfor %}
             {{ field.errors.as_ul }}
             {{ field }}
-            {% if form.non_field_errors %}
-                {{ form.non_field_errors }}
-            {% endif %}
+            {{ form.non_field_errors }}
         </td>
     </tr>
     {% endwith %}
