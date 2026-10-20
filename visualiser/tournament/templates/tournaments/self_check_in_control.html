@@ -13,7 +13,7 @@
   <p>{% trans "You should only enable self-check-ins for a round shortly before the round is due to start, to avoid players checking themselves in but then not actually playing." %}</p>
   {% csrf_token %}
   <table>
-    {{ form }}
+    {{ form.as_table }}
   </table>
   <input type="submit" value="{% trans "Submit" %}" />
 </form>

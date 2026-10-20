@@ -19,6 +19,7 @@ Forms for self check-in in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 
 class EnableCheckInForm(forms.Form):
@@ -47,6 +48,8 @@ class EnableCheckInForm(forms.Form):
         for i in range(first_round_num, 1 + last_round_num):
             name = f'round_{i}'
             readonly = (i < this_round_num)
-            self.fields[name] = forms.BooleanField(required=False, initial=False)
+            self.fields[name] = forms.BooleanField(label=_('Round %(number)d') % {'number': i},
+                                                   required=False,
+                                                   initial=False)
             if readonly:
                 self.fields[name].disabled = True

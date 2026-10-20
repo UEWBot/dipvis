@@ -2431,6 +2431,23 @@ class TournamentViewTests(TestCase):
         self.assertTrue(any({'form': {'name': 'Preferences CSV import'}} in json.loads(entry.change_message)
                             for entry in LogEntry.objects.filter(user=self.u3)))
 
+    def test_self_check_in_control_get(self):
+        """Each round's checkbox should be a table row, labelled with the round"""
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('self_check_in_control', args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/self_check_in_control.html')
+        round_count = self.t2.round_set.count()
+        self.assertGreater(round_count, 0)
+        for number in range(1, round_count + 1):
+            self.assertContains(response,
+                                f'<th><label for="id_round_{number}">Round {number}:</label></th>',
+                                count=1,
+                                html=True)
+        self.assertContains(response, '<tr>', count=round_count)
+        self.assertNotContains(response, '<div>')
+
     def test_self_check_in_control_logs_changes(self):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         data = {f'round_{number}': 'on'
