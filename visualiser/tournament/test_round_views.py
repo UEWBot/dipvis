@@ -2498,7 +2498,10 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/create_games.html')
-        self.assertContains(response, 'Enter a whole number.')
+        # The hidden field's error should be shown with the row's other errors
+        self.assertContains(response,
+                            '<td><ul class="errorlist nonfield"><li>(Hidden field game_id) Enter a whole number.</li></ul></td>',
+                            html=True)
 
     def test_create_games_post_modify_players(self):
         """Change players or power assignments"""

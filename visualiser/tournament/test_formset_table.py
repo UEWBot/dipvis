@@ -17,6 +17,7 @@
 """
 formset_table.html Tests for the Diplomacy Tournament Visualiser.
 """
+import re
 
 from django import forms
 from django.forms import formset_factory
@@ -26,6 +27,11 @@ from django.test import SimpleTestCase
 
 class SimpleForm(forms.Form):
     value = forms.IntegerField()
+
+
+class HiddenFieldForm(forms.Form):
+    hidden_value = forms.IntegerField(widget=forms.HiddenInput())
+    name = forms.CharField()
 
 
 class FormsetTableTests(SimpleTestCase):
@@ -48,7 +54,35 @@ class FormsetTableTests(SimpleTestCase):
         self.assertEqual(html.count('<th>Value</th>'), 1)
         self.assertNotIn('<th scope="row">', html)
 
+    def test_hidden_field_errors_in_error_cell(self):
+        """Hidden field errors should be in the trailing error cell, not the first cell."""
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '0',
+                'form-0-hidden_value': 'not-a-number',
+                'form-0-name': 'Name'}
+        formset = formset_factory(HiddenFieldForm)(data)
+        self.assertFalse(formset.is_valid())
+        html = render_to_string('formset_table.html', {'formset': formset})
+        first_cell = re.search(r'<td>(.*?)</td>', html, re.DOTALL).group(1)
+        self.assertNotIn('errorlist', first_cell)
+        self.assertInHTML('<td><ul class="errorlist nonfield"><li>(Hidden field hidden_value) Enter a whole number.</li></ul></td>',
+                          html)
+
     def test_row_labels(self):
         html = self._render('formset_table_row_labels.html', 3)
         self.assertEqual(html.count('<th scope="row">'), 3)
         self.assertNotIn('<thead>', html)
+
+    def test_row_labels_hidden_field_errors_after_field(self):
+        """Hidden field errors should be identified, and shown after the field."""
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '0',
+                'form-0-hidden_value': 'not-a-number',
+                'form-0-name': 'Name'}
+        formset = formset_factory(HiddenFieldForm)(data)
+        self.assertFalse(formset.is_valid())
+        html = render_to_string('formset_table_row_labels.html', {'formset': formset})
+        self.assertEqual(html.count('errorlist'), 1)
+        error = html.index('(Hidden field hidden_value) Enter a whole number.')
+        self.assertGreater(error, html.index('name="form-0-name"'))
+        self.assertLess(error, html.index('</td>'))

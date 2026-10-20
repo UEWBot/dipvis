@@ -15,12 +15,12 @@ Any further visible fields are not rendered.
         <th scope="row">{{ field.label_tag }}</th>
         <td>
             {% for hidden in form.hidden_fields %}
-                {{ hidden.errors.as_ul }}
                 {{ hidden }}
             {% endfor %}
             {{ field.errors.as_ul }}
             {{ field }}
-            {{ form.non_field_errors }}
+            {# Includes any hidden field errors #}
+            {{ form.get_context.errors }}
         </td>
     </tr>
     {% endwith %}

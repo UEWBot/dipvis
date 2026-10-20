@@ -2981,7 +2981,9 @@ class TournamentViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards_form.html')
-        self.assertContains(response, 'This field is required.')
+        self.assertContains(response,
+                            '<td><ul class="errorlist nonfield"><li>(Hidden field id) This field is required.</li></ul></td>',
+                            html=True)
         # Cleanup
         existing.delete()
 

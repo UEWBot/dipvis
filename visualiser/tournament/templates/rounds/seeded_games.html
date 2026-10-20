@@ -21,7 +21,6 @@
             <td>
               {% if forloop.first %}
                 {% for hidden in form.hidden_fields %}
-                  {{ hidden.errors.as_ul }}
                   {{ hidden }}
                 {% endfor %}
               {% endif %}
@@ -30,9 +29,12 @@
               {{ field }}
             </td>
           {% endfor %}
-          {% if form.non_field_errors %}
-            <td>{{ form.non_field_errors }}</td>
-          {% endif %}
+          {# Includes any hidden field errors #}
+          {% with errors=form.get_context.errors %}
+            {% if errors %}
+              <td>{{ errors }}</td>
+            {% endif %}
+          {% endwith %}
         </tr>
       {% endfor %}
     </tbody>
