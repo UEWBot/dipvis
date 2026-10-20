@@ -36,6 +36,8 @@ class PrefsForm(forms.ModelForm):
         fields = ()
 
     def __init__(self, *args, **kwargs):
+        # The label is the player's name, so no colon
+        kwargs.setdefault('label_suffix', '')
         super().__init__(*args, **kwargs)
         # Overridable default initial value, like ModelForm
         if self.instance.pk and ('prefs' not in self.initial):

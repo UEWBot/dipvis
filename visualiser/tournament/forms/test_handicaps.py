@@ -47,6 +47,10 @@ class HandicapFormTest(TestCase):
         form = HandicapForm(instance=self.tp)
         self.assertEqual(form.fields['handicap'].label, 'Arthur Bottom')
 
+    def test_handicap_form_no_label_colon(self):
+        form = HandicapForm(instance=self.tp)
+        self.assertEqual(form['handicap'].label_tag(), '<label for="id_handicap">Arthur Bottom</label>')
+
     def test_handicap_form_handicap_help_text(self):
         form = HandicapForm(instance=self.tp)
         self.assertEqual(form.fields['handicap'].help_text, '')

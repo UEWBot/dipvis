@@ -721,6 +721,8 @@ class TournamentPlayerViewTests(TestCase):
         # Each checkbox should have its help text, which aria-describedby refers to
         self.assertContains(response, '<span class="helptext"', count=len(players))
         assert_aria_describedby_targets_exist(self, response.content.decode())
+        # Player names shouldn't have a colon appended
+        self.assertNotContains(response, ':</label>')
         self.u3.user_permissions.remove(perm)
         self.u3.save()
 
@@ -947,7 +949,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/player_entry.html')
         # The preferences field should be labelled with the player's name
-        self.assertContains(response, f'<label for="id_prefs">{self.tp11.player}:</label>', html=True)
+        self.assertContains(response, f'<label for="id_prefs">{self.tp11.player}</label>', html=True)
 
     def test_player_prefs_invalid_uuid(self):
         """Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer"""

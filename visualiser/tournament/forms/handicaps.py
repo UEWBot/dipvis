@@ -31,6 +31,8 @@ class HandicapForm(forms.ModelForm):
         fields = ('handicap',)
 
     def __init__(self, *args, **kwargs):
+        # The label is the player's name, so no colon
+        kwargs.setdefault('label_suffix', '')
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
             self.fields['handicap'].label = str(self.instance.player)

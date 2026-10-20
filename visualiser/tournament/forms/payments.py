@@ -31,6 +31,8 @@ class PaidForm(forms.ModelForm):
         fields = ('paid',)
 
     def __init__(self, *args, **kwargs):
+        # The label is the player's name, so no colon
+        kwargs.setdefault('label_suffix', '')
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
             self.fields['paid'].label = str(self.instance.player)
