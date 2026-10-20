@@ -1481,6 +1481,11 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
+        # Field labels should be linked to their inputs, with no colon
+        self.assertContains(response, '<label for="id_form-0-top_board">Top board</label>', html=True)
+        for gp in self.t2.round_numbered(3).game_set.get().gameplayer_set.all():
+            label = f'{gp.player}*' if gp.roundplayer().sandboxer else str(gp.player)
+            self.assertContains(response, f'<label for="id_form-0-{gp.pk}">{label}</label>', html=True)
         # A single Game should have been created
         g_qs = self.t2.round_numbered(3).game_set
         self.assertEqual(g_qs.count(), 1)

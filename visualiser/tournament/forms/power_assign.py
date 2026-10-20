@@ -49,6 +49,7 @@ class PowerAssignForm(forms.Form):
         """Dynamically creates one GreatPower field per RoundPlayer"""
         # Remove our special kwarg from the list
         self.game = kwargs.pop('game')
+        kwargs.setdefault('label_suffix', '')
         super().__init__(*args, **kwargs)
 
         queryset = GreatPower.objects.all()
