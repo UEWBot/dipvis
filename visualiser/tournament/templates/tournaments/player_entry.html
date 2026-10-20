@@ -28,24 +28,19 @@
 
 <form method="post" action="{% url 'player_prefs' tournament.id uuid %}">
   {% csrf_token %}
-  <table class="form">
-    {# Includes any hidden field errors #}
-    {{ form.get_context.errors }}
-    {% for hidden in form.hidden_fields %}
-      {{ hidden }}
-    {% endfor %}
-    {% for field in form.visible_fields %}
-      <div class=fieldWrapper">
-        <tr>
-          {{ field.errors }}
-          {{ field }}
-          {% if field.help_text %}
-            <p class="help">{{ field.help_text|safe }}</p>
-          {% endif %}
-        </tr>
-      </div>
-    {% endfor %}
-  </table>
+  {# Includes any hidden field errors #}
+  {{ form.get_context.errors }}
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+  {% for field in form.visible_fields %}
+    <p>{{ field.errors }}
+    {{ field.label_tag }}
+    {{ field }}</p>
+    {% if field.help_text %}
+      <p class="helptext" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</p>
+    {% endif %}
+  {% endfor %}
   <input type="submit" value="{% trans "Submit" %}" />
 </form>
 {% endblock content %}

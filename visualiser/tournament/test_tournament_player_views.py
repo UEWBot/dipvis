@@ -942,6 +942,8 @@ class TournamentPlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/player_entry.html')
+        # The preferences field should be labelled with the player's name
+        self.assertContains(response, f'<label for="id_prefs">{self.tp11.player}:</label>', html=True)
 
     def test_player_prefs_invalid_uuid(self):
         """Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer"""

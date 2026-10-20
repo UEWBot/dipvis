@@ -36,6 +36,10 @@ class HiddenFieldForm(forms.Form):
     standbys = 0
 
 
+class HelpTextForm(forms.Form):
+    name = forms.CharField(help_text='Some help')
+
+
 class HiddenFieldTemplateTests(SimpleTestCase):
     """Templates that render a form field-by-field should handle hidden fields."""
 
@@ -51,6 +55,7 @@ class HiddenFieldTemplateTests(SimpleTestCase):
         self.assertIn('(Hidden field hidden_value) Enter a whole number.', html)
         # The visible field should still be rendered with its label
         self.assertIn('name="name"', html)
+        self.assertIn('<label for="id_name">', html)
 
     def test_enter_url(self):
         self._check('backstabbr/enter_url.html', {})
@@ -76,3 +81,14 @@ class HiddenFieldTemplateTests(SimpleTestCase):
                     {'tournament': SimpleNamespace(id=1),
                      'uuid': uuid.uuid4(),
                      'prefs_list': []})
+
+    def test_player_entry_help_text(self):
+        """Help text should be shown, and linked to its field."""
+        form = HelpTextForm()
+        html = render_to_string('tournaments/player_entry.html',
+                                {'form': form,
+                                 'tournament': SimpleNamespace(id=1),
+                                 'uuid': uuid.uuid4(),
+                                 'prefs_list': []})
+        self.assertInHTML('<p class="helptext" id="id_name_helptext">Some help</p>', html)
+        self.assertIn('aria-describedby="id_name_helptext"', html)
