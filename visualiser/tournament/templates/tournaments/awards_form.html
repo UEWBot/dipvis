@@ -5,7 +5,7 @@
 
 {% block content %}
 <h1>{% blocktrans with tournament=tournament %}{{ tournament }} Awards{% endblocktrans %}</h1>
-<form method="post" action={% url 'enter_awards' tournament.id %}>
+<form method="post" action="{% url 'enter_awards' tournament.id %}">
   {% csrf_token %}
   {% for tournament_award, formset in award_formsets %}
     <h2>{{ tournament_award.award }}</h2>
@@ -42,6 +42,6 @@
       </tbody>
     </table>
   {% endfor %}
-  <input type="submit" value={% trans "Submit" %} />
+  <input type="submit" value="{% trans "Submit" %}" />
 </form>
 {% endblock content %}

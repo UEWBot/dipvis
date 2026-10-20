@@ -6,7 +6,7 @@
 {% block content %}
 <h1>{% trans "Enter Backstabbr URL" %}</h1>
 
-<form method="post" action={% url 'enter_url' %}>
+<form method="post" action="{% url 'enter_url' %}">
   {% csrf_token %}
   {{ form.non_field_errors }}
   {% for field in form %}

@@ -10,7 +10,7 @@
     <dd><ul>
       {% for g in r.game_set.all %}
         {% if g.external_url %}
-          <li><a href={{ g.external_url }}>{{ g.name }}</a></li>
+          <li><a href="{{ g.external_url }}">{{ g.name }}</a></li>
         {% else %}
           <li>{{ g.name }} - {% trans "No sandbox link" %}</li>
         {% endif %}

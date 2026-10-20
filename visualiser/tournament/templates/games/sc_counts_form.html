@@ -5,7 +5,7 @@
 
 {% block content %}
 <h1>{% blocktrans with game=game %}Game {{ game }} Supply Centres{% endblocktrans %}</h1>
-<form method="post" action={% url 'enter_scs' tournament.id game.name %}>
+<form method="post" action="{% url 'enter_scs' tournament.id game.name %}">
     {% csrf_token %}
     {{ end_form }}
     {{ formset.management_form }}

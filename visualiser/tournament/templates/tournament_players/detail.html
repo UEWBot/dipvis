@@ -65,7 +65,7 @@
 </ul>
 
 <h2>{% trans "Previous Matchups" %}</h2>
-<form method="post" action={% url 'tournament_player_detail' tournament.id player.id %}>
+<form method="post" action="{% url 'tournament_player_detail' tournament.id player.id %}">
   {% csrf_token %}
   {{ form }}
   <input type="submit" value="{% trans "Submit" %}" />

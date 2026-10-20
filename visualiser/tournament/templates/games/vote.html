@@ -17,9 +17,9 @@
 {% endif %}
 <p>{% blocktrans with year=game.final_year player_count=player_count %}After {{ year }}, there were {{ player_count }} powers still alive{% endblocktrans %}</p>
 {% if concession %}
-  <form action={% url 'concession' tournament.id game.name %} method="post">
+  <form action="{% url 'concession' tournament.id game.name %}" method="post">
 {% else %}
-  <form action={% url 'draw_vote' tournament.id game.name %} method="post">
+  <form action="{% url 'draw_vote' tournament.id game.name %}" method="post">
 {% endif %}
   {% csrf_token %}
   {{ form.non_field_errors }}

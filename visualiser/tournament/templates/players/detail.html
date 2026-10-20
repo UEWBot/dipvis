@@ -43,13 +43,13 @@
   {% endfor %}
 </ul>
 {% if perms.tournament.add_playereventranking %}
-  <form method="post" action={% url 'player_detail' player.pk %}>
+  <form method="post" action="{% url 'player_detail' player.pk %}">
     {% csrf_token %}
     <input type="submit" name="update_bg" value="{% trans "Update background" %}" />
   </form>
 {% endif %}
 <h2>{% trans "Compare With Another Player" %}</h2>
-<form method="post" action={% url 'player_detail' player.pk %}>
+<form method="post" action="{% url 'player_detail' player.pk %}">
   {% csrf_token %}
   {{ form }}
   <input type="submit" name="versus" value="{% trans "Submit" %}" />

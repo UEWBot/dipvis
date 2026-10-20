@@ -6,7 +6,7 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Game Seeding" %}</h1>
 
-<form method="post" action={% url 'get_seven' tournament.id round.number %}>
+<form method="post" action="{% url 'get_seven' tournament.id round.number %}">
   {% csrf_token %}
   {{ form.non_field_errors }}
   <p>{% blocktrans with n_players=playing n_standbys=standbys %}You have {{ n_players }} players wanting to play plus {{ n_standbys }} available if needed.{% endblocktrans %}</p>
