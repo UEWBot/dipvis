@@ -21,17 +21,21 @@
       <tbody>
         {% for form in formset.forms %}
           <tr>
-            {{ form.non_field_errors }}
-            {% for hidden in form.hidden_fields %}
-              {{ hidden.errors.as_ul }}
-              {{ hidden }}
-            {% endfor %}
             {% for field in form.visible_fields %}
               <td>
+                {% if forloop.first %}
+                  {% for hidden in form.hidden_fields %}
+                    {{ hidden.errors.as_ul }}
+                    {{ hidden }}
+                  {% endfor %}
+                {% endif %}
                 {{ field.errors.as_ul }}
                 {{ field }}
               </td>
             {% endfor %}
+            {% if form.non_field_errors %}
+              <td>{{ form.non_field_errors }}</td>
+            {% endif %}
           </tr>
         {% endfor %}
       </tbody>

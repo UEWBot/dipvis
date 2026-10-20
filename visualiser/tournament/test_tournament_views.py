@@ -2960,6 +2960,36 @@ class TournamentViewTests(TestCase):
         # Cleanup
         existing.delete()
 
+    def test_enter_awards_row_errors_rendered(self):
+        """Row-level errors should be shown in a table cell."""
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        tournament_awards = list(self.t1.tournamentaward_set.select_related('award').order_by('award__name'))
+        ta = next(ta for ta in tournament_awards if ta.award.power_id is None)
+        tp = self.t1.tournamentplayer_set.filter(unranked=False).first()
+        data = {}
+        for other_ta in tournament_awards:
+            prefix = f'ta-{other_ta.pk}'
+            data[f'{prefix}-TOTAL_FORMS'] = '2'
+            data[f'{prefix}-INITIAL_FORMS'] = '0'
+            data[f'{prefix}-MIN_NUM_FORMS'] = '0'
+            data[f'{prefix}-MAX_NUM_FORMS'] = '1000'
+            for i in range(2):
+                data[f'{prefix}-{i}-id'] = ''
+                # The same player twice for one award
+                data[f'{prefix}-{i}-tournament_player'] = str(tp.id) if other_ta == ta else ''
+                data[f'{prefix}-{i}-game'] = ''
+        data = urlencode(data, doseq=True)
+        response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards_form.html')
+        self.assertContains(response,
+                            '<td><ul class="errorlist"><li>Please correct the duplicate values below.',
+                            count=1)
+        self.assertFalse(AwardRecipient.objects.filter(tournament_award=ta).exists())
+
     def test_tournament_wdd_awards(self):
         """Should be viewable without logging in"""
         response = self.client.get(reverse('tournament_wdd_awards',

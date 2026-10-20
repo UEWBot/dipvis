@@ -2308,6 +2308,7 @@ class RoundViewTests(TestCase):
         # Check error(s)
         self.assertIn('Power Italy appears more than once',
                       response.context['formset'].errors[0]['__all__'])
+        self.assertContains(response, '<td><ul class="errorlist nonfield">', count=1)
         # Clean up
         g.delete()
 

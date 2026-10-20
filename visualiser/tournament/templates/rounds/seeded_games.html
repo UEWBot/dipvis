@@ -18,7 +18,6 @@
     <tbody>
       {% for form in formset.forms %}
         <tr class="{% cycle 'odd_row' 'even_row' %}">
-          {{ form.non_field_errors }}
           {% for field in form.visible_fields %}
             <td>
               {% if forloop.first %}
@@ -32,6 +31,9 @@
               {{ field }}
             </td>
           {% endfor %}
+          {% if form.non_field_errors %}
+            <td>{{ form.non_field_errors }}</td>
+          {% endif %}
         </tr>
       {% endfor %}
     </tbody>

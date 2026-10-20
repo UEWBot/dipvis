@@ -848,6 +848,8 @@ class GameViewTests(TestCase):
         self.assertTemplateUsed(response, 'games/sc_counts_form.html')
         # One form-wide error in the 1910 form, because the SC total is 35
         self.assertEqual(response.context['formset'].total_error_count(), 1)
+        # ... which should be shown in a table cell
+        self.assertContains(response, '<td><ul class="errorlist nonfield">', count=1)
 
     def test_post_enter_scs_zombie(self):
         self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1907).exists())
