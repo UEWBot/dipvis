@@ -16,7 +16,7 @@
 
 from urllib.parse import urlencode, urlunparse
 
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.urls import reverse
 
 from tournament.backstabbr import BACKSTABBR_NETLOC
@@ -44,30 +44,35 @@ class BackstabbrViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'backstabbr/sc_graph.html')
 
+    @tag('backstabbr')
     def test_graph_game(self):
         response = self.client.get(reverse('graph_img_bs',
                                            args=('game', SOLO_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    @tag('backstabbr')
     def test_graph_sandbox_1(self):
         response = self.client.get(reverse('graph_img_bs',
                                            args=('sandbox', SANDBOX_1_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    @tag('backstabbr')
     def test_graph_sandbox_2(self):
         response = self.client.get(reverse('graph_img_bs',
                                            args=('sandbox', SANDBOX_2_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    @tag('backstabbr')
     def test_graph_sandbox_3(self):
         response = self.client.get(reverse('graph_img_bs',
                                            args=('sandbox', SANDBOX_3_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    @tag('backstabbr')
     def test_graph_invalid_game_number(self):
         response = self.client.get(reverse('graph_img_bs',
                                            args=('game', INVALID_GAME_NUMBER, )),
