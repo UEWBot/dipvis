@@ -7,7 +7,7 @@
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Payments" %}</h1>
 
 <form method="post" action="{% url 'tournament_player_payments' tournament.id %}">
-    {% include "formset_table.html" %}
+    {% include "formset_table.html" with row_labels=True %}
 </form>
 
 {% endblock %}

@@ -703,7 +703,8 @@ class TournamentPlayerViewTests(TestCase):
         self.assertIn('login', response.url)
 
     def test_payments_success(self):
-        self.assertGreaterEqual(self.t2.tournamentplayer_set.count(), 5)
+        players = list(self.t2.tournamentplayer_set.order_by('player'))
+        self.assertGreaterEqual(len(players), 5)
         perm = Permission.objects.get(name='Can change tournament player')
         self.u3.user_permissions.add(perm)
         self.u3.save()
@@ -714,6 +715,8 @@ class TournamentPlayerViewTests(TestCase):
                                    content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournament_players/payments.html')
+        self.assertContains(response, '<th scope="row">', count=len(players))
+        self.assertContains(response, '<td>', count=len(players))
         self.u3.user_permissions.remove(perm)
         self.u3.save()
 

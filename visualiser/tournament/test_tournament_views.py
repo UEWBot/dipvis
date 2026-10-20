@@ -1686,6 +1686,9 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/enter_handicaps.html')
+        player_count = self.t2.tournamentplayer_set.count()
+        self.assertContains(response, '<th scope="row">', count=player_count)
+        self.assertContains(response, '<td>', count=player_count)
         # Cleanup
         self.t2.handicaps = False
         self.t2.save()
@@ -2296,6 +2299,9 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/enter_prefs.html')
+        player_count = self.t2.tournamentplayer_set.count()
+        self.assertContains(response, '<th scope="row">', count=player_count)
+        self.assertContains(response, '<td>', count=player_count)
 
     def test_enter_prefs_no_prefs(self):
         """Even a manager can't enter preferences for a tournament that uses another power assignment method"""
