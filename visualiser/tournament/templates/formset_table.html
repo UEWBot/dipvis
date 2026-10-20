@@ -24,7 +24,9 @@
         {{ field }}
         </td>
     {% endfor %}
-    <td>{{ form.non_field_errors }}</td>
+    {% if form.non_field_errors %}
+        <td>{{ form.non_field_errors }}</td>
+    {% endif %}
     </tr>
 {% endfor %}
 </tbody>
