@@ -32,6 +32,8 @@ class RankOverrideForm(forms.ModelForm):
     class Meta:
         fields = ('rank_override',)
         labels = {'rank_override': _('Rank override')}
+        # Don't repeat the model's help text on every row
+        help_texts = {'rank_override': ''}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

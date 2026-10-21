@@ -56,6 +56,10 @@ class PaidFormTest(TestCase):
         form = PaidForm(instance=self.tp)
         self.assertEqual(form['paid'].label_tag(), '<label for="id_paid">Arthur Bottom</label>')
 
+    def test_paid_form_paid_help_text(self):
+        form = PaidForm(instance=self.tp)
+        self.assertEqual(form.fields['paid'].help_text, '')
+
     def test_paid_form_none(self):
         form = PaidForm(instance=self.tp)
         self.assertEqual(form['paid'].initial, False)

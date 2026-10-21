@@ -718,8 +718,9 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournament_players/payments.html')
         self.assertContains(response, '<th scope="row">', count=len(players))
         self.assertContains(response, '<td>', count=len(players))
-        # Each checkbox should have its help text, which aria-describedby refers to
-        self.assertContains(response, '<span class="helptext"', count=len(players))
+        # Help text isn't shown, so nothing should refer to it
+        self.assertNotContains(response, 'class="helptext"')
+        self.assertNotContains(response, '_helptext')
         assert_aria_describedby_targets_exist(self, response.content.decode())
         # Player names shouldn't have a colon appended
         self.assertNotContains(response, ':</label>')

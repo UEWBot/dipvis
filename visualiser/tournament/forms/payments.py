@@ -29,6 +29,8 @@ class PaidForm(forms.ModelForm):
     class Meta:
         model = TournamentPlayer
         fields = ('paid',)
+        # Don't repeat the model's help text on every row
+        help_texts = {'paid': ''}
 
     def __init__(self, *args, **kwargs):
         # The label is the player's name, so no colon

@@ -63,6 +63,15 @@ class RankOverrideFormTests(TestCase):
         self.assertTrue(form.fields['score'].disabled)
         self.assertTrue(form.fields['calculated_rank'].disabled)
 
+    def test_no_help_text(self):
+        """The model's help text shouldn't be shown"""
+        for form in (TournamentPlayerRankOverrideForm(instance=self.tournament_player),
+                     TeamRankOverrideForm(instance=self.team)):
+            with self.subTest(form=type(form).__name__):
+                for name, field in form.fields.items():
+                    self.assertEqual(field.help_text, '', name)
+                self.assertNotIn('aria-describedby', str(form['rank_override']))
+
     def test_tournament_player_form_saves_and_clears_override(self):
         form = TournamentPlayerRankOverrideForm(instance=self.tournament_player,
                                                  data={'rank_override': '1'})

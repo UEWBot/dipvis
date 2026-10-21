@@ -65,6 +65,13 @@ class TeamFormTest(TestCase):
         for i in range(self.t.team_size):
             self.assertEqual(str(form.fields[f'player_{i}'].label), f'Player {i + 1}')
 
+    def test_team_form_no_help_text(self):
+        """The model's help text shouldn't be shown"""
+        form = TeamForm(tournament=self.t)
+        for name, field in form.fields.items():
+            self.assertEqual(field.help_text, '', name)
+        self.assertNotIn('aria-describedby', str(form['name']))
+
     def test_team_form_players_optional(self):
         """One player should be required, others optional"""
         form = TeamForm(tournament=self.t, data={'name': 'Sausages',

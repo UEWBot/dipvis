@@ -35,6 +35,8 @@ class TeamForm(forms.ModelForm):
         model = Team
         fields = ('name',)
         labels = {'name': _('Name')}
+        # Don't repeat the model's help text on every row
+        help_texts = {'name': ''}
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
