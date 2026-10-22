@@ -26,6 +26,9 @@ from tournament.game_seeder import (GameSeeder, ImpossibleToSeed,
                                     InvalidPlayerPairing, InvalidWeight,
                                     PowersNotUnique, SeedMethod)
 
+# Seed the random number generator so that results are repeatable
+RANDOM_SEED = 0
+
 
 class GameSeederSetupTest(unittest.TestCase):
     """
@@ -41,13 +44,13 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # add_player()
     def test_add_player_twice(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         seeder.add_player('A')
         self.assertRaises(InvalidPlayer, seeder.add_player, 'A')
 
     # add_played_game()
     def test_add_played_game(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -59,7 +62,7 @@ class GameSeederSetupTest(unittest.TestCase):
                                 ('G', '7')})
 
     def test_add_played_game_invalid_player1(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F']:
             seeder.add_player(p)
         self.assertRaises(InvalidPlayer,
@@ -73,7 +76,7 @@ class GameSeederSetupTest(unittest.TestCase):
                            ('M', '7')})
 
     def test_add_played_game_invalid_player2(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F']:
             seeder.add_player(p)
         self.assertRaises(InvalidPlayer,
@@ -87,7 +90,7 @@ class GameSeederSetupTest(unittest.TestCase):
                            ('G', '7')})
 
     def test_add_played_game_player_too_few_players(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F']:
             seeder.add_player(p)
         self.assertRaises(InvalidPlayerCount,
@@ -100,7 +103,7 @@ class GameSeederSetupTest(unittest.TestCase):
                            ('F', '6')})
 
     def test_add_played_game_player_too_many_players(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']:
             seeder.add_player(p)
         self.assertRaises(InvalidPlayerCount,
@@ -115,7 +118,7 @@ class GameSeederSetupTest(unittest.TestCase):
                            ('H', '1')})
 
     def test_add_played_game_bad_powers(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         self.assertRaises(PowersNotUnique,
@@ -130,28 +133,28 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # _add_bias()
     def test_add_bias_invalid_weight(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B']:
             seeder.add_player(p)
         self.assertRaises(InvalidWeight, seeder._add_bias, 'A', 'B', 0)
 
     def test_add_bias_same_player(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         seeder.add_player('A')
         self.assertRaises(InvalidPlayerPairing, seeder.add_bias, 'A', 'A')
 
     def test_add_bias_unknown_player1(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         seeder.add_player('A')
         self.assertRaises(InvalidPlayer, seeder.add_bias, 'B', 'A')
 
     def test_add_bias_unknown_player2(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         seeder.add_player('A')
         self.assertRaises(InvalidPlayer, seeder.add_bias, 'A', 'B')
 
     def test_add_bias_twice(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B']:
             seeder.add_player(p)
         seeder.add_bias('A', 'B')
@@ -161,7 +164,7 @@ class GameSeederSetupTest(unittest.TestCase):
                          2 * seeder._BIAS_WEIGHT)
 
     def test_add_bias(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N']:
             seeder.add_player(p)
         seeder.add_bias('A', 'B')
@@ -174,7 +177,7 @@ class GameSeederSetupTest(unittest.TestCase):
                 self.assertNotIn('A', g)
 
     def test_add_bias_fitness(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         seeder.add_bias('A', 'B')
@@ -183,7 +186,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # _power_fitness()
     def test_power_fitness_no_games(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         self.assertEqual(0, seeder._power_fitness({('A', '1'),
@@ -195,7 +198,7 @@ class GameSeederSetupTest(unittest.TestCase):
                                                    ('G', '7')}))
 
     def test_power_fitness_exact_match(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -215,7 +218,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # _assign_some_powers()
     def test_assign_some_powers(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         games = seeder._assign_some_powers(['A', 'B', 'C', 'D', 'E', 'F', 'G'],
@@ -225,7 +228,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # _assign_powers()
     def test_assign_powers(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         # Add games so that every player has played six powers once each,
@@ -284,13 +287,13 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # _fitness_score()
     def test_fitness_score_no_games(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         self.assertEqual(0, seeder._fitness_score({'A', 'B', 'C', 'D', 'E', 'F', 'G'}))
 
     def test_fitness_score_one_pair_played(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -303,7 +306,7 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(2, seeder._fitness_score({'A', 'B', 'H', 'I', 'J', 'K', 'L'}))
 
     def test_fitness_score_worst_case(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -316,7 +319,7 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(42, seeder._fitness_score({'A', 'B', 'C', 'D', 'E', 'F', 'G'}))
 
     def test_fitness_score_two_pairs(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q']:
             seeder.add_player(p)
         # Two previous non-overlapping games
@@ -339,7 +342,7 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(4, seeder._fitness_score(game))
 
     def test_fitness_score_one_triple(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -354,7 +357,7 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(6, seeder._fitness_score(game))
 
     def test_fitness_score_third_round(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -378,7 +381,8 @@ class GameSeederSetupTest(unittest.TestCase):
     def test_seed_games_exhaustive_bad_count(self):
         """Exhaustive seeding with only 6 players in the second round"""
         seeder = GameSeeder(self.powers,
-                            SeedMethod.EXHAUSTIVE)
+                            SeedMethod.EXHAUSTIVE,
+                            random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -392,7 +396,8 @@ class GameSeederSetupTest(unittest.TestCase):
 
     def test_seed_games_doubler_not_playing(self):
         seeder = GameSeeder(self.powers,
-                            SeedMethod.EXHAUSTIVE)
+                            SeedMethod.EXHAUSTIVE,
+                            random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         self.assertRaises(ImpossibleToSeed, seeder.seed_games, {'E'}, {'E'})
@@ -404,7 +409,8 @@ class GameSeederSetupTest(unittest.TestCase):
         So we have 7 players, but still can't form a valid game
         """
         seeder = GameSeeder(self.powers,
-                            SeedMethod.EXHAUSTIVE)
+                            SeedMethod.EXHAUSTIVE,
+                            random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F']:
             seeder.add_player(p)
         self.assertRaises(ImpossibleToSeed, seeder.seed_games, set(), {'E'})
@@ -416,7 +422,8 @@ class GameSeederSetupTest(unittest.TestCase):
         So we have 7 players, but still can't form a valid game
         """
         seeder = GameSeeder(self.powers,
-                            SeedMethod.EXHAUSTIVE)
+                            SeedMethod.EXHAUSTIVE,
+                            random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -431,7 +438,7 @@ class GameSeederSetupTest(unittest.TestCase):
     # seed_games_and_powers() issues
     def test_seed_games_and_powers_issues(self):
         """Check that the issues list is properly populated"""
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
             seeder.add_player(p)
         seeder.add_played_game({('A', '1'),
@@ -495,7 +502,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
 def with_powers(game):
     """Convert a set of seven players to a set of seven (player, power) 2-tuples"""
-    return set(zip(list(game), ['1', '2', '3', '4', '5', '6', '7']))
+    return set(zip(sorted(game), ['1', '2', '3', '4', '5', '6', '7']))
 
 
 class _GameSetAssertionsMixin:
@@ -549,7 +556,8 @@ class _SharedSeederAlgorithmCasesMixin:
 
     def test_seed_games_no_players(self):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            self.seed_method)
+                            self.seed_method,
+                            random_seed=RANDOM_SEED)
         games = seeder.seed_games()
         self.assertEqual(len(games), 0)
 
@@ -557,7 +565,8 @@ class _SharedSeederAlgorithmCasesMixin:
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                             seed_method=self.seed_method,
                             starts=starts,
-                            iterations=iterations)
+                            iterations=iterations,
+                            random_seed=RANDOM_SEED)
         for i in range(num_players):
             seeder.add_player(f'{i}p')
         return seeder
@@ -651,7 +660,8 @@ class _SharedRandomBoardSeederCasesMixin:
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                             starts=starts,
                             iterations=iterations,
-                            seed_method=self.seed_method)
+                            seed_method=self.seed_method,
+                            random_seed=RANDOM_SEED)
         for i in range(49):
             seeder.add_player(f'{i}p')
         games = seeder.seed_games()
@@ -665,7 +675,8 @@ class _SharedRandomBoardSeederCasesMixin:
 
     def test_seed_games_second_round(self):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=self.seed_method)
+                            seed_method=self.seed_method,
+                            random_seed=RANDOM_SEED)
         for p in ascii_uppercase[:21]:
             seeder.add_player(p)
         # Add some previously-played games.
@@ -701,7 +712,8 @@ class _SharedRandomBoardSeederCasesMixin:
 
     def test_seed_games_separate_dups_1(self):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=self.seed_method)
+                            seed_method=self.seed_method,
+                            random_seed=RANDOM_SEED)
         for p in ascii_uppercase[:26]:
             seeder.add_player(p)
         dups = {'A', 'B'}
@@ -713,7 +725,8 @@ class _SharedRandomBoardSeederCasesMixin:
 
     def test_seed_games_separate_dups_2(self):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=self.seed_method)
+                            seed_method=self.seed_method,
+                            random_seed=RANDOM_SEED)
         for p in ascii_uppercase[:18]:
             seeder.add_player(p)
         dups = {'A', 'B', 'C'}
@@ -726,7 +739,8 @@ class _SharedRandomBoardSeederCasesMixin:
 
     def test_seed_games_three_rounds_rotating_omissions(self):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=self.seed_method)
+                            seed_method=self.seed_method,
+                            random_seed=RANDOM_SEED)
         for i in range(25):
             seeder.add_player(f'{i}p')
 
@@ -802,7 +816,8 @@ class ExhaustiveGameSeederTest(_SharedSeederAlgorithmCasesMixin,
         for count, fitness in players:
             with self.subTest(player_count=count):
                 seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                                    seed_method=self.seed_method)
+                                    seed_method=self.seed_method,
+                                    random_seed=RANDOM_SEED)
                 for i in range(count):
                     seeder.add_player(f'{i}p')
                 r = seeder.seed_games()

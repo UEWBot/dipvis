@@ -112,7 +112,8 @@ class GameSeeder:
                  powers,
                  seed_method,
                  starts=1,
-                 iterations=1000):
+                 iterations=1000,
+                 random_seed=None):
         """
         Create a GameSeeder object
 
@@ -126,7 +127,10 @@ class GameSeeder:
         EXHAUSTIVE seed_method.
         iterations is the number of times to modify each initial seeding in an
         attempt to improve it. Not used with EXHAUSTIVE or BOARD seed_methods.
+        random_seed seeds the random number generator, making the results
+        repeatable (e.g. for testing). By default, results are unpredictable.
         """
+        self._random = random.Random(random_seed)
         self.games_played = False
         self.seed_method = seed_method
         if seed_method in (SeedMethod.RANDOM, SeedMethod.BOARD):
@@ -158,6 +162,15 @@ class GameSeeder:
         self.powers_played[player] = {}
         for p in self.powers:
             self.powers_played[player][p] = 0
+
+    def _in_player_order(self, players):
+        """
+        Return the players in a collection, in the order they were added.
+
+        Set iteration order can vary from run to run, so use this before making
+        random choices, to keep results repeatable with a given random_seed.
+        """
+        return [p for p in self.players if p in players]
 
     def _add_played_game(self, game, matrix):
         """
@@ -311,9 +324,9 @@ class GameSeeder:
         # Try every combination of power assignments in a random order,
         # and keep the best
         best_fitness = 99999
-        player_list = list(game)
+        player_list = self._in_player_order(game)
         power_list = list(self.powers)
-        random.shuffle(player_list)
+        self._random.shuffle(player_list)
         games = self._assign_some_powers(player_list, power_list)
         for g in games:
             score = self._power_fitness(g)
@@ -368,7 +381,7 @@ class GameSeeder:
                 # We have just seven players left, but not seven unique players
                 raise _AssignmentFailed(f"{self.num_powers} remaining players includes duplicates")
             # Pick a random player to add to the current game
-            p = random.choice(list(players))
+            p = self._random.choice(players)
             if p in game:
                 # This player is no good
                 continue
@@ -421,10 +434,10 @@ class GameSeeder:
             # The more iterations, the better the result, but the longer it takes
             for _ in range(self.iterations):
                 # Try swapping a random player between two random games
-                g1, g2 = random.sample(games, 2)
+                g1, g2 = self._random.sample(games, 2)
                 # Pick a player from each game that isn't also playing the other
-                p1 = random.choice(list(g1 - g2))
-                p2 = random.choice(list(g2 - g1))
+                p1 = self._random.choice(self._in_player_order(g1 - g2))
+                p2 = self._random.choice(self._in_player_order(g2 - g1))
                 g1.remove(p1)
                 g2.remove(p2)
                 g1.add(p2)
@@ -539,7 +552,7 @@ class GameSeeder:
                 ]) == min_options
             ]
 
-            chosen_entry = random.choice(set2)
+            chosen_entry = self._random.choice(set2)
             possible_boards = [
                 b_idx for b_idx, board in enumerate(boards)
                 if (
@@ -553,7 +566,7 @@ class GameSeeder:
 
             freest = min(len(boards[b_idx]) for b_idx in possible_boards)
             restricted_boards = [b_idx for b_idx in possible_boards if len(boards[b_idx]) == freest]
-            board_choice = random.choice(restricted_boards)
+            board_choice = self._random.choice(restricted_boards)
 
             boards[board_choice].append(chosen_entry)
             board_player_sets[board_choice].add(entry_players[chosen_entry])
@@ -757,7 +770,7 @@ class GameSeeder:
                 raise InvalidPlayer(str(p))
             players.remove(p)
         # Add in any duplicate players
-        players += list(players_doubling_up)
+        players += self._in_player_order(players_doubling_up)
         if players:
             if len(players) % self.num_powers != 0:
                 raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
