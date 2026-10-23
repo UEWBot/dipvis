@@ -731,7 +731,7 @@ class GameSeeder:
                 seeding, fitness = self._board_seed_games_once(players,
                                                                include_these_games,
                                                                optimise_swaps)
-            except _AssignmentFailed as e:
+            except _AssignmentFailed:
                 continue
             if (best_fitness is None) or (fitness < best_fitness):
                 best_seeding = seeding
