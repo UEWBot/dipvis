@@ -160,6 +160,26 @@ STATIC_URL = '/static/'
 # seeding will accept. Memory use grows combinatorially; 21 can exhaust RAM.
 GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS = 14
 
+# Log the game seeder's state after each seeding, so that it can be replayed
+# with GameSeeder.replay() if a TD reports a problem
+GAME_SEEDER_LOG_STATE = True
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'tournament.game_seeder': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
+
 # Testing
-TEST_RUNNER = 'django_slowtests.testrunner.DiscoverSlowestTestsRunner'
+TEST_RUNNER = 'visualiser.test_runner.TestRunner'
 NUM_SLOW_TESTS = 10

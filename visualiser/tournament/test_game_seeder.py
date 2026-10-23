@@ -965,6 +965,27 @@ class GameSeederStateTest(unittest.TestCase):
         # The failed calls shouldn't have been recorded
         self.assertEqual({op for op, *_ in seeder.state()['operations']}, {'add_player'})
 
+    @override_settings(GAME_SEEDER_LOG_STATE=True)
+    def test_state_logged(self):
+        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=RANDOM_SEED)
+        for i in range(14):
+            seeder.add_player(f'{i}p')
+        with self.assertLogs('tournament.game_seeder', 'INFO') as cm:
+            games = seeder.seed_games()
+        self.assertEqual(len(cm.records), 1)
+        state = json.loads(cm.records[0].getMessage().split('\n', 1)[1])
+        self.assertEqual(state, seeder.state())
+        with self.assertLogs('tournament.game_seeder', 'INFO'):
+            self.assertEqual(GameSeeder.replay(state), games)
+
+    @override_settings(GAME_SEEDER_LOG_STATE=False)
+    def test_state_not_logged(self):
+        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=RANDOM_SEED)
+        for i in range(14):
+            seeder.add_player(f'{i}p')
+        with self.assertNoLogs('tournament.game_seeder'):
+            seeder.seed_games()
+
     def test_random_seed_chosen_and_recorded(self):
         seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
         self.assertIsInstance(seeder.random_seed, int)

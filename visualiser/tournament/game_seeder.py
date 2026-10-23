@@ -21,6 +21,7 @@ Assign players to Diplomacy games in a tournament setting.
 import copy
 import itertools
 import json
+import logging
 import random
 from collections import Counter
 #No auto until python 3.6
@@ -31,8 +32,12 @@ from operator import itemgetter
 from django.conf import settings
 from django.utils.translation import gettext as _
 
+logger = logging.getLogger(__name__)
+
 # Default for settings.GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS
 DEFAULT_MAX_EXHAUSTIVE_PLAYERS = 14
+
+_REPLAY_HINT = 'To reproduce, pass this (after json.loads()) to GameSeeder.replay():\n'
 
 
 class InvalidPlayer(Exception):
@@ -726,7 +731,7 @@ class GameSeeder:
         best_seeding = None
         best_fitness = None
 
-        for n in range(starts):
+        for _ in range(starts):
             try:
                 seeding, fitness = self._board_seed_games_once(players,
                                                                include_these_games,
@@ -739,8 +744,6 @@ class GameSeeder:
             if best_fitness == 0:
                 # This is as good as it gets, so no point continuing
                 break
-
-        print(f'With Board seeding, starts={self.starts}, best fitness score is {best_fitness} in {n+1} seedings')
 
         if best_fitness is None:
             raise ImpossibleToSeed(f"Tried {starts} times, and didn't find a valid seeding. doublers={players_doubling_up}")
@@ -921,22 +924,27 @@ class GameSeeder:
         If the call fails for any reason other than invalid arguments, the
         seeder's state is attached to the exception, so that the problem can be
         reproduced with replay().
+        If it succeeds, the state is logged unless settings.GAME_SEEDER_LOG_STATE
+        is False.
         """
         self._check_seeding_args(omitting_players, players_doubling_up)
         self._operations.append([operation,
                                  [self._player_index[p] for p in self._in_player_order(omitting_players)],
                                  [self._player_index[p] for p in self._in_player_order(players_doubling_up)]])
         try:
-            return seeding_method(omitting_players, players_doubling_up)
+            result = seeding_method(omitting_players, players_doubling_up)
         except Exception as e:
             self._attach_state(e)
             raise
+        if getattr(settings, 'GAME_SEEDER_LOG_STATE', True) and logger.isEnabledFor(logging.INFO):
+            logger.info('Seeding succeeded. %s%s', _REPLAY_HINT, json.dumps(self.state()))
+        return result
 
     def _attach_state(self, exc):
         """Attach the seeder's state to an exception"""
         state = self.state()
         exc.seeder_state = state
-        note = 'To reproduce, pass this (after json.loads()) to GameSeeder.replay():\n' + json.dumps(state)
+        note = _REPLAY_HINT + json.dumps(state)
         if hasattr(exc, 'add_note'):
             exc.add_note(note)
         else:
@@ -1027,13 +1035,6 @@ class GameSeeder:
                     raise ImpossibleToSeed from e
             # Sort them by fitness
             seedings.sort(key=itemgetter(1))
-            if self.seed_method == SeedMethod.RANDOM:
-                bg_str = f'With Random seeding, starts={self.starts} and iterations={self.iterations}'
-            elif self.seed_method == SeedMethod.EXHAUSTIVE:
-                bg_str = 'With Exhaustive seeding'
-            if self.seed_method != SeedMethod.BOARD:
-                # The stats for BOARD seeding were already printed
-                print(f'{bg_str}, best fitness score is {seedings[0][1]} in {len(seedings)} seedings')
         finally:
             # Remove temporary bias
             self._add_bias_for_doublers(players_doubling_up, add=False)
