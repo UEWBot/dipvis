@@ -7,7 +7,7 @@
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Payments" %}</h1>
 
 <form method="post" action="{% url 'tournament_player_payments' tournament.id %}">
-    {% include "formset_table_row_labels.html" with empty_message=_("No players are registered for this tournament.") %}
+    {% include "formset_table_row_labels.html" with empty_message=_("No players are registered for this tournament.") row_heading=_("Player") field_heading=_("Paid") %}
 </form>
 
 {% endblock %}

@@ -4,12 +4,21 @@ Formset table for forms with a single visible field, whose label varies from row
 The label is shown as a row heading, with the field to its right.
 Any further visible fields are not rendered.
 Set empty_message to replace the default message shown when there are no forms.
+Set row_heading and/or field_heading to add column headings.
 {% endcomment %}
 {% csrf_token %}
 {{ formset.management_form }}
 {{ formset.non_form_errors.as_ul }}
 {% if formset.forms %}
 <table class="form">
+{% if row_heading or field_heading %}
+<thead>
+    <tr>
+        <th scope="col">{{ row_heading }}</th>
+        <th scope="col">{{ field_heading }}</th>
+    </tr>
+</thead>
+{% endif %}
 <tbody>
 {% for form in formset.forms %}
     {% with field=form.visible_fields.0 %}

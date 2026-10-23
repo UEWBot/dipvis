@@ -10,6 +10,6 @@
 <p>{% trans "Missing powers will be ranked equal last." %}</p>
 
 <form method="post" action="{% url 'enter_prefs' tournament.id %}">
-    {% include "formset_table_row_labels.html" with empty_message=_("No players are registered for this tournament.") %}
+    {% include "formset_table_row_labels.html" with empty_message=_("No players are registered for this tournament.") row_heading=_("Player") field_heading=_("Preferences") %}
 </form>
 {% endblock content %}

@@ -718,6 +718,8 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournament_players/payments.html')
         self.assertContains(response, '<th scope="row">', count=len(players))
         self.assertContains(response, '<td>', count=len(players))
+        self.assertContains(response, '<th scope="col">Player</th>', count=1)
+        self.assertContains(response, '<th scope="col">Paid</th>', count=1)
         # Help text isn't shown, so nothing should refer to it
         self.assertNotContains(response, 'class="helptext"')
         self.assertNotContains(response, '_helptext')

@@ -1703,6 +1703,8 @@ class TournamentViewTests(TestCase):
         player_count = self.t2.tournamentplayer_set.count()
         self.assertContains(response, '<th scope="row">', count=player_count)
         self.assertContains(response, '<td>', count=player_count)
+        self.assertContains(response, '<th scope="col">Player</th>', count=1)
+        self.assertContains(response, '<th scope="col">Handicap</th>', count=1)
         # Cleanup
         self.t2.handicaps = False
         self.t2.save()
@@ -2316,6 +2318,8 @@ class TournamentViewTests(TestCase):
         player_count = self.t2.tournamentplayer_set.count()
         self.assertContains(response, '<th scope="row">', count=player_count)
         self.assertContains(response, '<td>', count=player_count)
+        self.assertContains(response, '<th scope="col">Player</th>', count=1)
+        self.assertContains(response, '<th scope="col">Preferences</th>', count=1)
 
     def test_enter_prefs_no_prefs(self):
         """Even a manager can't enter preferences for a tournament that uses another power assignment method"""
