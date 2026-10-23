@@ -20,7 +20,9 @@ Assign players to Diplomacy games in a tournament setting.
 
 import copy
 import itertools
+import json
 import random
+from collections import Counter
 #No auto until python 3.6
 #from enum import Enum, auto
 from enum import Enum
@@ -87,6 +89,17 @@ class SeedMethod(Enum):
     BOARD = 3
 
 
+def _unique_names(names):
+    """Return a copy of a list of names, numbering any duplicates to make them unique"""
+    counts = Counter(names)
+    seen = Counter()
+    result = []
+    for name in names:
+        seen[name] += 1
+        result.append(name if counts[name] == 1 else f'{name} #{seen[name]}')
+    return result
+
+
 class GameSeeder:
     """
     Assigns Diplomacy players to games to minimise the number of people they play again.
@@ -128,9 +141,17 @@ class GameSeeder:
         iterations is the number of times to modify each initial seeding in an
         attempt to improve it. Not used with EXHAUSTIVE or BOARD seed_methods.
         random_seed seeds the random number generator, making the results
-        repeatable (e.g. for testing). By default, results are unpredictable.
+        repeatable (e.g. for testing). By default, a random seed is chosen.
+        Either way, it is recorded so that problems can be reproduced
+        (see state() and replay()).
         """
+        if random_seed is None:
+            random_seed = random.SystemRandom().randrange(2 ** 32)
+        self.random_seed = random_seed
         self._random = random.Random(random_seed)
+        self._init_args = {'seed_method': seed_method.name,
+                           'starts': starts,
+                           'iterations': iterations}
         self.games_played = False
         self.seed_method = seed_method
         if seed_method in (SeedMethod.RANDOM, SeedMethod.BOARD):
@@ -142,11 +163,16 @@ class GameSeeder:
         # Dict, keyed by player, of dicts, keyed by (other) player,
         # of integer counts of shared games
         self.games_played_matrix = {}
-        self.powers = powers
-        self.num_powers = len(powers)
+        self.powers = list(powers)
+        self.num_powers = len(self.powers)
         # Dict, keyed by player, of dicts, keyed by power,
         # of integer counts of games the player has played that power
         self.powers_played = {}
+        # Positions of players and powers in self.players and self.powers
+        self._player_index = {}
+        self._power_index = {p: i for i, p in enumerate(self.powers)}
+        # Everything this seeder has been told, in order, so that it can be replayed
+        self._operations = []
 
     def add_player(self, player):
         """
@@ -157,11 +183,13 @@ class GameSeeder:
         """
         if player in self.games_played_matrix:
             raise InvalidPlayer(str(player))
+        self._player_index[player] = len(self.players)
         self.players.append(player)
         self.games_played_matrix[player] = {}
         self.powers_played[player] = {}
         for p in self.powers:
             self.powers_played[player][p] = 0
+        self._operations.append(['add_player', self._player_index[player]])
 
     def _in_player_order(self, players):
         """
@@ -221,6 +249,9 @@ class GameSeeder:
         if len(set([power for player, power in game])) != self.num_powers:
             raise PowersNotUnique()
         self._add_played_game(game, self.games_played_matrix)
+        self._operations.append(['add_played_game',
+                                 sorted([self._player_index[player], self._power_index[power]]
+                                        for player, power in game)])
 
     def _add_bias(self, player1, player2, weight):
         """
@@ -275,6 +306,7 @@ class GameSeeder:
         Raises InvalidPlayerPairing if player1 == player2.
         """
         self._add_bias(player1, player2, self._BIAS_WEIGHT)
+        self._operations.append(['add_bias', self._player_index[player1], self._player_index[player2]])
 
     def _power_fitness(self, game):
         """
@@ -749,6 +781,25 @@ class GameSeeder:
                 continue
         return res
 
+    def _check_seeding_args(self, omitting_players, players_doubling_up):
+        """
+        Check the arguments to a seeding call, raising an exception if they're invalid.
+
+        Can raise ImpossibleToSeed if omitting_players and players_doubling_up
+        overlap.
+        Can raise InvalidPlayer if any player is unknown.
+        Can raise InvalidPlayerCount if the resulting number of players isn't
+        an exact multiple of the number of powers.
+        """
+        if set(omitting_players) & set(players_doubling_up):
+            raise ImpossibleToSeed(f'omitting_players and players_doubling_up are not disjoint')
+        for p in itertools.chain(players_doubling_up, omitting_players):
+            if p not in self.games_played_matrix:
+                raise InvalidPlayer(str(p))
+        player_count = len(self.players) - len(set(omitting_players)) + len(players_doubling_up)
+        if player_count % self.num_powers != 0:
+            raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
+
     def _player_pool(self, omitting_players, players_doubling_up):
         """
         Create a pool of players to seed into games
@@ -756,27 +807,14 @@ class GameSeeder:
         Returns a list of players containing every known player and every
         player doubling up, but excluding any players in omitting_players.
         """
+        self._check_seeding_args(omitting_players, players_doubling_up)
         # Come up with a list of players to draw from
-        players = list(self.games_played_matrix.keys())
-        if set(omitting_players) & set(players_doubling_up):
-            raise ImpossibleToSeed(f'omitting_players and players_doubling_up are not disjoint')
-        # Check the players_doubling_up list
-        for p in players_doubling_up:
-            if p not in players:
-                raise InvalidPlayer(str(p))
-        # Omit any players who aren't playing this round
-        for p in omitting_players:
-            if p not in players:
-                raise InvalidPlayer(str(p))
-            players.remove(p)
+        players = [p for p in self.players if p not in omitting_players]
         # Add in any duplicate players
         players += self._in_player_order(players_doubling_up)
-        if players:
-            if len(players) % self.num_powers != 0:
-                raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
-            if len(set(players)) < self.num_powers:
-                # We've ended up with a group of players that we can't make a valid game from
-                raise ImpossibleToSeed('Too few unique players for a single game')
+        if players and (len(set(players)) < self.num_powers):
+            # We've ended up with a group of players that we can't make a valid game from
+            raise ImpossibleToSeed('Too few unique players for a single game')
         return players
 
     def _seed_games(self, omitting_players, players_doubling_up):
@@ -814,8 +852,15 @@ class GameSeeder:
         (player, power) 2-tuples and a list of issues.
         Parameters and exceptions are the same as seed_games()
         """
+        return self._run_seeding('seed_games_and_powers',
+                                 omitting_players,
+                                 players_doubling_up,
+                                 self._choose_seeding_and_powers)
+
+    def _choose_seeding_and_powers(self, omitting_players, players_doubling_up):
+        """Implementation of seed_games_and_powers()"""
         result = []
-        games = self.seed_games(omitting_players, players_doubling_up)
+        games = self._choose_seeding(omitting_players, players_doubling_up)
         for game in games:
             result.append(self._assign_powers(game))
         return result
@@ -850,7 +895,92 @@ class GameSeeder:
         Can raise InvalidPlayerCount if the resulting number of players isn't
         an exact multiple of the number of powers.
         Can raise ImpossibleToSeed if no valid seeding is possible.
+        If seeding fails for any reason other than invalid arguments, the
+        exception has a seeder_state attribute (also added to the exception
+        message), which can be passed to replay() to reproduce the problem.
         """
+        return self._run_seeding('seed_games',
+                                 omitting_players,
+                                 players_doubling_up,
+                                 self._choose_seeding)
+
+    def _run_seeding(self, operation, omitting_players, players_doubling_up, seeding_method):
+        """
+        Check and record a seeding call, then make it.
+
+        If the call fails for any reason other than invalid arguments, the
+        seeder's state is attached to the exception, so that the problem can be
+        reproduced with replay().
+        """
+        self._check_seeding_args(omitting_players, players_doubling_up)
+        self._operations.append([operation,
+                                 [self._player_index[p] for p in self._in_player_order(omitting_players)],
+                                 [self._player_index[p] for p in self._in_player_order(players_doubling_up)]])
+        try:
+            return seeding_method(omitting_players, players_doubling_up)
+        except Exception as e:
+            self._attach_state(e)
+            raise
+
+    def _attach_state(self, exc):
+        """Attach the seeder's state to an exception"""
+        state = self.state()
+        exc.seeder_state = state
+        note = 'To reproduce, pass this (after json.loads()) to GameSeeder.replay():\n' + json.dumps(state)
+        if hasattr(exc, 'add_note'):
+            exc.add_note(note)
+        else:
+            # Exception notes were added in Python 3.11
+            exc.args = (f'{exc.args[0]}\n{note}' if exc.args else note,) + exc.args[1:]
+
+    def state(self):
+        """
+        Return everything needed to reproduce this seeder's behaviour.
+
+        The result can be converted to JSON, and can be passed to replay().
+        Players and powers are recorded by name, in the order they were added.
+        """
+        return {'version': 1,
+                **self._init_args,
+                'random_seed': self.random_seed,
+                'powers': [str(p) for p in self.powers],
+                'players': [str(p) for p in self.players],
+                'operations': copy.deepcopy(self._operations)}
+
+    @classmethod
+    def replay(cls, state):
+        """
+        Recreate a seeder from the output of state(), and repeat everything it did.
+
+        Players and powers are represented by their names.
+        Returns the result of the last seeding call, so if that call raised an
+        exception, so will this.
+        """
+        powers = _unique_names(state['powers'])
+        players = _unique_names(state['players'])
+        seeder = cls(powers,
+                     SeedMethod[state['seed_method']],
+                     starts=state['starts'],
+                     iterations=state['iterations'],
+                     random_seed=state['random_seed'])
+        result = None
+        for operation, *args in state['operations']:
+            if operation == 'add_player':
+                seeder.add_player(players[args[0]])
+            elif operation == 'add_played_game':
+                seeder.add_played_game({(players[i], powers[p]) for i, p in args[0]})
+            elif operation == 'add_bias':
+                seeder.add_bias(players[args[0]], players[args[1]])
+            elif operation in ('seed_games', 'seed_games_and_powers'):
+                omitting_players, players_doubling_up = args
+                result = getattr(seeder, operation)({players[i] for i in omitting_players},
+                                                    {players[i] for i in players_doubling_up})
+            else:
+                raise ValueError(f'Unknown operation {operation}')
+        return result
+
+    def _choose_seeding(self, omitting_players, players_doubling_up):
+        """Implementation of seed_games()"""
         # Add temporary bias to keep players_doubling_up apart
         self._add_bias_for_doublers(players_doubling_up, add=True)
         try:

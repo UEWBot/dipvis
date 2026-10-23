@@ -18,6 +18,7 @@
 Assign powers to players in a Diplomacy game.
 """
 
+import json
 import unittest
 from string import ascii_uppercase
 
@@ -840,3 +841,102 @@ class BoardGameSeederTest(_SharedSeederAlgorithmCasesMixin,
     """Validate board-based seeding."""
 
     seed_method = SeedMethod.BOARD
+
+
+class GameSeederStateTest(unittest.TestCase):
+    """Validate recording a seeder's state, and replaying it to reproduce problems."""
+
+    powers = ['1', '2', '3', '4', '5', '6', '7']
+
+    def _round_trip(self, seeder):
+        """The state, as it would be after being reported as JSON"""
+        return json.loads(json.dumps(seeder.state()))
+
+    def _note(self, exc):
+        """The text added to an exception to report the seeder state"""
+        notes = getattr(exc, '__notes__', None)
+        return notes[-1] if notes else str(exc)
+
+    def test_replay_reproduces_seeding(self):
+        for method in SeedMethod:
+            with self.subTest(method=method.name):
+                seeder = GameSeeder(self.powers, method, starts=3, iterations=100, random_seed=RANDOM_SEED)
+                # EXHAUSTIVE builds every possible seeding, so keep to 14 players per round
+                for i in range(14):
+                    seeder.add_player(f'{i}p')
+                seeder.add_bias('0p', '1p')
+                for g in seeder.seed_games(omitting_players={'13p'}, players_doubling_up={'0p'}):
+                    seeder.add_played_game(with_powers(g))
+                result = seeder.seed_games_and_powers(omitting_players={'12p'}, players_doubling_up={'5p'})
+                self.assertEqual(GameSeeder.replay(self._round_trip(seeder)), result)
+
+    def test_impossible_to_seed_can_be_reproduced(self):
+        """A board seeding failure (with a random seed that's known to fail) can be reproduced"""
+        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=30)
+        for i in range(13):
+            seeder.add_player(f'{i}p')
+        for g in seeder.seed_games(players_doubling_up={'2p'}):
+            seeder.add_played_game(with_powers(g))
+        with self.assertRaises(ImpossibleToSeed) as cm:
+            seeder.seed_games(players_doubling_up={'3p'})
+        state = cm.exception.seeder_state
+        self.assertEqual(state, seeder.state())
+        # The state should be reported in the exception
+        note = self._note(cm.exception)
+        self.assertIn('GameSeeder.replay()', note)
+        self.assertEqual(json.loads(note.split('\n', 1)[1]), state)
+        # and replaying it should fail in the same way
+        with self.assertRaises(ImpossibleToSeed):
+            GameSeeder.replay(json.loads(json.dumps(state)))
+
+    def test_too_few_unique_players_includes_state(self):
+        """Valid arguments that can't be seeded should report the state"""
+        seeder = GameSeeder(self.powers, SeedMethod.EXHAUSTIVE, random_seed=RANDOM_SEED)
+        for p in ['A', 'B', 'C', 'D', 'E', 'F']:
+            seeder.add_player(p)
+        with self.assertRaises(ImpossibleToSeed) as cm:
+            seeder.seed_games(players_doubling_up={'E'})
+        self.assertEqual(cm.exception.seeder_state['operations'][-1], ['seed_games', [], [4]])
+        with self.assertRaises(ImpossibleToSeed):
+            GameSeeder.replay(self._round_trip(seeder))
+
+    def test_invalid_arguments_have_no_state(self):
+        """Exceptions caused by invalid arguments are the caller's problem"""
+        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=RANDOM_SEED)
+        for p in ascii_uppercase[:14]:
+            seeder.add_player(p)
+        cases = [(InvalidPlayer, (set(), {'X'})),
+                 (InvalidPlayer, ({'X'}, set())),
+                 (InvalidPlayerCount, ({'A'}, set())),
+                 (ImpossibleToSeed, ({'A'}, {'A'}))]
+        for exc_class, args in cases:
+            with self.subTest(exception=exc_class.__name__, args=args):
+                with self.assertRaises(exc_class) as cm:
+                    seeder.seed_games(*args)
+                self.assertFalse(hasattr(cm.exception, 'seeder_state'))
+                self.assertIsNone(getattr(cm.exception, '__notes__', None))
+        # The failed calls shouldn't have been recorded
+        self.assertEqual({op for op, *_ in seeder.state()['operations']}, {'add_player'})
+
+    def test_random_seed_chosen_and_recorded(self):
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
+        self.assertIsInstance(seeder.random_seed, int)
+        self.assertEqual(seeder.state()['random_seed'], seeder.random_seed)
+
+    def test_replay_with_duplicate_names(self):
+        """Players are recorded by name, so duplicate names must still be distinct players"""
+
+        class Player:
+            def __str__(self):
+                return 'Same Name'
+
+        players = [Player() for _ in range(7)]
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
+        for p in players:
+            seeder.add_player(p)
+        seeder.add_bias(players[0], players[1])
+        seeder.seed_games()
+        state = self._round_trip(seeder)
+        self.assertEqual(state['players'], ['Same Name'] * 7)
+        games = GameSeeder.replay(state)
+        self.assertEqual(games, [{f'Same Name #{n}' for n in range(1, 8)}])
