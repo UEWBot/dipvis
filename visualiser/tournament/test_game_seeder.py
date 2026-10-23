@@ -21,13 +21,15 @@ Assign powers to players in a Diplomacy game.
 import json
 import unittest
 from string import ascii_uppercase
+from unittest import mock
 
 from django.test import override_settings
 
 from tournament.game_seeder import (GameSeeder, ImpossibleToSeed,
                                     InvalidPlayer, InvalidPlayerCount,
                                     InvalidPlayerPairing, InvalidWeight,
-                                    PowersNotUnique, SeedMethod)
+                                    PowersNotUnique, SeedMethod,
+                                    _AssignmentFailed)
 
 # Seed the random number generator so that results are repeatable
 RANDOM_SEED = 0
@@ -932,6 +934,18 @@ class GameSeederStateTest(unittest.TestCase):
         self.assertEqual(cm.exception.seeder_state['operations'][-1], ['seed_games', [], [4]])
         with self.assertRaises(ImpossibleToSeed):
             GameSeeder.replay(self._round_trip(seeder))
+
+    def test_random_assignment_gives_up(self):
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
+        for i in range(14):
+            seeder.add_player(f'{i}p')
+        with mock.patch.object(seeder,
+                               '_assign_players_to_games_randomly',
+                               side_effect=_AssignmentFailed) as assign:
+            with self.assertRaises(ImpossibleToSeed) as cm:
+                seeder.seed_games()
+        self.assertEqual(assign.call_count, GameSeeder._MAX_RANDOM_ATTEMPTS)
+        self.assertEqual(cm.exception.seeder_state, seeder.state())
 
     def test_invalid_arguments_have_no_state(self):
         """Exceptions caused by invalid arguments are the caller's problem"""

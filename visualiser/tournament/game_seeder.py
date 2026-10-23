@@ -290,6 +290,9 @@ class GameSeeder:
     # It represents the number of games the two players will be assumed to have played together
     _BIAS_WEIGHT = 25
 
+    # Worst measured failure rate per attempt is ~0.54, so 100 failures means a bug, not bad luck
+    _MAX_RANDOM_ATTEMPTS = 100
+
     # This value is used internally to keep players playing two games each apart
     _TEMP_WEIGHT = 10
 
@@ -486,17 +489,18 @@ class GameSeeder:
 
     def _assign_players_wrapper(self, players):
         """
-        Wrapper that just keeps calling _assign_players_to_games_randomly() until it succeeds.
+        Keep calling _assign_players_to_games_randomly() until it succeeds.
+
+        Raises ImpossibleToSeed if it fails _MAX_RANDOM_ATTEMPTS times.
         """
-        while True:
+        for _ in range(self._MAX_RANDOM_ATTEMPTS):
             # _assign_players_to_game() will empty the set of players we pass it
             p = players.copy()
             try:
-                res = self._assign_players_to_games_randomly(p)
-                break
+                return self._assign_players_to_games_randomly(p)
             except _AssignmentFailed:
                 pass
-        return res
+        raise ImpossibleToSeed(f'Random assignment failed {self._MAX_RANDOM_ATTEMPTS} times')
 
     def _board_seed_games_once(self,
                                players,
