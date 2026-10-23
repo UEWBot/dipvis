@@ -36,11 +36,6 @@ class InvalidPlayer(Exception):
     pass
 
 
-class InvalidKey(Exception):
-    """A key is invalid in some way (duplicated, duplicates a player, etc)."""
-    pass
-
-
 class InvalidPlayerCount(Exception):
     """An invalid number of players. Diplomacy is a seven-player game."""
     pass
