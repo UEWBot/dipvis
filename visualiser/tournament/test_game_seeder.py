@@ -905,8 +905,7 @@ class GameSeederStateTest(unittest.TestCase):
 
     def _note(self, exc):
         """The text added to an exception to report the seeder state"""
-        notes = getattr(exc, '__notes__', None)
-        return notes[-1] if notes else str(exc)
+        return exc.__notes__[-1]
 
     def test_replay_reproduces_seeding(self):
         for method in SeedMethod:

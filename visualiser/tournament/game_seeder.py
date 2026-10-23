@@ -24,9 +24,7 @@ import json
 import logging
 import random
 from collections import Counter
-#No auto until python 3.6
-#from enum import Enum, auto
-from enum import Enum
+from enum import Enum, auto
 from operator import itemgetter
 
 from django.conf import settings
@@ -86,11 +84,9 @@ class SeedMethod(Enum):
     EXHAUSTIVE - try every possible seeding and pick the best (slow)
     BOARD - board-first heuristic assignment plus swap improvements
     """
-    #RANDOM = auto()
-    #EXHAUSTIVE = auto()
-    RANDOM = 1
-    EXHAUSTIVE = 2
-    BOARD = 3
+    RANDOM = auto()
+    EXHAUSTIVE = auto()
+    BOARD = auto()
 
 
 def _unique_names(names):
@@ -947,8 +943,8 @@ class GameSeeder:
         an exact multiple of the number of powers.
         Can raise ImpossibleToSeed if no valid seeding is possible.
         If seeding fails for any reason other than invalid arguments, the
-        exception has a seeder_state attribute (also added to the exception
-        message), which can be passed to replay() to reproduce the problem.
+        exception has a seeder_state attribute (also added as an exception
+        note), which can be passed to replay() to reproduce the problem.
         """
         return self._run_seeding('seed_games',
                                  omitting_players,
@@ -982,12 +978,7 @@ class GameSeeder:
         """Attach the seeder's state to an exception"""
         state = self.state()
         exc.seeder_state = state
-        note = _REPLAY_HINT + json.dumps(state)
-        if hasattr(exc, 'add_note'):
-            exc.add_note(note)
-        else:
-            # Exception notes were added in Python 3.11
-            exc.args = (f'{exc.args[0]}\n{note}' if exc.args else note,) + exc.args[1:]
+        exc.add_note(_REPLAY_HINT + json.dumps(state))
 
     def state(self):
         """
