@@ -743,7 +743,7 @@ class GameSeeder:
         print(f'With Board seeding, starts={self.starts}, best fitness score is {best_fitness} in {n+1} seedings')
 
         if best_fitness is None:
-            raise ImpossibleToSeed(f"Tried {starts} times, and didn't find a valid seeding. doublers={players_doubling_up}, games_played={self.games_played_matrix}")
+            raise ImpossibleToSeed(f"Tried {starts} times, and didn't find a valid seeding. doublers={players_doubling_up}")
 
         return best_seeding, best_fitness
 
