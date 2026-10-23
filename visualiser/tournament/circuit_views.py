@@ -13,6 +13,7 @@ Circuit views for the Diplomacy Tournament Visualiser.
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.views.decorators.http import require_safe
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 
@@ -39,6 +40,7 @@ class CircuitDetailView(DetailView):
     template_name = 'circuits/detail.html'
 
 
+@require_safe
 def circuit_player_detail(request, circuit_id, circuit_player_id):
     """Circuit player detail."""
     circuit = get_object_or_404(Circuit, pk=circuit_id)
@@ -49,6 +51,7 @@ def circuit_player_detail(request, circuit_id, circuit_player_id):
                   {'circuit': circuit, 'circuit_player': cp})
 
 
+@require_safe
 def circuit_scores(request, circuit_id):
     """Show Circuit scores and tournament-by-tournament derivation."""
     circuit = get_object_or_404(Circuit, pk=circuit_id)
@@ -93,6 +96,7 @@ def circuit_scores(request, circuit_id):
                'scores': rows}
     return render(request, 'circuits/scores.html', context)
 
+@require_safe
 def api(request, circuit_id, version):
     """JSON API to retrieve data"""
     if version != 1:

@@ -22,6 +22,7 @@ from operator import attrgetter
 
 from django.http import Http404
 from django.shortcuts import render
+from django.views.decorators.http import require_safe
 
 from tournament.diplomacy import GreatPower
 from tournament.game_scoring import (G_SCORING_SYSTEMS, DotCountUnknown,
@@ -67,6 +68,7 @@ def _create_state(params):
 
 # GameScoringSystem views
 
+@require_safe
 def game_scoring_index(request):
     """GameScoringSystem index"""
     # Sort by name
@@ -76,6 +78,7 @@ def game_scoring_index(request):
                   {'system_list': system_list})
 
 
+@require_safe
 def game_scoring_detail(request, slug):
     """Details of a single GameScoringSystem"""
     sys = next((s for s in G_SCORING_SYSTEMS if s.slug == slug), None)

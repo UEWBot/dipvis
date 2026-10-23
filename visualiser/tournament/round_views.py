@@ -34,6 +34,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods, require_safe
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_board_call_email
@@ -70,6 +71,7 @@ def get_pool_or_404(the_round, pool_slug):
         raise Http404 from e
 
 
+@require_safe
 def round_simple(request, tournament_id, round_num, template):
     """Just render the specified template with the round"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -78,6 +80,7 @@ def round_simple(request, tournament_id, round_num, template):
     return render(request, f'rounds/{template}.html', context)
 
 
+@require_safe
 def board_call_csv(request, tournament_id, round_num):
     """CSV of the board call for the round"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -115,6 +118,7 @@ def board_call_csv(request, tournament_id, round_num):
 
 
 @permission_required('tournament.add_roundplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def roll_call(request, tournament_id, round_num):
     """Provide a form to specify which players are playing this round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -222,6 +226,7 @@ def roll_call(request, tournament_id, round_num):
 
 
 @permission_required('tournament.change_roundplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def populate_pools(request, tournament_id, round_num):
     """Assign RoundPlayers to the Pools for the Round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -266,6 +271,7 @@ def populate_pools(request, tournament_id, round_num):
 
 
 @permission_required('tournament.add_game')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def get_seven(request, tournament_id, round_num):
     """Provide a form to get a multiple of seven players for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -514,6 +520,7 @@ def _send_board_call_to_discord(the_round):
 
 
 @permission_required('tournament.add_game')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def seed_games(request, tournament_id, round_num):
     """Seed players to the games for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -669,6 +676,7 @@ def seed_games(request, tournament_id, round_num):
 
 # TODO: Name is misleading - also used to modify existing game(s)
 @permission_required('tournament.add_game')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''):
     """Form to create games for a round or pool within a round, or to modify existing game(s)"""
     # Options are Round or Pool or single Game, so optional params are mutually exclusive
@@ -809,6 +817,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                    'formset': formset})
 
 
+@require_safe
 def round_scores(request, tournament_id, round_num):
     """Display scores after the specified round"""
     # TODO can we share code with tournament_scores() ?
@@ -875,6 +884,7 @@ def round_scores(request, tournament_id, round_num):
 
 
 @permission_required('tournament.change_gameplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def game_scores(request, tournament_id, round_num):
     """Provide a form to enter scores for all the games in a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -915,6 +925,7 @@ def game_scores(request, tournament_id, round_num):
                    'formset': formset})
 
 
+@require_safe
 def game_index(request, tournament_id, round_num):
     """Display a list of games in the round"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -924,6 +935,7 @@ def game_index(request, tournament_id, round_num):
     return render(request, 'games/index.html', context)
 
 
+@require_safe
 def game_cycle(request, tournament_id, round_num, template, game_name=None):
     """Cycle through SC graphs for all games in the Round"""
     # TODO We should also be able to support cycling through SC charts here,

@@ -34,6 +34,7 @@ from django.http import (Http404, HttpResponse, HttpResponseRedirect,
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods, require_safe
 
 from tournament import backstabbr, webdip
 from tournament.audit import log_form_action, log_objects_action, log_objects_change
@@ -68,6 +69,7 @@ def get_game_or_404(tournament, game_name):
         raise Http404 from e
 
 
+@require_safe
 def game_simple(request, tournament_id, game_name, template):
     """Just render the specified template with the game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -76,6 +78,7 @@ def game_simple(request, tournament_id, game_name, template):
     return render(request, f'games/{template}.html', context)
 
 
+@require_safe
 def aar(request, tournament_id, game_name, player_id):
     """One Player's After Action Report for the Game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -92,6 +95,7 @@ def aar(request, tournament_id, game_name, player_id):
     return render(request, 'games/aar.html', context)
 
 
+@require_safe
 def game_sc_owners(request,
                    tournament_id,
                    game_name,
@@ -164,6 +168,7 @@ def game_sc_owners(request,
     return render(request, 'games/sc_owners.html', context)
 
 
+@require_safe
 def game_sc_chart(request,
                   tournament_id,
                   game_name,
@@ -233,6 +238,7 @@ def _graph_end_year(game):
     return 1907
 
 
+@require_safe
 def graph(request,
           tournament_id,
           game_name):
@@ -262,6 +268,7 @@ def graph(request,
     return response
 
 
+@require_safe
 def game_sc_graph(request,
                   tournament_id,
                   game_name,
@@ -296,6 +303,7 @@ def _blank_row_num(queryset, final_year):
 
 
 @permission_required('tournament.change_game')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def change_game(request, tournament_id, game_name):
     """Provide a form to change a single game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -304,6 +312,7 @@ def change_game(request, tournament_id, game_name):
 
 
 @permission_required('tournament.add_centrecount')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def sc_owners(request, tournament_id, game_name):
     """Provide a form to enter SC ownership for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -383,6 +392,7 @@ def sc_owners(request, tournament_id, game_name):
 
 
 @permission_required('tournament.add_centrecount')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -521,6 +531,7 @@ def sc_counts(request, tournament_id, game_name):
                    'game': g})
 
 
+@require_safe
 def game_news(request, tournament_id, game_name, for_year=None, as_ticker=False):
     """Display news for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -537,6 +548,7 @@ def game_news(request, tournament_id, game_name, for_year=None, as_ticker=False)
     return render(request, 'games/info.html', context)
 
 
+@require_safe
 def game_background(request, tournament_id, game_name, as_ticker=False):
     """Display background info for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -554,6 +566,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
 
 
 @permission_required('tournament.add_drawproposal')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def draw_vote(request, tournament_id, game_name, concession):
     """Provide a form to enter a draw vote for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -647,6 +660,7 @@ def draw_vote(request, tournament_id, game_name, concession):
                    'form': form})
 
 
+@require_safe
 def game_image(request,
                tournament_id,
                game_name,
@@ -715,6 +729,7 @@ def game_image(request,
 
 
 @permission_required('tournament.add_gameimage')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def add_game_image(request, tournament_id, game_name=''):
     """Add an image for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -943,6 +958,7 @@ def scrape_external_site(request, tournament_id, game_name):
                            _('The URL is not for a supported external site.'))
 
 
+@require_safe
 def api(request, version, tournament_id, game_name):
     """JSON API to retrieve data"""
     if version != 1:

@@ -713,6 +713,14 @@ class TournamentViewTests(TestCase):
         self.assertNotContains(response, 'Handicap')
         self.assertTemplateUsed(response, 'tournaments/scores.html')
 
+    def test_scores_post(self):
+        """Read-only pages only accept GET and HEAD"""
+        url = reverse('tournament_scores', args=(self.t1.pk,))
+        self.assertEqual(self.client.head(url, secure=True).status_code, 200)
+        response = self.client.post(url, secure=True)
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response['Allow'], 'GET, HEAD')
+
     def test_scores_uses_rank_override(self):
         self.tp11.calculated_rank = 2
         self.tp11.rank_override = 1
@@ -2434,6 +2442,21 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
+
+    def test_upload_prefs_head(self):
+        """HEAD would be treated as an upload, so it isn't allowed"""
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.head(reverse('upload_prefs', args=(self.t2.pk,)),
+                                    secure=True)
+        self.assertEqual(response.status_code, 405)
+
+    def test_enter_prefs_put(self):
+        """Form pages only accept GET, HEAD, and POST"""
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.put(reverse('enter_prefs', args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response['Allow'], 'GET, HEAD, POST')
 
     def test_upload_prefs_logs_changes(self):
         tp = self.t2.tournamentplayer_set.first()

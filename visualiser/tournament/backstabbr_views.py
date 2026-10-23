@@ -26,6 +26,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods, require_safe
 
 from tournament import backstabbr
 from tournament.forms import BackstabbrUrlForm
@@ -81,6 +82,7 @@ def _dots(game):
     return retval
 
 
+@require_safe
 def graph(request, game_type, game_number):
     """
     Just an SC graph for the specified game, as a PNG image
@@ -118,6 +120,7 @@ def graph(request, game_type, game_number):
     return response
 
 
+@require_safe
 def game_sc_graph(request, game_number, sandbox):
     """Show a Supply Centre chart for a backstabbr game"""
     if sandbox:
@@ -129,6 +132,7 @@ def game_sc_graph(request, game_number, sandbox):
     return render(request, 'backstabbr/sc_graph.html', context)
 
 
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def url_form(request):
     """Form to enter the URL of a backstabbr game"""
     form = BackstabbrUrlForm(request.POST or None)

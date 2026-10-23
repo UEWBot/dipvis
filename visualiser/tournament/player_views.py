@@ -31,6 +31,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.views import generic
+from django.views.decorators.http import require_http_methods, require_safe
 
 from tournament.audit import log_objects_action, log_objects_change
 from tournament.forms import PlayerForm
@@ -50,6 +51,7 @@ class PlayerIndexView(generic.ListView):
     context_object_name = 'player_list'
 
 
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def player_detail(request, pk):
     """Details of a single player"""
     player = get_object_or_404(Player, pk=pk)
@@ -86,6 +88,7 @@ def _event_kind_from_request(request):
     return by_value.get(value.lower())
 
 
+@require_safe
 def api_background(request, player_id, version):
     """JSON API to retrieve structured player background data."""
     if version != 1:
@@ -112,6 +115,7 @@ def api_background(request, player_id, version):
     return JsonResponse(data)
 
 
+@require_safe
 def player_versus(request, pk1, pk2):
     """History between two players"""
     p1 = get_object_or_404(Player, pk=pk1)
@@ -138,6 +142,7 @@ def player_versus(request, pk1, pk2):
                    'matches': matches})
 
 
+@require_safe
 def wpe(request, pk, years=7, count=7):
     """
     World Performance Evaluation details for a single player.
@@ -157,6 +162,8 @@ def wpe(request, pk, years=7, count=7):
 
 
 @permission_required('tournament.add_player')
+# Any method other than GET is treated as an upload
+@require_http_methods(['GET', 'POST'])
 def upload_players(request):
     """Upload a CSV file to add Players"""
     if request.method == 'GET':

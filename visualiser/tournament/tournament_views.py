@@ -40,6 +40,7 @@ from django.http import (Http404, HttpResponse, HttpResponseRedirect,
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_http_methods, require_safe
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_roll_call_emails
@@ -61,6 +62,7 @@ REFRESH_TIME = 60
 TOURNAMENTS_PER_PAGE = 25
 
 
+@require_safe
 def tournament_index(request):
     """Display a list of tournaments"""
     # We actually retrieve two separate lists, one of all published tournaments (visible to all)
@@ -111,6 +113,7 @@ def get_modifiable_tournament_or_404(pk, user):
 
 # Tournament views
 
+@require_safe
 def tournament_simple(request, tournament_id, template, context={}):
     """Just render the specified template with the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -118,6 +121,7 @@ def tournament_simple(request, tournament_id, template, context={}):
     return render(request, f'tournaments/{template}.html', context)
 
 
+@require_safe
 def tournament_scores(request,
                       tournament_id,
                       refresh=False,
@@ -182,6 +186,7 @@ def tournament_scores(request,
     return render(request, template, context)
 
 
+@require_safe
 def team_scores(request,
                 tournament_id,
                 refresh=False,
@@ -235,6 +240,7 @@ def team_scores(request,
     return render(request, 'tournaments/team_scores.html', context)
 
 
+@require_safe
 def graph(request, tournament_id):
     """Score graph for the specified tournament, as a PNG image"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -276,6 +282,7 @@ def graph(request, tournament_id):
     return HttpResponse(graphic, content_type="image/png")
 
 
+@require_safe
 def tournament_score_graph(request,
                            tournament_id,
                            refresh=False,
@@ -294,6 +301,7 @@ def tournament_score_graph(request,
     return render(request, 'tournaments/score_graph.html', context)
 
 
+@require_safe
 def tournament_game_results(request,
                             tournament_id,
                             refresh=False,
@@ -338,6 +346,7 @@ def tournament_game_results(request,
     return render(request, 'tournaments/game_results.html', context)
 
 
+@require_safe
 def tournament_best_countries(request,
                               tournament_id,
                               refresh=False,
@@ -409,6 +418,7 @@ def tournament_best_countries(request,
     return render(request, 'tournaments/best_countries.html', context)
 
 
+@require_safe
 def tournament_background(request, tournament_id, as_ticker=False):
     """Display background info for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -421,6 +431,7 @@ def tournament_background(request, tournament_id, as_ticker=False):
     return render(request, 'tournaments/info.html', context)
 
 
+@require_safe
 def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -433,6 +444,7 @@ def tournament_news(request, tournament_id, as_ticker=False):
     return render(request, 'tournaments/info.html', context)
 
 
+@require_safe
 def tournament_round(request, tournament_id):
     """Display details of the currently in-progress round of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -445,6 +457,7 @@ def tournament_round(request, tournament_id):
 
 
 @permission_required('tournament.change_roundplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def enter_scores(request, tournament_id):
     """Provide a form to enter each player's score for each round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -519,6 +532,7 @@ def enter_scores(request, tournament_id):
 
 
 @permission_required('tournament.change_round')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def self_check_in_control(request, tournament_id):
     """Provide a form to control self-check-in for each round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -561,6 +575,7 @@ def self_check_in_control(request, tournament_id):
 
 
 @permission_required('tournament.add_preference')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def enter_prefs(request, tournament_id):
     """Provide a form to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -584,6 +599,8 @@ def enter_prefs(request, tournament_id):
 
 
 @permission_required('tournament.add_preference')
+# Any method other than GET is treated as an upload
+@require_http_methods(['GET', 'POST'])
 def upload_prefs(request, tournament_id):
     """Upload a CSV file to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -651,6 +668,7 @@ def upload_prefs(request, tournament_id):
                                         args=(tournament_id,)))
 
 
+@require_safe
 def prefs_csv(request, tournament_id):
     """Download a template CSV file to enter player country preferences"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -706,6 +724,7 @@ def _previous_bias(tournament, user):
 
 
 @permission_required('tournament.add_seederbias')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def seeder_bias(request, tournament_id):
     """Display or add SeederBias objects for the Tournament"""
     user = request.user
@@ -742,6 +761,7 @@ def seeder_bias(request, tournament_id):
 
 
 @permission_required('tournament.change_tournamentplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def enter_awards(request, tournament_id):
     """Enter awards for the Tournament"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -764,6 +784,7 @@ def enter_awards(request, tournament_id):
 
 
 @permission_required('tournament.change_tournamentplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def enter_handicaps(request, tournament_id):
     """Enter handicaps for the Tournament"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -789,6 +810,7 @@ def enter_handicaps(request, tournament_id):
 
 
 @permission_required('tournament.change_tournamentplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def enter_player_ranks(request, tournament_id):
     """Provide a form to set official TournamentPlayer rank overrides."""
     tournament = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -811,6 +833,7 @@ def enter_player_ranks(request, tournament_id):
 
 
 @permission_required('tournament.change_team')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def enter_team_ranks(request, tournament_id):
     """Provide a form to set official Team rank overrides."""
     tournament = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -834,6 +857,7 @@ def enter_team_ranks(request, tournament_id):
                    'post_url': request.path_info})
 
 
+@require_safe
 def teams(request, tournament_id):
     """Show the registered teams"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -844,6 +868,7 @@ def teams(request, tournament_id):
 
 
 @permission_required('tournament.add_team')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def enter_teams(request, tournament_id):
     """Form to create or edit teams"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -936,6 +961,7 @@ def enter_teams(request, tournament_id):
                    'formset': formset})
 
 
+@require_safe
 def api(request, tournament_id, version):
     """JSON API to retrieve data"""
     if version != 1:
@@ -1048,6 +1074,7 @@ def api(request, tournament_id, version):
     return JsonResponse(data)
 
 
+@require_safe
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)

@@ -19,6 +19,7 @@ Series Views for the Diplomacy Tournament Visualiser.
 """
 
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_safe
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 
@@ -38,6 +39,7 @@ class SeriesDetailView(DetailView):
     template_name = 'series/detail.html'
 
 
+@require_safe
 def series_players(request, slug, include_ftf=True, include_vftf=True):
     """Show all the registered players of all the tournaments in the series"""
     assert include_vftf or include_ftf

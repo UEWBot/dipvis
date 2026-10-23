@@ -27,6 +27,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.http import require_http_methods
 
 from tournament.audit import log_formset_actions, log_objects_action
 from tournament.email import send_prefs_email
@@ -39,6 +40,7 @@ from tournament.tournament_views import (get_modifiable_tournament_or_404,
 
 
 @xframe_options_exempt
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def index(request, tournament_id):
     """Display a list of registered players for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -105,6 +107,7 @@ def index(request, tournament_id):
 
 
 @permission_required('tournament.change_tournamentplayer')
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def payments(request, tournament_id):
     """Page to track player registration payments"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
@@ -123,6 +126,7 @@ def payments(request, tournament_id):
     return render(request, 'tournament_players/payments.html', context)
 
 
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def detail(request, tournament_id, tp_id):
     """Display details of a single registered player for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -141,6 +145,7 @@ def detail(request, tournament_id, tp_id):
 
 # Note: No permission_required decorator
 # because this one should be available to any who have the URL
+@require_http_methods(['GET', 'HEAD', 'POST'])
 def player_prefs(request, tournament_id, uuid):
     """
     Display the current preferences for a single TournamentPlayer, and give them the ability to change them.
