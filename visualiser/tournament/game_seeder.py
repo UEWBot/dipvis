@@ -28,7 +28,11 @@ from collections import Counter
 from enum import Enum
 from operator import itemgetter
 
+from django.conf import settings
 from django.utils.translation import gettext as _
+
+# Default for settings.GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS
+DEFAULT_MAX_EXHAUSTIVE_PLAYERS = 14
 
 
 class InvalidPlayer(Exception):
@@ -102,9 +106,9 @@ class GameSeeder:
     Three algorithms are supported:
     EXHAUSTIVE
         Try every possible seeding. This will take a long time with many
-        players.
-        It may also exhaust memory. Definitely not recommended for 28 players,
-        and may well not work with 21.
+        players, and may exhaust memory, so the number of players (counting
+        players doubling up twice) is limited by
+        settings.GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS (default 14).
     RANDOM
         Initially assigns players at random to games, then tries swapping
         players at random between games.
@@ -784,7 +788,8 @@ class GameSeeder:
         overlap.
         Can raise InvalidPlayer if any player is unknown.
         Can raise InvalidPlayerCount if the resulting number of players isn't
-        an exact multiple of the number of powers.
+        an exact multiple of the number of powers, or is too large for
+        EXHAUSTIVE seeding.
         """
         if set(omitting_players) & set(players_doubling_up):
             raise ImpossibleToSeed(f'omitting_players and players_doubling_up are not disjoint')
@@ -794,6 +799,12 @@ class GameSeeder:
         player_count = len(self.players) - len(set(omitting_players)) + len(players_doubling_up)
         if player_count % self.num_powers != 0:
             raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
+        if self.seed_method == SeedMethod.EXHAUSTIVE:
+            max_players = getattr(settings,
+                                  'GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS',
+                                  DEFAULT_MAX_EXHAUSTIVE_PLAYERS)
+            if player_count > max_players:
+                raise InvalidPlayerCount(f'{player_count} players is more than the {max_players} allowed for EXHAUSTIVE seeding (see settings.GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS)')
 
     def _player_pool(self, omitting_players, players_doubling_up):
         """

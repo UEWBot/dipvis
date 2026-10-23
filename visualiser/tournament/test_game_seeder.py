@@ -22,6 +22,8 @@ import json
 import unittest
 from string import ascii_uppercase
 
+from django.test import override_settings
+
 from tournament.game_seeder import (GameSeeder, ImpossibleToSeed,
                                     InvalidPlayer, InvalidPlayerCount,
                                     InvalidPlayerPairing, InvalidWeight,
@@ -832,6 +834,37 @@ class ExhaustiveGameSeederTest(_SharedSeederAlgorithmCasesMixin,
                 self.check_game_set(r, count)
                 # Check that game_set has the expected fitness score
                 self.assertEqual(seeder._set_fitness(r), fitness)
+
+    def _seeder_with_players(self, count):
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            seed_method=self.seed_method,
+                            random_seed=RANDOM_SEED)
+        for i in range(count):
+            seeder.add_player(f'{i}p')
+        return seeder
+
+    def test_too_many_players(self):
+        seeder = self._seeder_with_players(21)
+        with self.assertRaises(InvalidPlayerCount):
+            seeder.seed_games()
+
+    def test_too_many_players_with_doublers(self):
+        seeder = self._seeder_with_players(14)
+        with self.assertRaises(InvalidPlayerCount):
+            seeder.seed_games(omitting_players={'0p'},
+                              players_doubling_up={'1p', '2p', '3p', '4p', '5p', '6p', '7p', '8p'})
+
+    @override_settings(GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS=7)
+    def test_max_players_lowered(self):
+        seeder = self._seeder_with_players(14)
+        with self.assertRaises(InvalidPlayerCount):
+            seeder.seed_games()
+        self.check_game_set(seeder.seed_games(omitting_players={f'{i}p' for i in range(7)}), 7)
+
+    @override_settings(GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS=21)
+    def test_max_players_raised(self):
+        # Before any games are played, seeding is random, so 21 is cheap
+        self.check_game_set(self._seeder_with_players(21).seed_games(), 21)
 
 
 class BoardGameSeederTest(_SharedSeederAlgorithmCasesMixin,
