@@ -104,6 +104,40 @@ def _unique_names(names):
     return result
 
 
+def _doublers_placeable(need, forbidden, capacity):
+    """
+    Can each player p be put on need[p] distinct boards, none in forbidden[p],
+    without putting more than capacity[b] players on board b?
+
+    Uses augmenting paths (max flow), so the answer is exact.
+    """
+    if sum(need.values()) > sum(capacity):
+        return False
+    free = list(capacity)
+    on_board = {p: set() for p in need}
+
+    def augment(p, visited):
+        for b in range(len(free)):
+            if (b in visited) or (b in forbidden[p]) or (b in on_board[p]):
+                continue
+            visited.add(b)
+            if free[b] > 0:
+                free[b] -= 1
+                on_board[p].add(b)
+                return True
+            # Board b is full - try moving someone off it
+            for q in need:
+                if b in on_board[q]:
+                    on_board[q].remove(b)
+                    if augment(q, visited):
+                        on_board[p].add(b)
+                        return True
+                    on_board[q].add(b)
+        return False
+
+    return all(augment(p, set()) for p, n in need.items() for _ in range(n))
+
+
 class GameSeeder:
     """
     Assigns Diplomacy players to games to minimise the number of people they play again.
@@ -540,6 +574,9 @@ class GameSeeder:
                 pair_badness[i][j] = self.games_played_matrix[player_i].get(player_j, 0)
                 pair_score[i][j] = pair_badness[i][j] ** 2
 
+        copies = Counter(entry_players)
+        has_doublers = any(n > 1 for n in copies.values())
+
         for _ in range(len(entry_players)):
             badness_matrix = [[0] * num_entries for _ in range(num_boards)]
             for b_idx, board in enumerate(boards):
@@ -551,58 +588,59 @@ class GameSeeder:
                         badness += pair_badness[entry][existing]
                     badness_matrix[b_idx][entry] = badness
 
+            # Greedy placement alone can leave a doubler's second copy with only its own board
+            # (or two copies with only one board), so only allow placements that avoid that
+            need = Counter()
+            if has_doublers:
+                need = Counter(entry_players[e] for e in unassigned if copies[entry_players[e]] > 1)
+                forbidden = {p: {b for b, s in enumerate(board_player_sets) if p in s} for p in need}
+                capacity = [self.num_powers - len(board) for board in boards]
+
+            def keeps_doublers_placeable(entry, b_idx):
+                player = entry_players[entry]
+                remaining = need.copy()
+                if player in remaining:
+                    remaining[player] -= 1
+                    if not remaining[player]:
+                        del remaining[player]
+                if not remaining:
+                    return True
+                cap = capacity.copy()
+                cap[b_idx] -= 1
+                forb = forbidden
+                if player in remaining:
+                    forb = dict(forbidden)
+                    forb[player] = forbidden[player] | {b_idx}
+                return _doublers_placeable(remaining, forb, cap)
+
+            allowed = {}
+            for entry in unassigned:
+                allowed[entry] = [b_idx for b_idx, board in enumerate(boards)
+                                  if (len(board) < self.num_powers)
+                                  # Never allow identical player objects in one game.
+                                  and (entry_players[entry] not in board_player_sets[b_idx])
+                                  and ((not need) or keeps_doublers_placeable(entry, b_idx))]
+
             player_to_min_badness = {}
             for entry in unassigned:
-                candidate_scores = []
-                for b_idx, board in enumerate(boards):
-                    if len(board) >= self.num_powers:
-                        continue
-                    # Never allow identical player objects in one game.
-                    if entry_players[entry] in board_player_sets[b_idx]:
-                        continue
-                    candidate_scores.append(badness_matrix[b_idx][entry])
-                if not candidate_scores:
-                    raise _AssignmentFailed("No candidate scores")
-                player_to_min_badness[entry] = min(candidate_scores)
+                if allowed[entry]:
+                    player_to_min_badness[entry] = min(badness_matrix[b_idx][entry]
+                                                       for b_idx in allowed[entry])
+            if not player_to_min_badness:
+                raise _AssignmentFailed("No valid placement")
 
             critical_value = max(player_to_min_badness.values())
-            set1 = [entry for entry in unassigned if player_to_min_badness[entry] == critical_value]
+            set1 = [entry for entry in player_to_min_badness
+                    if player_to_min_badness[entry] == critical_value]
 
-            min_options = min(
-                len([
-                    b_idx for b_idx, board in enumerate(boards)
-                    if (
-                        len(board) < self.num_powers
-                        and (entry_players[entry] not in board_player_sets[b_idx])
-                        and (badness_matrix[b_idx][entry] == critical_value)
-                    )
-                ])
-                for entry in set1
-            )
-
-            set2 = [
-                entry for entry in set1
-                if len([
-                    b_idx for b_idx, board in enumerate(boards)
-                    if (
-                        len(board) < self.num_powers
-                        and (entry_players[entry] not in board_player_sets[b_idx])
-                        and (badness_matrix[b_idx][entry] == critical_value)
-                    )
-                ]) == min_options
-            ]
+            options = {entry: [b_idx for b_idx in allowed[entry]
+                               if badness_matrix[b_idx][entry] == critical_value]
+                       for entry in set1}
+            min_options = min(len(o) for o in options.values())
+            set2 = [entry for entry in set1 if len(options[entry]) == min_options]
 
             chosen_entry = self._random.choice(set2)
-            possible_boards = [
-                b_idx for b_idx, board in enumerate(boards)
-                if (
-                    len(board) < self.num_powers
-                    and (entry_players[chosen_entry] not in board_player_sets[b_idx])
-                    and (badness_matrix[b_idx][chosen_entry] == critical_value)
-                )
-            ]
-            if not possible_boards:
-                raise _AssignmentFailed("No possible boards")
+            possible_boards = options[chosen_entry]
 
             freest = min(len(boards[b_idx]) for b_idx in possible_boards)
             restricted_boards = [b_idx for b_idx in possible_boards if len(boards[b_idx]) == freest]

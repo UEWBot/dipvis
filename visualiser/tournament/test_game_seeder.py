@@ -877,6 +877,22 @@ class BoardGameSeederTest(_SharedSeederAlgorithmCasesMixin,
 
     seed_method = SeedMethod.BOARD
 
+    def test_doubler_never_left_without_a_board(self):
+        """Random seed 30 used to leave both copies of 3p needing the same board"""
+        for seed in range(50):
+            with self.subTest(random_seed=seed):
+                seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                                    self.seed_method,
+                                    random_seed=seed)
+                for i in range(13):
+                    seeder.add_player(f'{i}p')
+                for rnd in range(3):
+                    doubler = f'{rnd + 2}p'
+                    r = seeder.seed_games(players_doubling_up={doubler})
+                    self.check_game_set(r, 14, duplicates={doubler})
+                    for g in r:
+                        seeder.add_played_game(with_powers(g))
+
 
 class GameSeederStateTest(unittest.TestCase):
     """Validate recording a seeder's state, and replaying it to reproduce problems."""
@@ -906,23 +922,24 @@ class GameSeederStateTest(unittest.TestCase):
                 self.assertEqual(GameSeeder.replay(self._round_trip(seeder)), result)
 
     def test_impossible_to_seed_can_be_reproduced(self):
-        """A board seeding failure (with a random seed that's known to fail) can be reproduced"""
-        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=30)
+        """A board seeding failure can be reproduced"""
+        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=RANDOM_SEED)
         for i in range(13):
             seeder.add_player(f'{i}p')
         for g in seeder.seed_games(players_doubling_up={'2p'}):
             seeder.add_played_game(with_powers(g))
-        with self.assertRaises(ImpossibleToSeed) as cm:
-            seeder.seed_games(players_doubling_up={'3p'})
-        state = cm.exception.seeder_state
-        self.assertEqual(state, seeder.state())
-        # The state should be reported in the exception
-        note = self._note(cm.exception)
-        self.assertIn('GameSeeder.replay()', note)
-        self.assertEqual(json.loads(note.split('\n', 1)[1]), state)
-        # and replaying it should fail in the same way
-        with self.assertRaises(ImpossibleToSeed):
-            GameSeeder.replay(json.loads(json.dumps(state)))
+        with mock.patch.object(GameSeeder, '_board_seed_games_once', side_effect=_AssignmentFailed):
+            with self.assertRaises(ImpossibleToSeed) as cm:
+                seeder.seed_games(players_doubling_up={'3p'})
+            state = cm.exception.seeder_state
+            self.assertEqual(state, seeder.state())
+            # The state should be reported in the exception
+            note = self._note(cm.exception)
+            self.assertIn('GameSeeder.replay()', note)
+            self.assertEqual(json.loads(note.split('\n', 1)[1]), state)
+            # and replaying it should fail in the same way
+            with self.assertRaises(ImpossibleToSeed):
+                GameSeeder.replay(json.loads(json.dumps(state)))
 
     def test_too_few_unique_players_includes_state(self):
         """Valid arguments that can't be seeded should report the state"""
