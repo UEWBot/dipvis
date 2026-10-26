@@ -345,17 +345,19 @@ class GameSeeder:
         self._add_bias(player1, player2, self._BIAS_WEIGHT)
         self._operations.append(['add_bias', self._player_index[player1], self._player_index[player2]])
 
-    def _power_fitness(self, game):
+    def _power_fitness(self, game, this_round):
         """
         Returns a fitness score (0-??) for a game. Lower is better.
 
         In this case, a game is a set of (player, power) 2-tuples.
         The value returned is the sum of the number of times each player has
-        previously played the specified power.
+        previously played the specified power, including earlier games this round.
+        this_round is a Counter, keyed by (player, power), of powers already
+        assigned in this round.
         """
         f = 0
         for player, power in game:
-            f += self.powers_played[player][power]
+            f += self.powers_played[player][power] + this_round[(player, power)]
         return f
 
     def _assign_some_powers(self, players, powers):
@@ -384,11 +386,13 @@ class GameSeeder:
                 result.append(game)
         return result
 
-    def _assign_powers(self, game):
+    def _assign_powers(self, game, this_round):
         """
         Returns a 2-tuple containing a set of (player, power) 2-tuples and a list of "issues".
 
         game is a set of players.
+        this_round is a Counter, keyed by (player, power), of powers already
+        assigned in other games this round.
         """
         # Try every combination of power assignments in a random order,
         # and keep the best
@@ -398,7 +402,7 @@ class GameSeeder:
         self._random.shuffle(player_list)
         games = self._assign_some_powers(player_list, power_list)
         for g in games:
-            score = self._power_fitness(g)
+            score = self._power_fitness(g, this_round)
             if score < best_fitness:
                 best_fitness = score
                 best_result = g
@@ -406,8 +410,12 @@ class GameSeeder:
                 # This is as good as it gets - no player has played this power before
                 break
         issues = []
-        if best_fitness > 0:
-            issues.append(_('Game has %(num)d player(s) who have already played their power') % {'num': best_fitness})
+        repeats = sum(1 for player, power in best_result if self.powers_played[player][power])
+        if repeats:
+            issues.append(_('Game has %(num)d player(s) who have already played their power') % {'num': repeats})
+        same_power = sum(1 for player, power in best_result if this_round[(player, power)])
+        if same_power:
+            issues.append(_('Game has %(num)d player(s) playing the same power in both their games this round') % {'num': same_power})
         return best_result, issues
 
     def _fitness_score(self, game, earlier_meetings=None):
@@ -903,8 +911,12 @@ class GameSeeder:
         """Implementation of seed_games_and_powers()"""
         result = []
         games = self._choose_seeding(omitting_players, players_doubling_up)
+        # So that players in two games aren't given the same power in both
+        this_round = Counter()
         for game in games:
-            result.append(self._assign_powers(game))
+            game_with_powers, issues = self._assign_powers(game, this_round)
+            result.append((game_with_powers, issues))
+            this_round.update(game_with_powers)
         return result
 
     def _add_bias_for_doublers(self, players_doubling_up, add):

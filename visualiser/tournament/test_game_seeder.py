@@ -202,7 +202,8 @@ class GameSeederSetupTest(unittest.TestCase):
                                                    ('D', '4'),
                                                    ('E', '5'),
                                                    ('F', '6'),
-                                                   ('G', '7')}))
+                                                   ('G', '7')},
+                                                  Counter()))
 
     def test_power_fitness_exact_match(self):
         seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
@@ -221,7 +222,8 @@ class GameSeederSetupTest(unittest.TestCase):
                                                    ('D', '4'),
                                                    ('E', '5'),
                                                    ('F', '6'),
-                                                   ('G', '7')}))
+                                                   ('G', '7')},
+                                                  Counter()))
 
     # _assign_some_powers()
     def test_assign_some_powers(self):
@@ -234,6 +236,34 @@ class GameSeederSetupTest(unittest.TestCase):
         # Ideally, we'd also check for duplicate seedings
 
     # _assign_powers()
+    def _seeder_with_one_unplayed_power_each(self):
+        """Players A-G, who have each played every power except one"""
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
+        players = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+        for p in players:
+            seeder.add_player(p)
+        # In game n, player i plays power (i + n) % 7, so A is left with '7', B with '1', etc.
+        for n in range(6):
+            seeder.add_played_game({(p, self.powers[(i + n) % 7]) for i, p in enumerate(players)})
+        return seeder
+
+    def test_assign_powers_same_power_this_round(self):
+        """A doubler's only unplayed power was used in their other game"""
+        seeder = self._seeder_with_one_unplayed_power_each()
+        game, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'},
+                                             Counter({('A', '7'): 1}))
+        self.assertIn(('A', '7'), game)
+        self.assertEqual(issues,
+                         ['Game has 1 player(s) playing the same power in both their games this round'])
+
+    def test_assign_powers_repeated_power(self):
+        seeder = self._seeder_with_one_unplayed_power_each()
+        # Now everyone has played every power
+        seeder.add_played_game({('A', '7'), ('B', '1'), ('C', '2'), ('D', '3'),
+                                ('E', '4'), ('F', '5'), ('G', '6')})
+        _, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'}, Counter())
+        self.assertEqual(issues, ['Game has 7 player(s) who have already played their power'])
+
     def test_assign_powers(self):
         seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
         for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
@@ -282,7 +312,7 @@ class GameSeederSetupTest(unittest.TestCase):
                                 ('E', '3'),
                                 ('F', '4'),
                                 ('G', '5')})
-        game, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'})
+        game, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'}, Counter())
         self.assertIn(('A', '7'), game)
         self.assertIn(('B', '1'), game)
         self.assertIn(('C', '2'), game)
@@ -939,6 +969,39 @@ class DoublerPairingTest(unittest.TestCase):
             with self.subTest(random_seed=seed):
                 games = self._seeder(seed).seed_games(players_doubling_up=set(self.doublers))
                 self.assertEqual(self._repeated_pairs(games), [])
+
+
+class DoublerPowersTest(unittest.TestCase):
+    """Players doubling up shouldn't play the same power in both their games (issue #304)."""
+
+    powers = ['1', '2', '3', '4', '5', '6', '7']
+
+    def test_doublers_get_different_powers(self):
+        for seed in range(10):
+            with self.subTest(random_seed=seed):
+                seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=seed)
+                for i in range(12):
+                    seeder.add_player(f'{i}p')
+                for rnd in range(3):
+                    doublers = {f'{2 * rnd}p', f'{2 * rnd + 1}p'}
+                    games = seeder.seed_games_and_powers(players_doubling_up=doublers)
+                    powers = {}
+                    for game, _ in games:
+                        for player, power in game:
+                            powers.setdefault(player, []).append(power)
+                    for p in doublers:
+                        self.assertNotEqual(powers[p][0], powers[p][1], f'{p} in round {rnd + 1}')
+                    for game, _ in games:
+                        seeder.add_played_game(game)
+
+    def test_powers_played_unchanged(self):
+        """The temporary record of this round's powers should be removed afterwards"""
+        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=RANDOM_SEED)
+        for i in range(13):
+            seeder.add_player(f'{i}p')
+        before = json.dumps(seeder.powers_played, sort_keys=True)
+        seeder.seed_games_and_powers(players_doubling_up={'0p'})
+        self.assertEqual(json.dumps(seeder.powers_played, sort_keys=True), before)
 
 
 class GameSeederStateTest(unittest.TestCase):
