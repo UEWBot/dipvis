@@ -931,8 +931,8 @@ class DoublerPairingTest(unittest.TestCase):
         repeated = self._boards([('A', 'D'), ('A', 'D'), ('B', 'C'), ('B', 'C')])
         # Each doubler meets two others once, including A who has met C before
         cycle = self._boards([('A', 'D'), ('D', 'B'), ('B', 'C'), ('C', 'A')])
-        self.assertLess(seeder._set_fitness(cycle, include_these_games=True),
-                        seeder._set_fitness(repeated, include_these_games=True))
+        self.assertLess(seeder._set_fitness(cycle),
+                        seeder._set_fitness(repeated))
 
     def test_board_seeding_avoids_repeated_pairs(self):
         for seed in range(5):

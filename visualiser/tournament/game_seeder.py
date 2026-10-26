@@ -462,25 +462,29 @@ class GameSeeder:
                 game = set()
         return res
 
-    def _set_fitness(self, games, include_these_games=False):
+    def _set_fitness(self, games):
         """
         Calculate a total fitness score for this set of games. Lower is better.
 
-        If include_these_games is True, meetings in earlier games in the set
-        are added to the previous meetings before squaring, so a pair meeting
-        twice in the set costs as much as one more previous meeting.
-        This helps keep players playing two games apart but is more work.
+        Meetings in earlier games in the set are added to the previous meetings
+        before squaring, so a pair meeting twice in the set costs as much as
+        one more previous meeting.
         """
-        if not include_these_games:
+        if sum(len(g) for g in games) - len(set().union(*games)) < 2:
+            # Fewer than two players in more than one game, so nobody can meet twice
             return sum(self._fitness_score(g) for g in games)
+        appearances = Counter(p for g in games for p in g)
+        repeated = {p for p, n in appearances.items() if n > 1}
         fitness = 0
         this_set = Counter()
         for g in games:
             fitness += self._fitness_score(g, this_set)
-            this_set.update((p, q) for p in g for q in g if p != q)
+            # Only players in more than one game can meet again
+            in_game = repeated.intersection(g)
+            this_set.update((p, q) for p in in_game for q in in_game if p != q)
         return fitness
 
-    def _improve_fitness(self, games, include_these_games=False):
+    def _improve_fitness(self, games):
         """
         Try to modify a list of games to find a better set.
 
@@ -488,12 +492,9 @@ class GameSeeder:
         overall fitness score.
         Returns the best set of games it finds and the fitness score
         for that set.
-        If include_these_games is True, add in a fitness score
-        for the games in this set. This helps keeps players
-        playing two games apart but is more work
         """
         best_set = copy.deepcopy(games)
-        best_fitness = self._set_fitness(games, include_these_games)
+        best_fitness = self._set_fitness(games)
         # There's nothing to do if we only have one game
         if len(games) >= 2:
             # The more iterations, the better the result, but the longer it takes
@@ -507,7 +508,7 @@ class GameSeeder:
                 g2.remove(p2)
                 g1.add(p2)
                 g2.add(p1)
-                fitness = self._set_fitness(games, include_these_games)
+                fitness = self._set_fitness(games)
                 if fitness < best_fitness:
                     #print("Improving fitness from %d to %d" % (best_fitness, fitness))
                     #print(games)
@@ -535,7 +536,6 @@ class GameSeeder:
 
     def _board_seed_games_once(self,
                                players,
-                               include_these_games=False,
                                optimise_swaps=True):
         """
         Assign players to boards using a board-first badness heuristic.
@@ -568,6 +568,8 @@ class GameSeeder:
 
         copies = Counter(entry_players)
         has_doublers = any(n > 1 for n in copies.values())
+        # Swapping a doubler can then change the cost of other boards, so score the whole set
+        doublers_can_meet = sum(1 for n in copies.values() if n > 1) > 1
 
         for _ in range(len(entry_players)):
             badness_matrix = [[0] * num_entries for _ in range(num_boards)]
@@ -655,9 +657,9 @@ class GameSeeder:
                         score += pair_score[i][j]
             return score
 
-        if include_these_games:
+        if doublers_can_meet:
             best_games = entries_to_games(board_entries)
-            best_fitness = self._set_fitness(best_games, include_these_games)
+            best_fitness = self._set_fitness(best_games)
             board_costs = None
             current_fitness = best_fitness
         else:
@@ -704,10 +706,9 @@ class GameSeeder:
                             board_player_sets[g2_idx].remove(v2)
                             board_player_sets[g2_idx].add(v1)
 
-                            if include_these_games:
+                            if doublers_can_meet:
                                 candidate_games = entries_to_games(board_entries)
-                                candidate_fitness = self._set_fitness(candidate_games,
-                                                                      include_these_games)
+                                candidate_fitness = self._set_fitness(candidate_games)
                             else:
                                 new1 = board_hist_fitness(board_entries[g1_idx])
                                 new2 = board_hist_fitness(board_entries[g2_idx])
@@ -715,7 +716,7 @@ class GameSeeder:
 
                             if candidate_fitness < best_fitness:
                                 best_fitness = candidate_fitness
-                                if include_these_games:
+                                if doublers_can_meet:
                                     best_games = candidate_games
                                 else:
                                     board_costs[g1_idx] = new1
@@ -738,7 +739,7 @@ class GameSeeder:
             if improved:
                 board_entries = [board.copy() for board in best_entries]
 
-        if not include_these_games:
+        if not doublers_can_meet:
             best_games = entries_to_games(best_entries)
         return best_games, best_fitness
 
@@ -756,15 +757,13 @@ class GameSeeder:
         if self.games_played or (len(players_doubling_up) > 1):
             starts = self.starts
 
-        include_these_games = (len(players_doubling_up) > 1)
-        optimise_swaps = self.games_played or include_these_games
+        optimise_swaps = self.games_played or (len(players_doubling_up) > 1)
         best_seeding = None
         best_fitness = None
 
         for _ in range(starts):
             try:
                 seeding, fitness = self._board_seed_games_once(players,
-                                                               include_these_games,
                                                                optimise_swaps)
             except _AssignmentFailed:
                 continue
@@ -881,7 +880,7 @@ class GameSeeder:
         res = self._assign_players_wrapper(players)
         # There's no point iterating if all solutions have a fitness of zero
         if self.games_played or (len(players_doubling_up) > 1):
-            res, fitness = self._improve_fitness(res, include_these_games=(len(players_doubling_up) > 1))
+            res, fitness = self._improve_fitness(res)
         else:
             fitness = 0
         # Return the resulting list of games
@@ -1052,7 +1051,7 @@ class GameSeeder:
                 seedings = []
                 try:
                     for s in self._all_possible_seedings(players):
-                        fitness = self._set_fitness(s, include_these_games=(len(players_doubling_up) > 1))
+                        fitness = self._set_fitness(s)
                         seedings.append((s, fitness))
                 except _AssignmentFailed as e:
                     # Remove temporary bias
