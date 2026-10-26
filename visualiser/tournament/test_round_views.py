@@ -1848,6 +1848,86 @@ class RoundViewTests(TestCase):
         self.rp113.game_count = 2
         self.rp113.save(update_fields=['game_count'])
 
+    def _seed_two_pools(self, mock_seed_games, pool1_assignment, pool1_seeded_powers):
+        """
+        Seed round 1 of t1 with one game in each of two pools, returning the two pools.
+
+        pool1 overrides the tournament's power assignment with pool1_assignment.
+        pool1_seeded_powers and the tournament's setting determine whether the
+        (mock) seeder provides powers for pool1 and pool2, respectively.
+        """
+        r = self.r11
+        self.assertFalse(r.game_set.exists())
+        self.new_tp = TournamentPlayer.objects.create(player=self.p14, tournament=self.t1)
+        self.new_rp = RoundPlayer.objects.create(player=self.p14, the_round=r)
+        self.rp112.game_count = 1
+        self.rp112.save(update_fields=['game_count'])
+        self.rp113.game_count = 1
+        self.rp113.save(update_fields=['game_count'])
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    power_assignment=pool1_assignment,
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r, name='Variable')
+        for rp in [self.rp11, self.rp13, self.rp15, self.rp17, self.rp19, self.rp111, self.rp113]:
+            rp.pool = pool1
+            rp.save()
+        for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, self.new_rp]:
+            rp.pool = pool2
+            rp.save()
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        seeded = []
+        for pool, with_powers in [(pool1, pool1_seeded_powers),
+                                  (pool2, self.t1.power_assignment == PowerAssignMethods.AUTO)]:
+            tps = [self.t1.tournamentplayer_set.get(player=rp.player) for rp in pool.roundplayer_set.all()]
+            seeded.append((pool, set(zip(tps, powers if with_powers else [None] * 7)), []))
+        mock_seed_games.return_value = seeded
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)), secure=True)
+        self.assertEqual(response.status_code, 200)
+        return pool1, pool2
+
+    def _clean_up_two_pools(self):
+        self.new_rp.delete()
+        self.new_tp.delete()
+        for rp in self.r11.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        self.r11.game_set.all().delete()
+        self.r11.pool_set.all().delete()
+        self.rp112.game_count = 0
+        self.rp112.save(update_fields=['game_count'])
+        self.rp113.game_count = 2
+        self.rp113.save(update_fields=['game_count'])
+
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_pool_overrides_to_preferences(self, mock_seed_games):
+        """A pool using PREFERENCES in an AUTO tournament should have powers assigned from preferences"""
+        self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
+        pool1, pool2 = self._seed_two_pools(mock_seed_games, PowerAssignMethods.PREFERENCES, False)
+        for pool in [pool1, pool2]:
+            with self.subTest(pool=pool.name):
+                for gp in pool.game_set.get().gameplayer_set.all():
+                    self.assertIsNotNone(gp.power)
+        self._clean_up_two_pools()
+
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_pool_overrides_preferences(self, mock_seed_games):
+        """A pool using AUTO in a PREFERENCES tournament should keep the seeder's powers"""
+        self.t1.power_assignment = PowerAssignMethods.PREFERENCES
+        self.t1.save(update_fields=['power_assignment'])
+        pool1, pool2 = self._seed_two_pools(mock_seed_games, PowerAssignMethods.AUTO, True)
+        seeded = {tp.player: power for tp, power in mock_seed_games.return_value[0][1]}
+        for gp in pool1.game_set.get().gameplayer_set.all():
+            self.assertEqual(gp.power, seeded[gp.player])
+        # The other pool follows the tournament setting
+        for gp in pool2.game_set.get().gameplayer_set.all():
+            self.assertIsNotNone(gp.power)
+        self._clean_up_two_pools()
+        self.t1.power_assignment = PowerAssignMethods.AUTO
+        self.t1.save(update_fields=['power_assignment'])
+
     @patch('tournament.round_views._seed_games')
     def test_seed_games_set_is_top_board(self, mock_seed_games):
         self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)

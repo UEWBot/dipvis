@@ -457,9 +457,9 @@ def _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool=None):
 
 def _pool_power_assignment(tournament_power_assignment, pool):
     """
-    Returns the PowerAssignmentMethod to use for the pool
+    Returns the PowerAssignmentMethod to use for the pool (which may be None)
     """
-    if pool.power_assignment != '':
+    if (pool is not None) and (pool.power_assignment != ''):
         return pool.power_assignment
     return tournament_power_assignment
 
@@ -653,7 +653,7 @@ def seed_games(request, tournament_id, round_num):
                                                power=power)
                 current[str(gp.id)] = power
             # If we're assigning powers from preferences, do so now
-            if t.power_assignment == PowerAssignMethods.PREFERENCES:
+            if _pool_power_assignment(t.power_assignment, pool) == PowerAssignMethods.PREFERENCES:
                 new_game.assign_powers_from_prefs()
                 for tp, _ in g:
                     gp = GamePlayer.objects.get(player=tp.player,
