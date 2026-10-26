@@ -191,51 +191,17 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(2 * seeder._BIAS_WEIGHT ** 2,
                          seeder._fitness_score({'A', 'B', 'C', 'D', 'E', 'F', 'G'}))
 
-    # _power_fitness()
-    def test_power_fitness_no_games(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
-        for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
-            seeder.add_player(p)
-        self.assertEqual(0, seeder._power_fitness({('A', '1'),
-                                                   ('B', '2'),
-                                                   ('C', '3'),
-                                                   ('D', '4'),
-                                                   ('E', '5'),
-                                                   ('F', '6'),
-                                                   ('G', '7')},
-                                                  Counter()))
-
-    def test_power_fitness_exact_match(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
-        for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
-            seeder.add_player(p)
-        seeder.add_played_game({('A', '1'),
-                                ('B', '2'),
-                                ('C', '3'),
-                                ('D', '4'),
-                                ('E', '5'),
-                                ('F', '6'),
-                                ('G', '7')})
-        self.assertEqual(7, seeder._power_fitness({('A', '1'),
-                                                   ('B', '2'),
-                                                   ('C', '3'),
-                                                   ('D', '4'),
-                                                   ('E', '5'),
-                                                   ('F', '6'),
-                                                   ('G', '7')},
-                                                  Counter()))
-
-    # _assign_some_powers()
-    def test_assign_some_powers(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
-        for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
-            seeder.add_player(p)
-        games = seeder._assign_some_powers(['A', 'B', 'C', 'D', 'E', 'F', 'G'],
-                                           self.powers)
-        self.assertEqual(len(games), 7*6*5*4*3*2)
-        # Ideally, we'd also check for duplicate seedings
-
     # _assign_powers()
+    def test_assign_powers_no_history(self):
+        seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
+        players = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+        for p in players:
+            seeder.add_player(p)
+        game, issues = seeder._assign_powers(set(players), Counter())
+        self.assertEqual(sorted(player for player, _ in game), players)
+        self.assertEqual(sorted(power for _, power in game), self.powers)
+        self.assertEqual(issues, [])
+
     def _seeder_with_one_unplayed_power_each(self):
         """Players A-G, who have each played every power except one"""
         seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)

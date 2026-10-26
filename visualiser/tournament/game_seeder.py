@@ -345,47 +345,6 @@ class GameSeeder:
         self._add_bias(player1, player2, self._BIAS_WEIGHT)
         self._operations.append(['add_bias', self._player_index[player1], self._player_index[player2]])
 
-    def _power_fitness(self, game, this_round):
-        """
-        Returns a fitness score (0-??) for a game. Lower is better.
-
-        In this case, a game is a set of (player, power) 2-tuples.
-        The value returned is the sum of the number of times each player has
-        previously played the specified power, including earlier games this round.
-        this_round is a Counter, keyed by (player, power), of powers already
-        assigned in this round.
-        """
-        f = 0
-        for player, power in game:
-            f += self.powers_played[player][power] + this_round[(player, power)]
-        return f
-
-    def _assign_some_powers(self, players, powers):
-        """
-        Returns a list of sets of (player, power) 2-tuples.
-
-        This is the set of all possible games with that player and power list.
-        """
-        assert len(players) == len(powers)
-        # If there's just one player left, there's only one possible game
-        if len(players) == 1:
-            pair = (players[0], powers[0])
-            game = set()
-            game.add(pair)
-            result = []
-            result.append(game)
-            return result
-        result = []
-        player = players.pop(0)
-        for power in powers:
-            pair = (player, power)
-            powers2 = powers.copy()
-            powers2.remove(power)
-            for game in self._assign_some_powers(players.copy(), powers2):
-                game.add(pair)
-                result.append(game)
-        return result
-
     def _assign_powers(self, game, this_round):
         """
         Returns a 2-tuple containing a set of (player, power) 2-tuples and a list of "issues".
@@ -393,22 +352,26 @@ class GameSeeder:
         game is a set of players.
         this_round is a Counter, keyed by (player, power), of powers already
         assigned in other games this round.
+        The powers are assigned to minimise the total number of times players
+        have already played their power, including earlier games this round.
         """
-        # Try every combination of power assignments in a random order,
-        # and keep the best
-        best_fitness = 99999
         player_list = self._in_player_order(game)
-        power_list = list(self.powers)
+        # Shuffle the players so that ties are broken randomly
         self._random.shuffle(player_list)
-        games = self._assign_some_powers(player_list, power_list)
-        for g in games:
-            score = self._power_fitness(g, this_round)
-            if score < best_fitness:
+        costs = [[self.powers_played[player][power] + this_round[(player, power)]
+                  for power in self.powers]
+                 for player in player_list]
+        # Try every combination of power assignments, and keep the best
+        best_fitness = None
+        for perm in itertools.permutations(range(self.num_powers)):
+            score = sum(row[i] for row, i in zip(costs, perm))
+            if (best_fitness is None) or (score < best_fitness):
                 best_fitness = score
-                best_result = g
-            if best_fitness == 0:
-                # This is as good as it gets - no player has played this power before
-                break
+                best_perm = perm
+                if best_fitness == 0:
+                    # This is as good as it gets - no player has played their power before
+                    break
+        best_result = {(player, self.powers[i]) for player, i in zip(player_list, best_perm)}
         issues = []
         repeats = sum(1 for player, power in best_result if self.powers_played[player][power])
         if repeats:
