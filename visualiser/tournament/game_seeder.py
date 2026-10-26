@@ -410,7 +410,7 @@ class GameSeeder:
             issues.append(_('Game has %(num)d player(s) who have already played their power') % {'num': best_fitness})
         return best_result, issues
 
-    def _fitness_score(self, game, games_played_matrix=None):
+    def _fitness_score(self, game, earlier_meetings=None):
         """
         Returns a fitness score (0-??) for a game. Lower is better.
 
@@ -419,19 +419,19 @@ class GameSeeder:
         of players has played together already.
         game is a set of players (player can be any type as long as it's the
         same in all calls to this object).
+        earlier_meetings is an optional Counter, keyed by (player, player), of
+        additional meetings to add to those already played.
         """
-        if games_played_matrix is None:
-            games_played_matrix = self.games_played_matrix
         f = 0
         # Sum the number of times each pair of players has played together
         for p in game:
+            played = self.games_played_matrix[p]
             for q in game:
                 if p != q:
-                    try:
-                        f += (games_played_matrix[p][q] ** 2)
-                    except KeyError:
-                        # These players have not played each other
-                        pass
+                    n = played.get(q, 0)
+                    if earlier_meetings:
+                        n += earlier_meetings[(p, q)]
+                    f += n ** 2
         return f
 
     def _assign_players_to_games_randomly(self, players):
@@ -464,24 +464,20 @@ class GameSeeder:
 
     def _set_fitness(self, games, include_these_games=False):
         """
-        Calculate a total fitness score for this set of games.
+        Calculate a total fitness score for this set of games. Lower is better.
 
-        Range is 0-(42 * len(games)). Lower is better.
-        If include_these_games is True, add in a fitness score
-        for the games in this set. This helps keeps players
-        playing two games apart but is more work
+        If include_these_games is True, meetings in earlier games in the set
+        are added to the previous meetings before squaring, so a pair meeting
+        twice in the set costs as much as one more previous meeting.
+        This helps keep players playing two games apart but is more work.
         """
+        if not include_these_games:
+            return sum(self._fitness_score(g) for g in games)
         fitness = 0
-        matrix = {}
+        this_set = Counter()
         for g in games:
-            if include_these_games:
-                for player in g:
-                    if player not in matrix:
-                        matrix[player] = {}
-            fitness += self._fitness_score(g, self.games_played_matrix)
-            if include_these_games:
-                fitness += self._fitness_score(g, matrix)
-                self._add_played_game(g, matrix)
+            fitness += self._fitness_score(g, this_set)
+            this_set.update((p, q) for p in g for q in g if p != q)
         return fitness
 
     def _improve_fitness(self, games, include_these_games=False):

@@ -18,8 +18,10 @@
 Assign powers to players in a Diplomacy game.
 """
 
+import itertools
 import json
 import unittest
+from collections import Counter
 from string import ascii_uppercase
 from unittest import mock
 
@@ -892,6 +894,51 @@ class BoardGameSeederTest(_SharedSeederAlgorithmCasesMixin,
                     self.check_game_set(r, 14, duplicates={doubler})
                     for g in r:
                         seeder.add_played_game(with_powers(g))
+
+
+class DoublerPairingTest(unittest.TestCase):
+    """Players doubling up shouldn't be put together on both their boards."""
+
+    powers = ['1', '2', '3', '4', '5', '6', '7']
+    doublers = ['A', 'B', 'C', 'D']
+
+    def _seeder(self, random_seed=RANDOM_SEED):
+        """24 players, where only some pairs of doublers have met before"""
+        seeder = GameSeeder(self.powers, SeedMethod.BOARD, random_seed=random_seed)
+        for p in self.doublers + [f'{i}p' for i in range(20)]:
+            seeder.add_player(p)
+        # A/D and B/C have never met, but the other doubler pairs except B/D have
+        seeder._add_bias('A', 'B', 1)
+        seeder._add_bias('A', 'C', 1)
+        seeder._add_bias('C', 'D', 2)
+        return seeder
+
+    def _boards(self, doubler_pairs):
+        """Four boards, each with the specified pair of doublers and five others"""
+        others = [f'{i}p' for i in range(20)]
+        return [set(pair) | set(others[5 * i:5 * i + 5]) for i, pair in enumerate(doubler_pairs)]
+
+    def _repeated_pairs(self, games):
+        meetings = Counter()
+        for g in games:
+            meetings.update(itertools.combinations(sorted(set(g) & set(self.doublers)), 2))
+        return [pair for pair, n in meetings.items() if n > 1]
+
+    def test_repeat_meeting_costs_more(self):
+        """Two pairs meeting twice should score worse than meeting a previous opponent"""
+        seeder = self._seeder()
+        seeder._add_bias_for_doublers(self.doublers, add=True)
+        repeated = self._boards([('A', 'D'), ('A', 'D'), ('B', 'C'), ('B', 'C')])
+        # Each doubler meets two others once, including A who has met C before
+        cycle = self._boards([('A', 'D'), ('D', 'B'), ('B', 'C'), ('C', 'A')])
+        self.assertLess(seeder._set_fitness(cycle, include_these_games=True),
+                        seeder._set_fitness(repeated, include_these_games=True))
+
+    def test_board_seeding_avoids_repeated_pairs(self):
+        for seed in range(5):
+            with self.subTest(random_seed=seed):
+                games = self._seeder(seed).seed_games(players_doubling_up=set(self.doublers))
+                self.assertEqual(self._repeated_pairs(games), [])
 
 
 class GameSeederStateTest(unittest.TestCase):
