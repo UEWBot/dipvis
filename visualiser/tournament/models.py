@@ -1271,11 +1271,17 @@ class Tournament(models.Model):
 
     def powers_assigned_from_prefs(self):
         """
-        Returns True if power_assignment is PREFERENCES.
+        Returns True if powers are assigned from preferences in any Round.
 
+        That is, if power_assignment is PREFERENCES or any Pool overrides it to be.
         Intended for use in template code.
         """
-        return self.power_assignment == PowerAssignMethods.PREFERENCES
+        if self.power_assignment == PowerAssignMethods.PREFERENCES:
+            return True
+        if self.pk is None:
+            return False
+        return Pool.objects.filter(the_round__tournament=self,
+                                   power_assignment=PowerAssignMethods.PREFERENCES).exists()
 
     @property
     def is_virtual(self):
@@ -2276,7 +2282,7 @@ class TournamentPlayer(models.Model):
         """
         if not self.uuid_str:
             self._generate_uuid()
-        if self.tournament.power_assignment == PowerAssignMethods.PREFERENCES:
+        if self.tournament.powers_assigned_from_prefs():
             path = reverse('player_prefs',
                            args=[str(self.tournament_id), self.uuid_str])
         else:

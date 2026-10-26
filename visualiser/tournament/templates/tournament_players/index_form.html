@@ -8,6 +8,7 @@
 
 <form action="{% url 'tournament_players' tournament.id %}" method="post">
   {% csrf_token %}
+  {% with uses_prefs=tournament.powers_assigned_from_prefs %}
   <table class="form">
     <thead><tr>
       <th></th>
@@ -26,7 +27,7 @@
       {% endif %}
       <th>{% trans "Unranked?" %}</th>
       <th>{% trans "Email known?" %}</th>
-      {% if tournament.powers_assigned_from_prefs %}
+      {% if uses_prefs %}
         <th>{% trans "Prefs email sent?" %}</th>
         <th></th>
       {% endif %}
@@ -53,7 +54,7 @@
           {% endif %}
           <td style="text-align:center;">{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
           <td>{% if tp.player.email != "" %}{% trans "Yes" %}{% endif %}</td>
-          {% if tournament.powers_assigned_from_prefs %}
+          {% if uses_prefs %}
               <td style="text-align:center;">{% if tp.uuid_str != "" %}{% trans "Yes" %}{% endif %}</td>
               <td>{% if tp.player.email != "" %}
                 <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email" %}" />
@@ -68,6 +69,7 @@
       {% endfor %}
     </tbody>
   </table>
+  {% endwith %}
   <p>{% trans "<b>Warning!</b> You will really mess things up if you unregister a player who has played in the tournament" %}</p>
 <p><a href="{% url 'tournament_player_payments' tournament.id %}">{% trans "Track Payments" %}</a></p>
 <h2>{% trans "Register Players" %}</h2>

@@ -3427,6 +3427,19 @@ class TournamentTests(TestCase):
                        power_assignment=PowerAssignMethods.PREFERENCES)
         self.assertIs(True, t.powers_assigned_from_prefs())
 
+    def test_tournament_powers_assigned_from_prefs_pool(self):
+        """A Pool using preferences means the Tournament needs them"""
+        t = Tournament.objects.first()
+        self.assertNotEqual(t.power_assignment, PowerAssignMethods.PREFERENCES)
+        r = t.round_set.first()
+        pool = Pool.objects.create(the_round=r, name='Top')
+        self.assertIs(False, t.powers_assigned_from_prefs())
+        pool.power_assignment = PowerAssignMethods.PREFERENCES
+        pool.save(update_fields=['power_assignment'])
+        self.assertIs(True, t.powers_assigned_from_prefs())
+        # Clean up
+        pool.delete()
+
     # Tournament.show_game_urls()
     def test_tournament_show_game_urls_flag_unset(self):
         t = Tournament.objects.first()

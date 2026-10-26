@@ -89,7 +89,7 @@ def send_board_call_email(the_round):
 PREFS_EMAIL = """
 Hi,
 You're receiving this because you are registered for the %(tourney)s Diplomacy tournament.
-The tournament is using player preferences to assign Great Powers.
+The tournament is using player preferences to assign Great Powers for some or all games.
 To enter or update your preferences, go to the following web page:
 %(url)s
 Note 1: this address is unique to you - if you share it with anyone, they will be able to change your preferences!
