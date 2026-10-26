@@ -55,6 +55,13 @@ class WDRBackgroundTests(TestCase):
         b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
         self.assertEqual('CA', b.nationality())
 
+    def test_wdr_background_nationality_world(self):
+        """The WDR's "ALL" ("World") means the nationality is unknown"""
+        with patch.object(WDRBackground, '_read_wdr'):
+            b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
+        b.data = {'player_nationality': 'ALL'}
+        self.assertEqual('', b.nationality())
+
     # WDRBackground.location()
     @tag('wdr')
     def test_wdr_background_location(self):

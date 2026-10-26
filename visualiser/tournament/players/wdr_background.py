@@ -88,9 +88,13 @@ class WDRBackground():
         """
         Returns the nationality of the player
 
-        2-letter ISO code
+        2-letter ISO code, or an empty string if unknown
         """
-        return self.data['player_nationality']
+        nat = self.data['player_nationality']
+        # The WDR uses "ALL" (shown as "World") when it doesn't know the nationality
+        if nat == 'ALL':
+            return ''
+        return nat
 
     def location(self):
         """
