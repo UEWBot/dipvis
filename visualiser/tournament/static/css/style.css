@@ -1,0 +1,15 @@
+.even_row {
+    background: #fff;
+}
+
+.odd_row {
+    background: #f9f9f9;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 5px;
+}
