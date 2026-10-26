@@ -160,7 +160,8 @@ class GameSeeder:
                  seed_method,
                  starts=1,
                  iterations=1000,
-                 random_seed=None):
+                 random_seed=None,
+                 player_name=str):
         """
         Create a GameSeeder object
 
@@ -178,10 +179,13 @@ class GameSeeder:
         repeatable (e.g. for testing). By default, a random seed is chosen.
         Either way, it is recorded so that problems can be reproduced
         (see state() and replay()).
+        player_name is a function returning the name to use for a player in
+        the issues reported when assigning powers.
         """
         if random_seed is None:
             random_seed = random.SystemRandom().randrange(2 ** 32)
         self.random_seed = random_seed
+        self._player_name = player_name
         self._random = random.Random(random_seed)
         self._init_args = {'seed_method': seed_method.name,
                            'starts': starts,
@@ -373,12 +377,14 @@ class GameSeeder:
                     break
         best_result = {(player, self.powers[i]) for player, i in zip(player_list, best_perm)}
         issues = []
-        repeats = sum(1 for player, power in best_result if self.powers_played[player][power])
-        if repeats:
-            issues.append(_('Game has %(num)d player(s) who have already played their power') % {'num': repeats})
-        same_power = sum(1 for player, power in best_result if this_round[(player, power)])
-        if same_power:
-            issues.append(_('Game has %(num)d player(s) playing the same power in both their games this round') % {'num': same_power})
+        assigned = dict(best_result)
+        for player in self._in_player_order(game):
+            power = assigned[player]
+            names = {'player': self._player_name(player), 'power': power}
+            if self.powers_played[player][power]:
+                issues.append(_('%(player)s has already played %(power)s') % names)
+            if this_round[(player, power)]:
+                issues.append(_('%(player)s is playing %(power)s in both their games this round') % names)
         return best_result, issues
 
     def _fitness_score(self, game, earlier_meetings=None):

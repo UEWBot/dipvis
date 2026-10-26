@@ -43,7 +43,8 @@ class PowerAssignForm(forms.Form):
 
     issues = forms.CharField(label=_('Issues'),
                              required=False,
-                             disabled=True)
+                             disabled=True,
+                             widget=forms.Textarea(attrs={'rows': 3}))
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one GreatPower field per RoundPlayer"""

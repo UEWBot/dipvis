@@ -219,16 +219,23 @@ class GameSeederSetupTest(unittest.TestCase):
         game, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'},
                                              Counter({('A', '7'): 1}))
         self.assertIn(('A', '7'), game)
-        self.assertEqual(issues,
-                         ['Game has 1 player(s) playing the same power in both their games this round'])
+        self.assertEqual(issues, ['A is playing 7 in both their games this round'])
+
+    def test_assign_powers_player_name(self):
+        seeder = self._seeder_with_one_unplayed_power_each()
+        seeder._player_name = lambda p: f'Player {p}'
+        _, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'},
+                                          Counter({('A', '7'): 1}))
+        self.assertEqual(issues, ['Player A is playing 7 in both their games this round'])
 
     def test_assign_powers_repeated_power(self):
         seeder = self._seeder_with_one_unplayed_power_each()
         # Now everyone has played every power
         seeder.add_played_game({('A', '7'), ('B', '1'), ('C', '2'), ('D', '3'),
                                 ('E', '4'), ('F', '5'), ('G', '6')})
-        _, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'}, Counter())
-        self.assertEqual(issues, ['Game has 7 player(s) who have already played their power'])
+        game, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'}, Counter())
+        # Everyone has to repeat a power, and the issues are in player order
+        self.assertEqual(issues, [f'{p} has already played {power}' for p, power in sorted(game)])
 
     def test_assign_powers(self):
         seeder = GameSeeder(self.powers, SeedMethod.RANDOM, random_seed=RANDOM_SEED)
@@ -497,8 +504,10 @@ class GameSeederSetupTest(unittest.TestCase):
         r = seeder.seed_games_and_powers()
         self.assertEqual(1, len(r))
         g, i = r[0]
-        self.assertEqual(1, len(i))
-        self.assertIn('5 player', i[0])
+        # One issue for each of the 5 players who have to repeat a power
+        self.assertEqual(5, len(i))
+        self.assertEqual(i, [f'{p} has already played {power}'
+                             for p, power in sorted(g) if seeder.powers_played[p][power]])
 
     # TODO more tests of seed_games_and_powers() power assignment
 
