@@ -29,6 +29,7 @@ about a player and retrieving it as needed.
 import datetime as dt
 import traceback
 
+from django_countries import countries
 from django_countries.fields import Country
 
 from tournament.diplomacy import GreatPower
@@ -374,8 +375,13 @@ def _add_player_bg_from_wdr(player, wdr_id):
     if not player.nationalities:
         nat = bg.nationality()
         if nat:
-            player.nationalities = Country(nat)
-            fields.append('nationalities')
+            # Also accepts lower-case and 3-letter codes, returning '' if unrecognised
+            code = countries.alpha2(nat)
+            if code:
+                player.nationalities = Country(code)
+                fields.append('nationalities')
+            else:
+                print(f'Ignoring unrecognised WDR nationality {nat!r} for {player}')
     # Location
     # Assume that if we know a location it either came from the WDR or is more accurate
     if not player.location:

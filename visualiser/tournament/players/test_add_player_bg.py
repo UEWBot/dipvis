@@ -76,6 +76,37 @@ class AddPlayerBgTests(TestCase):
         ranking = player.playereventranking_set.get(wdr_tournament_id=1352)
         self.assertIsNone(ranking.rank)
 
+    def _add_bg_with_wdr_nationality(self, nationality):
+        """Run _add_player_bg_from_wdr() with a WDR player having just the specified nationality"""
+        player = Player.objects.create(first_name='Nationality', last_name='Player')
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+            mock_wdr.return_value.tournaments.return_value = []
+            mock_wdr.return_value.boards.return_value = []
+            mock_wdr.return_value.awards.return_value = []
+            mock_wdr.return_value.rankings.return_value = {}
+            mock_wdr.return_value.nationality.return_value = nationality
+            mock_wdr.return_value.location.return_value = ''
+            fields = add_bg_module._add_player_bg_from_wdr(player, 1)
+        return player, fields
+
+    def test_add_player_bg_wdr_valid_nationality(self):
+        for nationality in ('CA', 'ca', 'CAN', 'GB-ENG'):
+            with self.subTest(nationality=nationality):
+                player, fields = self._add_bg_with_wdr_nationality(nationality)
+                self.assertIn('nationalities', fields)
+                self.assertEqual([c.code for c in player.nationalities],
+                                 ['GB-ENG' if nationality == 'GB-ENG' else 'CA'])
+
+    @patch('builtins.print')
+    def test_add_player_bg_wdr_invalid_nationality(self, mock_print):
+        for nationality in ('ALL', 'XX', 'world'):
+            with self.subTest(nationality=nationality):
+                player, fields = self._add_bg_with_wdr_nationality(nationality)
+                self.assertNotIn('nationalities', fields)
+                self.assertEqual(len(player.nationalities), 0)
+                mock_print.assert_called_with(f'Ignoring unrecognised WDR nationality {nationality!r} for {player}')
+
     def test_add_player_bg_keeps_partial_wdr_board(self):
         player = Player.objects.create(first_name='Adam', last_name='Silverman')
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
