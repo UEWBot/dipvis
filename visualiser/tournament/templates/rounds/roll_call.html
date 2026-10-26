@@ -3,6 +3,24 @@
 
 {% block title %}{% blocktrans with tournament=tournament round=round.number %}Round {{ round }} of {{ tournament }} Roll Call - DipTV{% endblocktrans %}{% endblock title %}
 
+{% block style %}
+<style>
+{# Used by PlayerRoundForm #}
+.readonly-look:disabled {
+    border: none !important;
+    background: transparent !important;
+    padding-left: 0 !important;
+    color: inherit !important;
+    text-align: center !important;
+}
+.center-checkbox {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+</style>
+{% endblock style %}
+
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Roll Call" %}</h1>
 

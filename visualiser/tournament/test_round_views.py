@@ -679,6 +679,10 @@ class RoundViewTests(TestCase):
         self.assertTemplateUsed(response, 'rounds/roll_call.html')
         self.assertContains(response, 'id="select-all-present"')
         self.assertContains(response, 'name$="-present"')
+        # The page's styles should be in the <head>
+        head = response.content.decode().split('</head>')[0]
+        self.assertIn('.readonly-look:disabled', head)
+        self.assertIn('.center-checkbox', head)
 
     def test_roll_call_get_player_field_rendering(self):
         """Pre-populated rows show player name as text; blank extra rows show a select."""
@@ -2835,6 +2839,8 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/board_call.html')
+        # Roll call styles aren't needed here
+        self.assertNotContains(response, 'readonly-look')
 
     def test_board_call_by_player(self):
         response = self.client.get(reverse('board_call_by_player',
