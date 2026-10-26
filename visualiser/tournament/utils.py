@@ -32,6 +32,7 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone as django_timezone
+from django_countries import countries
 
 from tournament import backstabbr
 from tournament.diplomacy import FIRST_YEAR, GameSet, GreatPower
@@ -161,6 +162,21 @@ def archive_tournaments(dry_run=False):
         if not dry_run:
             t.editable = False
             t.save()
+
+
+def clean_invalid_nationalities(dry_run=False):
+    """
+    Remove any Player nationalities that aren't valid country codes (e.g. the WDR's "ALL")
+    """
+    for p in Player.objects.exclude(nationalities=''):
+        old_codes = [c.code for c in p.nationalities]
+        new_codes = [c for c in old_codes if c in countries]
+        if new_codes == old_codes:
+            continue
+        print(f'Changing nationalities of {p} ({p.pk}) from {old_codes} to {new_codes}')
+        if not dry_run:
+            p.nationalities = new_codes
+            p.save(update_fields=['nationalities'])
 
 
 # Populate attributes - set attributes that can be figured out

@@ -36,6 +36,7 @@ from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
                               add_missing_player_wdr_ids,
                               check_wdd_player_ids,
                               clean_duplicate_player,
+                              clean_invalid_nationalities,
                               find_tournaments_missing_wdd_ids,
                               find_tournaments_missing_wdr_ids,
                               find_players_missing_wdd_ids,
@@ -229,6 +230,54 @@ class UtilsTests(TestCase):
         self.assertTrue(t.editable)
         # Cleanup
         t.delete()
+
+    def _players_with_nationalities(self):
+        nationalities = {'only_all': ['ALL'],
+                         'all_and_ca': ['CA', 'ALL'],
+                         'invalid': ['XX', 'world'],
+                         'override': ['GB-ENG'],
+                         'ca': ['CA'],
+                         'none': []}
+        players = {}
+        for name, nats in nationalities.items():
+            p = Player.objects.create(first_name='Nationality', last_name=name)
+            p.nationalities = nats
+            p.save(update_fields=['nationalities'])
+            players[name] = p
+        return players
+
+    @patch('builtins.print')
+    def test_clean_invalid_nationalities(self, mock_print):
+        players = self._players_with_nationalities()
+        clean_invalid_nationalities()
+        expected = {'only_all': [],
+                    'all_and_ca': ['CA'],
+                    'invalid': [],
+                    'override': ['GB-ENG'],
+                    'ca': ['CA'],
+                    'none': []}
+        for name, p in players.items():
+            with self.subTest(player=name):
+                p.refresh_from_db()
+                self.assertEqual(sorted(c.code for c in p.nationalities), expected[name])
+        self.assertEqual(mock_print.call_count, 3)
+        # Cleanup
+        for p in players.values():
+            p.delete()
+
+    @patch('builtins.print')
+    def test_clean_invalid_nationalities_dry_run(self, mock_print):
+        players = self._players_with_nationalities()
+        clean_invalid_nationalities(dry_run=True)
+        p = players['all_and_ca']
+        p.refresh_from_db()
+        self.assertEqual(sorted(c.code for c in p.nationalities), ['ALL', 'CA'])
+        old_codes = [c.code for c in p.nationalities]
+        mock_print.assert_any_call(f'Changing nationalities of {p} ({p.pk}) from {old_codes} to [\'CA\']')
+        self.assertEqual(mock_print.call_count, 3)
+        # Cleanup
+        for p in players.values():
+            p.delete()
 
     def test_power_award_to_gameplayers(self):
         today = django_timezone.now().date()
