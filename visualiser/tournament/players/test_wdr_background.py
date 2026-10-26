@@ -22,7 +22,6 @@ from django.test import TestCase, tag
 from . import InvalidWDRId, WDRBackground, WDRNotAccessible
 
 
-@tag('wdr')
 class WDRBackgroundTests(TestCase):
 
     INVALID_WDR_ID = 0
