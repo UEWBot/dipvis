@@ -3231,18 +3231,17 @@ class Game(models.Model):
         draw = self.passed_draw()
         if draw:
             powers = draw.powers()
-            sz = len(powers)
-            if sz == 1:
-                retval = _(u'Game%(game)s conceded to ') % {'game': gn_str}
-            else:
-                retval = _(u'Vote passed to end game%(game)s as a %(n)d-way draw between ') % {'game': gn_str,
-                                                                                               'n': sz}
             winners = []
             for power in powers:
                 game_player = self.gameplayer_set.get(power=power)
                 winners.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                                'power': _(power.abbreviation)})
-            return retval + ', '.join(winners)
+            if len(powers) == 1:
+                return _('Game%(game)s conceded to %(player)s') % {'game': gn_str,
+                                                                   'player': winners[0]}
+            return _('Vote passed to end game%(game)s as a %(n)d-way draw between %(players)s') % {'game': gn_str,
+                                                                                                    'n': len(powers),
+                                                                                                    'players': ', '.join(winners)}
         # Did a power reach 18 (or more) centres ?
         soloer = self.soloer()
         if soloer:
