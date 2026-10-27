@@ -51,7 +51,7 @@ class GScoringOMG(GameScoringSystem):
         gap = dots[0][1] - dots[1][1]
         num_leaders = state.num_powers_with(dots[0][1])
         rank_pts = _adjust_rank_score(dots, [4.5, 3, 1.5])
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         soloed = soloer is not None
         tribute = 0
         for i, (p, c) in enumerate(dots):

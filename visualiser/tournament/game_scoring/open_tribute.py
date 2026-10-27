@@ -45,7 +45,7 @@ class GScoringOpenTribute(GameScoringSystem):
         retval = {}
         leader_scs = state.highest_dot_count()
         num_leaders = state.num_powers_with(leader_scs)
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         soloed = soloer is not None
         tribute = 0
         for p in state.all_powers():

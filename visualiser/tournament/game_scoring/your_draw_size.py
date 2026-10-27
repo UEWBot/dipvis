@@ -67,7 +67,7 @@ class GScoringYourDrawSize(GameScoringSystem):
         Return a dict, indexed by power id, of scores.
         """
         retval = {}
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         for p in state.all_powers():
             if soloer is None:
                 retval[p] = self.dots_to_pts[state.dot_count(p)]

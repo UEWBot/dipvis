@@ -52,8 +52,13 @@ class TournamentGameState(GameState):
         """Returns an iterable of all the powers."""
         return GreatPower.objects.all()
 
-    def soloer(self):
-        """Returns the power that soloed the game or was conceded to, or None."""
+    def soloing_power(self):
+        """
+        Returns the power that soloed the game, or None.
+
+        If a passed draw vote includes a single power, that is a concession
+        and counts as a solo.
+        """
         if self.final_year_scs[0].count >= WINNING_SCS:
             return self.final_year_scs[0].power
         if self.draw is not None:

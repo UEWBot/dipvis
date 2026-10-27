@@ -43,10 +43,10 @@ class GScoringDrawSize(GameScoringSystem):
         """
         retval = {}
         survivors = state.powers_in_draw()
-        soloed = state.soloer() is not None
+        soloed = state.soloing_power() is not None
         for p in state.all_powers():
             retval[p] = 0.0
-            if p == state.soloer():
+            if p == state.soloing_power():
                 retval[p] = 100.0
             elif soloed:
                 # Leave the score at zero

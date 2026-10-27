@@ -79,7 +79,7 @@ class GScoringDuctTapeV2(GameScoringSystem):
         retval = {}
 
         # Solos are special - no centre points for anyone, including the soloer
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         if soloer is not None:
             for p in state.all_powers():
                 retval[p] = self.SOLO_PTS if p == soloer else 0

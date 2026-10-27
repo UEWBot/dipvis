@@ -41,7 +41,7 @@ class GScoringBase3(GameScoringSystem):
         Return a dict, indexed by power id, of scores.
         """
         retval = {}
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         soloed = soloer is not None
         leader_scs = state.highest_dot_count()
         num_leaders = state.num_powers_with(leader_scs)

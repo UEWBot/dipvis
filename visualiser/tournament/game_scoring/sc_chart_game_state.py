@@ -51,7 +51,12 @@ class SCChartGameState(GameState):
     def all_powers(self):
         return self.powers
 
-    def soloer(self):
+    def soloing_power(self):
+        """
+        Returns the first power to reach WINNING_SCS centres, or None.
+
+        Draw votes are unknown, so concessions are not detected.
+        """
         for year, counts in self.sc_counts.items():
             for power, count in counts.items():
                 if count >= WINNING_SCS:

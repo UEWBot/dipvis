@@ -84,7 +84,7 @@ class GScoringGIRSH(GameScoringSystem):
                                         state.last_full_year(),
                                         powers,
                                         self.rank_points)
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         gap_scores = self._gap_scores(state)
         # Add centre-count and solo bonuses, then the survival and gap penalties
         for power in powers:

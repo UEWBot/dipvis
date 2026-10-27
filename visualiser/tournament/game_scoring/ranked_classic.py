@@ -101,7 +101,7 @@ class GScoringRankedClassic(GameScoringSystem):
         """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
-        if state.soloer() is not None:
+        if state.soloing_power() is not None:
             solo_year = state.solo_year()
             for p, c in dots:
                 if c >= WINNING_SCS:

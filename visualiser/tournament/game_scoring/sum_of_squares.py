@@ -40,7 +40,7 @@ class GScoringSumOfSquares(GameScoringSystem):
         """
         retval = {}
         retval_solo = {}
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         all_powers = state.all_powers()
         for p in all_powers:
             retval_solo[p] = 0.0

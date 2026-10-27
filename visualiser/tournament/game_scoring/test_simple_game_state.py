@@ -49,7 +49,7 @@ class SimpleGameStateTests(TestCase):
                               final_year=1907,
                               elimination_years={},
                               draw=[self.italy])
-        self.assertEqual(sgs.soloer(), self.italy)
+        self.assertEqual(sgs.soloing_power(), self.italy)
         self.assertEqual(sgs.powers_in_draw(), [self.italy])
 
     def test_sgs_solo_year_none(self):

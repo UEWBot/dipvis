@@ -57,7 +57,7 @@ class GScoringManorCon(GameScoringSystem):
         Return a dict, indexed by power id, of scores.
         """
         retval = {}
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         soloed = soloer is not None
         if soloed:
             solo_year = state.solo_year()

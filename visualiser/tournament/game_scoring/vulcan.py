@@ -46,7 +46,7 @@ class GScoringVulcan(GameScoringSystem):
         Return a dict, indexed by power id, of scores.
         """
         retval = {}
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
         # sort lowest-to-highest dot count
         dots.sort(key=itemgetter(1))

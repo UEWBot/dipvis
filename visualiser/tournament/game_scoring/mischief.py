@@ -41,7 +41,7 @@ class GScoringMischief(GameScoringSystem):
         retval = {}
         leader_scs = state.highest_dot_count()
         num_leaders = state.num_powers_with(leader_scs)
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         soloed = soloer is not None
         for p in state.all_powers():
             dots = state.dot_count(p)

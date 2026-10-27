@@ -71,7 +71,7 @@ class GScoringMaxonian(GameScoringSystem):
                                         state.last_full_year(),
                                         state.all_powers(),
                                         self.rank_points)
-        soloer = state.soloer()
+        soloer = state.soloing_power()
 
         # add bonus points
         for p in retval.keys():

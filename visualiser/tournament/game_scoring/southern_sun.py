@@ -61,7 +61,7 @@ class GScoringSouthernSun(GameScoringSystem):
         """
         retval = {}
         all_powers = state.all_powers()
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         if soloer is not None:
             for p in all_powers:
                 if p == soloer:

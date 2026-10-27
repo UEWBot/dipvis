@@ -43,8 +43,13 @@ class GameState(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def soloer(self):
-        """Returns the power that soloed the game or was conceded to, or None."""
+    def soloing_power(self):
+        """
+        Returns the power that soloed the game, or None.
+
+        A game conceded to a single power counts as a solo by that power,
+        if the implementation knows about draw votes.
+        """
         raise NotImplementedError
 
     @abstractmethod

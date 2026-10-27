@@ -79,7 +79,7 @@ class GScoringBangkok(GameScoringSystem):
         """
         retval = {}
         all_powers = state.all_powers()
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         soloed = soloer is not None
         if soloed:
             for p in all_powers:

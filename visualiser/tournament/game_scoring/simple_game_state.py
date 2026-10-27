@@ -74,8 +74,12 @@ class SimpleGameState(GameState):
         """Returns an iterable of all the powers."""
         return self.sc_counts.keys()
 
-    def soloer(self):
-        """Returns the power that soloed the game or was conceded to, or None."""
+    def soloing_power(self):
+        """
+        Returns the power that soloed the game, or None.
+
+        If draw is a single power, that is a concession and counts as a solo.
+        """
         for p, c in self.sc_counts.items():
             if c >= WINNING_SCS:
                 return p

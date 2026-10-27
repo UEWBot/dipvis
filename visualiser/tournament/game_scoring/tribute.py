@@ -48,7 +48,7 @@ class GScoringTribute(GameScoringSystem):
             bonus_per_survivor = min(survival_points, leader_scs - 6)
         else:
             bonus_per_survivor = 0
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         soloed = soloer is not None
         for p in state.all_powers():
             if soloed:

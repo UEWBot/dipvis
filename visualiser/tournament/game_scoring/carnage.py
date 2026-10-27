@@ -90,7 +90,7 @@ class GScoringCarnage(GameScoringSystem):
         retval = {}
 
         # Solos are special
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         if soloer is not None:
             for p in state.all_powers():
                 if p == soloer:

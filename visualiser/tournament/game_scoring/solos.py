@@ -41,6 +41,6 @@ class GScoringSolos(GameScoringSystem):
         retval = {}
         for p in state.all_powers():
             retval[p] = 0.0
-            if state.soloer() == p:
+            if state.soloing_power() == p:
                 retval[p] = 100.0
         return retval

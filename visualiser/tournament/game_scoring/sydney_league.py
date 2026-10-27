@@ -79,7 +79,7 @@ class GScoringSydneyLeague(GameScoringSystem):
                 retval[p] = rank_pts[i] + (y + 1 - FIRST_YEAR)
 
         # Adjust scores if someone soloed
-        soloer = state.soloer()
+        soloer = state.soloing_power()
         if soloer is not None:
             for p in state.all_powers():
                 if p == soloer:
