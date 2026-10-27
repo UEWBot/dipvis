@@ -2957,7 +2957,7 @@ class Game(models.Model):
         If year is not provided, it will be derived.
         """
         year = year or self.final_year()
-        if (self.soloer() is not None) or (self.passed_draw() is not None) or (year == self.the_round.final_year):
+        if (self.soloing_power() is not None) or (self.passed_draw() is not None) or (year == self.the_round.final_year):
             self.is_finished = True
             self.save(update_fields=['is_finished'])
 
@@ -3142,15 +3142,26 @@ class Game(models.Model):
         """
         return self.centrecount_set.aggregate(Max('year'))['year__max']
 
-    def soloer(self):
+    def soloing_power(self):
         """
-        Returns either a GamePlayer if somebody soloed the game, or None
+        Returns either the GreatPower that soloed the game, or None
         """
         try:
             sc = self.centrecount_set.get(count__gte=WINNING_SCS)
         except CentreCount.DoesNotExist:
             return None
-        return self.gameplayer_set.get(power=sc.power)
+        return sc.power
+
+    def soloer(self):
+        """
+        Returns either a GamePlayer if somebody soloed the game, or None
+
+        Raises GamePlayer.DoesNotExist if nobody was assigned the soloing power.
+        """
+        power = self.soloing_power()
+        if power is None:
+            return None
+        return self.gameplayer_set.get(power=power)
 
     def survivors(self, year=None):
         """
@@ -3365,7 +3376,7 @@ class DrawProposal(models.Model):
         the votes_in_favour attribute must be set.
         """
         final_year = self.game.final_year()
-        if self.game.soloer() and (final_year <= self.year):
+        if self.game.soloing_power() and (final_year <= self.year):
             raise ValidationError(_(u'Game was soloed in %(year)d'),
                                   params={'year': final_year})
         # Figure out how many powers are still alive
@@ -3788,8 +3799,8 @@ class GamePlayer(models.Model):
             # Final year of the game as a whole
             final_year = cc_set.order_by('-year').first().year
             # Was the game soloed ?
-            soloer = g.soloer()
-            if self == soloer:
+            soloing_power = g.soloing_power()
+            if self.power == soloing_power:
                 if include_power:
                     gs = ngettext('Solo as %(power)s with %(dots)d centre in %(year)d',
                                   'Solo as %(power)s with %(dots)d centres in %(year)d',
@@ -3801,7 +3812,7 @@ class GamePlayer(models.Model):
                                   'Solo with %(dots)d centres in %(year)d',
                                   final_sc.count) % {'year': final_year,
                                                      'dots': final_sc.count}
-            elif soloer is not None:
+            elif soloing_power is not None:
                 if include_power:
                     gs = ngettext('Loss as %(power)s with %(dots)d centre in %(year)d',
                                   'Loss as %(power)s with %(dots)d centres in %(year)d',

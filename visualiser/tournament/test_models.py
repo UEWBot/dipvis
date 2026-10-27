@@ -8651,6 +8651,38 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         self.assertEqual(g.final_year(), 1900)
 
+    # Game.soloing_power()
+    def test_game_soloing_power_somebody(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.soloing_power(), g.gameplayer_set.get(player=self.p5).power)
+
+    def test_game_soloing_power_nobody(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertIsNone(g.soloing_power())
+
+    def test_game_soloing_power_no_gameplayers(self):
+        """Knowing that a game was soloed doesn't require knowing who played which power"""
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        soloing_power = g.soloing_power()
+        old_powers = {gp.pk: gp.power for gp in g.gameplayer_set.all()}
+        g.gameplayer_set.update(power=None)
+        self.assertEqual(g.soloing_power(), soloing_power)
+        self.assertRaises(GamePlayer.DoesNotExist, g.soloer)
+        old_finished = g.is_finished
+        g.is_finished = False
+        g.save(update_fields=['is_finished'])
+        g.set_is_finished()
+        self.assertIs(True, g.is_finished)
+        # Clean up
+        g.is_finished = old_finished
+        g.save(update_fields=['is_finished'])
+        for gp in g.gameplayer_set.all():
+            gp.power = old_powers[gp.pk]
+            gp.save(update_fields=['power'])
+
     # Game.soloer()
     def test_game_soloer_somebody(self):
         t = Tournament.objects.get(name='t1')
