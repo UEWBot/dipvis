@@ -453,7 +453,7 @@ class TScoringWDC2025(TournamentScoringSystem):
                 # Total SCs in scored games for tied players
                 total_scs = {}
                 for p, gps in tied_gps.items():
-                    total_scs[p] = sum(gp.final_sc_count() for gp in gps[:2])
+                    total_scs[p] = sum(gp.final_sc_count() for gp in gps[:2] if gp.power)
                 best_scs = max(total_scs.values())
                 if countOf(total_scs.values(), best_scs) <= tied_needed:
                     # All with best_scs make the cut

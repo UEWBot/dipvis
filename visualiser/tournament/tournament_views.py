@@ -991,7 +991,8 @@ def api(request, tournament_id, version):
                                       'location': gp.player.location}
                 if gp.score_is_final():
                     players[power_str]['score'] = gp.score
-                    players[power_str]['final_scs'] = gp.final_sc_count()
+                    if gp.power:
+                        players[power_str]['final_scs'] = gp.final_sc_count()
                 players[power_str]['elimination_year'] = gp.elimination_year()
                 if dp:
                     players[power_str]['in_draw'] = gp.power in dp.drawing_powers.all()

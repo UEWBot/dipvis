@@ -2696,6 +2696,22 @@ class TournamentViewTests(TestCase):
         g.save()
         tp.delete()
 
+    def test_api_no_powers(self):
+        g = self.t4.round_numbered(1).game_set.first()
+        self.assertIs(True, g.is_finished)
+        powers = {gp.pk: gp.power for gp in g.gameplayer_set.all()}
+        g.gameplayer_set.update(power=None)
+        try:
+            response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                       secure=True)
+        finally:
+            for gp in g.gameplayer_set.all():
+                gp.power = powers[gp.pk]
+                gp.save(update_fields=['power'])
+        self.assertEqual(response.status_code, 200)
+        for entry in response.json()['rounds']['1']['games'][g.name]['players'].values():
+            self.assertNotIn('final_scs', entry)
+
     def test_api_uses_rank_override(self):
         tp = self.t4.tournamentplayer_set.select_related('player').first()
         tp.calculated_rank = 2
