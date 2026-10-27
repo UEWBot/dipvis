@@ -2860,6 +2860,21 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/game_score.html')
 
+    def test_game_scores_no_powers(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        g = self.t4.round_numbered(1).game_set.first()
+        powers = {gp.pk: gp.power for gp in g.gameplayer_set.all()}
+        g.gameplayer_set.update(power=None)
+        try:
+            response = self.client.get(reverse('game_scores',
+                                               args=(self.t4.pk, 1)),
+                                       secure=True)
+        finally:
+            for gp in g.gameplayer_set.all():
+                gp.power = powers[gp.pk]
+                gp.save(update_fields=['power'])
+        self.assertEqual(response.status_code, 200)
+
     def test_game_scores_post(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         r = self.t4.round_numbered(1)

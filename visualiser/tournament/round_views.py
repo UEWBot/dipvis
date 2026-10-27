@@ -897,7 +897,7 @@ def game_scores(request, tournament_id, round_num):
     the_list = r.game_set.all()
     for game in the_list:
         content = {'name': game.name}
-        for gp in game.gameplayer_set.order_by('power'):
+        for gp in game.gameplayer_set.filter(power__isnull=False).select_related('power'):
             content[gp.power.name] = gp.score
         data.append(content)
     formset = GameScoreFormset(request.POST or None, initial=data)
