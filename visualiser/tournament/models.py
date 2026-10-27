@@ -3164,17 +3164,6 @@ class Game(models.Model):
             return None
         return sc.power
 
-    def soloer(self):
-        """
-        Returns either a GamePlayer if somebody soloed the game, or None
-
-        Raises GamePlayer.DoesNotExist if nobody was assigned the soloing power.
-        """
-        power = self.soloing_power()
-        if power is None:
-            return None
-        return self.gameplayer_set.get(power=power)
-
     def survivors(self, year=None):
         """
         Returns a list of the CentreCounts for the surviving powers.

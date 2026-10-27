@@ -8671,7 +8671,6 @@ class GameTests(TestCase):
         old_powers = {gp.pk: gp.power for gp in g.gameplayer_set.all()}
         g.gameplayer_set.update(power=None)
         self.assertEqual(g.soloing_power(), soloing_power)
-        self.assertRaises(GamePlayer.DoesNotExist, g.soloer)
         old_finished = g.is_finished
         g.is_finished = False
         g.save(update_fields=['is_finished'])
@@ -8683,18 +8682,6 @@ class GameTests(TestCase):
         for gp in g.gameplayer_set.all():
             gp.power = old_powers[gp.pk]
             gp.save(update_fields=['power'])
-
-    # Game.soloer()
-    def test_game_soloer_somebody(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        self.assertEqual(g.soloer().player, self.p5)
-        self.assertEqual(g.soloer().game, g)
-
-    def test_game_soloer_nobody(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
-        self.assertIsNone(g.soloer())
 
     # Game.survivors()
     def test_game_survivors(self):
@@ -8843,10 +8830,11 @@ class GameTests(TestCase):
     def test_game_result_str_soloed_no_powers(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        soloer = g.soloer()
+        soloing_power = g.soloing_power()
+        soloer = g.gameplayer_set.get(power=soloing_power).player
         result = self._result_str_without_powers(g)
-        self.assertIn(f' won by {soloer.power.name} with ', result)
-        self.assertNotIn(str(soloer.player), result)
+        self.assertIn(f' won by {soloing_power.name} with ', result)
+        self.assertNotIn(str(soloer), result)
 
     def test_game_result_str_conceded_no_powers(self):
         t = Tournament.objects.get(name='t1')
