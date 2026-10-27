@@ -2709,8 +2709,13 @@ class TournamentViewTests(TestCase):
                 gp.power = powers[gp.pk]
                 gp.save(update_fields=['power'])
         self.assertEqual(response.status_code, 200)
-        for entry in response.json()['rounds']['1']['games'][g.name]['players'].values():
-            self.assertNotIn('final_scs', entry)
+        players = response.json()['rounds']['1']['games'][g.name]['players']
+        self.assertEqual(set(players.keys()), {str(p) for p in GreatPower.objects.all()})
+        for entry in players.values():
+            self.assertNotIn('name', entry)
+            self.assertNotIn('score', entry)
+            self.assertIn('final_scs', entry)
+            self.assertIn('elimination_year', entry)
 
     def test_api_uses_rank_override(self):
         tp = self.t4.tournamentplayer_set.select_related('player').first()

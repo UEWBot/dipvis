@@ -983,19 +983,29 @@ def api(request, tournament_id, version):
             else:
                 draw = None
             players = {}
-            for gp in g.gameplayer_set.order_by('power'):
-                power_str = str(gp.power)
-                players[power_str] = {'name': str(gp.player),
-                                      'id': gp.player.pk,
-                                      'wdr_id': gp.player.wdr_player_id,
-                                      'location': gp.player.location}
-                if gp.score_is_final():
-                    players[power_str]['score'] = gp.score
-                    if gp.power:
-                        players[power_str]['final_scs'] = gp.final_sc_count()
-                players[power_str]['elimination_year'] = gp.elimination_year()
+            gps = {gp.power_id: gp for gp in g.gameplayer_set.filter(power__isnull=False).select_related('player')}
+            ccs = g.centrecount_set.order_by('year')
+            for power in GreatPower.objects.all():
+                entry = {}
+                gp = gps.get(power.id)
+                if gp:
+                    entry = {'name': str(gp.player),
+                             'id': gp.player.pk,
+                             'wdr_id': gp.player.wdr_player_id,
+                             'location': gp.player.location}
+                    score_is_final = gp.score_is_final()
+                    if score_is_final:
+                        entry['score'] = gp.score
+                else:
+                    score_is_final = g.is_finished
+                final_cc = ccs.filter(power=power).last()
+                if score_is_final and final_cc:
+                    entry['final_scs'] = final_cc.count
+                elim_cc = ccs.filter(power=power, count=0).first()
+                entry['elimination_year'] = elim_cc.year if elim_cc else None
                 if dp:
-                    players[power_str]['in_draw'] = gp.power in dp.drawing_powers.all()
+                    entry['in_draw'] = power in dp.drawing_powers.all()
+                players[str(power)] = entry
             games[g.name] = {'sandbox': g.external_url,
                              'started': g.started_at,
                              'players': players,
