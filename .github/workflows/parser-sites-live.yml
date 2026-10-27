@@ -7,7 +7,22 @@ on:
 
 jobs:
   live-parser-sites:
+    name: ${{ matrix.site }}
     runs-on: ubuntu-latest
+    strategy:
+      # One site being down shouldn't stop the others being checked
+      fail-fast: false
+      matrix:
+        include:
+          - site: Wikipedia
+            tag: wikipedia_live
+          - site: Backstabbr
+            tag: backstabbr
+          - site: World Diplomacy Reference
+            tag: wdr
+          - site: World Diplomacy Database
+            tag: wdd
+          # TODO: Add webdip once webdip can be accessed from github
 
     steps:
       - uses: actions/checkout@v6
@@ -19,12 +34,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-      - name: Run Live Parser Tests
+      - name: Run Live ${{ matrix.site }} Tests
         run: |
           cd visualiser
-          # TODO: Add --tag=webdip once webdip can be accessed from github
-          python ./manage.py test \
-            --tag=wikipedia_live \
-            --tag=backstabbr \
-            --tag=wdr \
-            --tag=wdd
+          python ./manage.py test --tag=${{ matrix.tag }}
