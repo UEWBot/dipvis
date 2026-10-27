@@ -161,7 +161,7 @@ def _save_rank(obj, rank):
     obj.save(update_fields=['calculated_rank'])
 
 
-def _power_str(power, player):
+def power_str(power, player):
     """
     Returns a string identifying a GreatPower in a Game, and its player if known.
 
@@ -3233,14 +3233,14 @@ class Game(models.Model):
         players = {gp.power_id: gp.player
                    for gp in self.gameplayer_set.filter(power__isnull=False).select_related('player')}
 
-        def power_str(power):
-            return _power_str(power, players.get(power.id))
+        def label(power):
+            return power_str(power, players.get(power.id))
 
         # Did a draw proposal pass ?
         draw = self.passed_draw()
         if draw:
             powers = draw.powers()
-            winners = [power_str(power) for power in powers]
+            winners = [label(power) for power in powers]
             if len(powers) == 1:
                 return _('Game%(game)s conceded to %(player)s') % {'game': gn_str,
                                                                    'player': winners[0]}
@@ -3252,12 +3252,12 @@ class Game(models.Model):
         if soloing_power:
             dots = self.centrecount_set.filter(power=soloing_power).order_by('-year').first().count
             return _('Game%(game)s won by %(player)s with %(dots)d centres') % {'game': gn_str,
-                                                                                'player': power_str(soloing_power),
+                                                                                'player': label(soloing_power),
                                                                                 'dots': dots}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
             toppers = self.board_toppers()
-            first_str = ', '.join([power_str(scs.power) for scs in toppers])
+            first_str = ', '.join([label(scs.power) for scs in toppers])
             return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
                                                                                              'top': toppers[0].count,
                                                                                              'player': first_str}

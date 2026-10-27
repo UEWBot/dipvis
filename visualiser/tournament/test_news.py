@@ -481,6 +481,21 @@ class NewsTests(TestCase):
         self.assertIn('Highest SC count in game g11 is 18, for Iris Jackson (G).', res)
         self.assertIn('0 draw votes have been taken in game g11.', res)
 
+    def test_game_news_no_powers(self):
+        g = Game.objects.first()
+        powers = {gp.pk: gp.power for gp in g.gameplayer_set.all()}
+        g.gameplayer_set.update(power=None)
+        try:
+            res = _game_news(g)
+        finally:
+            for gp in g.gameplayer_set.all():
+                gp.power = powers[gp.pk]
+                gp.save(update_fields=['power'])
+        self.assertIn(f'{self.russia.name} shrank from 5 to 3 centres.', res)
+        self.assertIn(f'{self.austria.name} was eliminated in 1904.', res)
+        self.assertIn(f'{self.germany.name} grew from 10 to 18 centres.', res)
+        self.assertIn(f'Highest SC count is 18, for {self.germany.name}.', res)
+
     def test_game_news_mask(self):
         g = Game.objects.first()
         # Test each mask bit individually

@@ -42,7 +42,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                SeederBias, Series, SupplyCentreOwnership, Team,
                                Tournament, TournamentPlayer, TScoringSumGames,
                                AwardRecipient, TournamentAward, TScoringSumRounds,
-                               _power_str,
+                               power_str,
                                find_game_scoring_system,
                                find_round_scoring_system,
                                find_tournament_scoring_system,
@@ -8848,12 +8848,12 @@ class GameTests(TestCase):
         self.assertEqual(self._result_str_without_powers(g), 'Game conceded to England')
         dp.delete()
 
-    # _power_str()
+    # power_str()
     def test_power_str(self):
-        self.assertEqual(_power_str(self.austria, self.p1), f'{self.p1} (A)')
+        self.assertEqual(power_str(self.austria, self.p1), f'{self.p1} (A)')
 
     def test_power_str_no_player(self):
-        self.assertEqual(_power_str(self.austria, None), self.austria.name)
+        self.assertEqual(power_str(self.austria, None), self.austria.name)
 
     def test_game_result_str_failed_draw(self):
         t = Tournament.objects.get(name='t1')

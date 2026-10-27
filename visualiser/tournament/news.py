@@ -23,7 +23,7 @@ import random
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
-from tournament.models import CentreCount, DrawSecrecy, Game, Round, Tournament
+from tournament.models import CentreCount, DrawSecrecy, Game, Round, Tournament, power_str
 from tournament.players import rank_str
 
 # Mask values to choose which news strings to include
@@ -255,7 +255,11 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     # If the game just started, there is no news, so return the background instead
     if last_year == 1900:
         return g.background()
-    gps = g.gameplayer_set.order_by()
+    players = {gp.power_id: gp.player for gp in g.gameplayer_set.filter(power__isnull=False).select_related('player')}
+
+    def label(power):
+        return power_str(power, players.get(power.id))
+
     current_scs = centres_set.filter(year=last_year)
     results = []
     if (mask & MASK_SC_OWNER_COUNTS) != 0:
@@ -275,7 +279,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # Who's topping the board ?
         max_scs = current_scs.order_by('-count')[0].count
         first = current_scs.order_by('-count').filter(count=max_scs)
-        first_str = ', '.join([f'{gps.get(power=scs.power).player} ({_(scs.power.abbreviation)})' for scs in list(first)])
+        first_str = ', '.join([label(scs.power) for scs in first])
         results.append(_(u'Highest SC count%(game)s is %(dots)d, for %(player)s.')
                        % {'game': gn_str,
                           'dots': max_scs,
@@ -297,20 +301,18 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # Who gained 2 or more centres in the last year ?
         if (mask & MASK_GAINERS) != 0:
             if scs.count - prev.count > 1:
-                results.append(_(u'%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s.')
-                               % {'player': gps.get(power=power).player,
-                                  'power': _(power.abbreviation),
+                results.append(_('%(power)s grew from %(old)d to %(new)d centres%(game)s.')
+                               % {'power': label(power),
                                   'old': prev.count,
                                   'new': scs.count,
                                   'game': gn_str})
         # Who lost 2 or more centres in the last year ?
         if (mask & MASK_LOSERS) != 0:
             if prev.count - scs.count > 1:
-                results.append(ngettext('%(player)s (%(power)s) shrank from %(old)d to %(new)d centre%(game)s.',
-                                        '%(player)s (%(power)s) shrank from %(old)d to %(new)d centres%(game)s.',
+                results.append(ngettext('%(power)s shrank from %(old)d to %(new)d centre%(game)s.',
+                                        '%(power)s shrank from %(old)d to %(new)d centres%(game)s.',
                                         scs.count)
-                               % {'player': gps.get(power=power).player,
-                                  'power': _(power.abbreviation),
+                               % {'power': label(power),
                                   'old': prev.count,
                                   'new': scs.count,
                                   'game': gn_str})
@@ -336,9 +338,8 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                                                                          'power': _(p.abbreviation)} for s, p in losses)
                 else:
                     losses_str = _('no centres')
-                results.append(_('%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s.')
-                               % {'player': gps.get(power=power).player,
-                                  'power': _(power.abbreviation),
+                results.append(_('%(power)s took %(gains)s and lost %(losses)s%(game)s.')
+                               % {'power': label(power),
                                   'gains': gains_str,
                                   'losses': losses_str,
                                   'game': gn_str})
@@ -365,12 +366,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         for d in draws_set:
             powers = d.powers()
             sz = len(powers)
-            incl = []
-            for power in powers:
-                game_player = gps.get(power=power)
-                incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
-                                                            'power': _(power.abbreviation)})
-            incl_str = ', '.join(incl)
+            incl_str = ', '.join(label(power) for power in powers)
             if g.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
                 count_str = _(', %(for)d for, %(against)d against') % {'for': d.votes_in_favour,
                                                                        'against': d.votes_against()}
@@ -390,9 +386,8 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
             scs = zeroes[0]
             power = scs.power
             zeroes = zeroes.exclude(power=power)
-            results.append(_(u'%(player)s (%(power)s) was eliminated in %(year)d%(game)s.')
-                           % {'player': gps.get(power=power).player,
-                              'power': _(power.abbreviation),
+            results.append(_('%(power)s was eliminated in %(year)d%(game)s.')
+                           % {'power': label(power),
                               'year': scs.year,
                               'game': gn_str})
     # Shuffle the resulting list
