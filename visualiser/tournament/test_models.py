@@ -10678,6 +10678,34 @@ class GamePlayerTests(TestCase):
         # Cleanup
         t.delete()
 
+    def test_gameplayer_is_best_country_no_power(self):
+        today = dt.date.today()
+        t = Tournament.objects.create(name='gp_best_country_no_power',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=s2,
+                                  dias=True,
+                                  start=dt.datetime.combine(t.start_date,
+                                                            dt.time(hour=8,
+                                                                    tzinfo=dt.timezone.utc)))
+        g1 = Game.objects.create(name='g-no-power',
+                                 started_at=r1.start,
+                                 the_round=r1,
+                                 the_set=self.set1)
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g1, score=1)
+        GamePlayer.objects.create(player=self.p2, game=g1, score=1)
+
+        self.assertIs(False, gp1.is_best_country())
+
+        # Cleanup
+        t.delete()
+
     def test_gameplayer_is_best_country_score(self):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)

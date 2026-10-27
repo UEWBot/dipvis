@@ -3674,6 +3674,8 @@ class GamePlayer(models.Model):
         """
         Returns True if this GamePlayer is the best result for this power (so far)
         """
+        if not self.power:
+            return False
         # Check all the other players of this power in the tournament
         t = self.game.the_round.tournament
         gps = GamePlayer.objects.filter(power=self.power,
