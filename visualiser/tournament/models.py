@@ -161,6 +161,18 @@ def _save_rank(obj, rank):
     obj.save(update_fields=['calculated_rank'])
 
 
+def _power_str(power, player):
+    """
+    Returns a string identifying a GreatPower in a Game, and its player if known.
+
+    player may be None (e.g. if powers haven't yet been assigned).
+    """
+    if player is None:
+        return _(power.name)
+    return _('%(player)s (%(power)s)') % {'player': player,
+                                          'power': _(power.abbreviation)}
+
+
 class RoundScoringSystem(ABC):
     """
     A scoring system for a Round.
@@ -3222,20 +3234,24 @@ class Game(models.Model):
     def result_str(self, include_game_name=False):
         """
         Returns a string representing the game result, if any, or None
+
+        Powers without an assigned player are identified by the power alone.
         """
         if include_game_name:
             gn_str = f' {self.name}'
         else:
             gn_str = ''
+        players = {gp.power_id: gp.player
+                   for gp in self.gameplayer_set.filter(power__isnull=False).select_related('player')}
+
+        def power_str(power):
+            return _power_str(power, players.get(power.id))
+
         # Did a draw proposal pass ?
         draw = self.passed_draw()
         if draw:
             powers = draw.powers()
-            winners = []
-            for power in powers:
-                game_player = self.gameplayer_set.get(power=power)
-                winners.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
-                                                               'power': _(power.abbreviation)})
+            winners = [power_str(power) for power in powers]
             if len(powers) == 1:
                 return _('Game%(game)s conceded to %(player)s') % {'game': gn_str,
                                                                    'player': winners[0]}
@@ -3243,20 +3259,16 @@ class Game(models.Model):
                                                                                                     'n': len(powers),
                                                                                                     'players': ', '.join(winners)}
         # Did a power reach 18 (or more) centres ?
-        soloer = self.soloer()
-        if soloer:
-            return _(u'Game%(game)s won by %(player)s (%(power)s) with %(dots)d centres') % {'game': gn_str,
-                                                                                             'player': soloer.player,
-                                                                                             'power': _(soloer.power.abbreviation),
-                                                                                             'dots': soloer.final_sc_count()}
+        soloing_power = self.soloing_power()
+        if soloing_power:
+            dots = self.centrecount_set.filter(power=soloing_power).order_by('-year').first().count
+            return _('Game%(game)s won by %(player)s with %(dots)d centres') % {'game': gn_str,
+                                                                                'player': power_str(soloing_power),
+                                                                                'dots': dots}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
-            gps_by_power_id = {
-                gp.power_id: gp for gp in self.gameplayer_set.select_related('player', 'power').order_by('power')
-            }
             toppers = self.board_toppers()
-            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': gps_by_power_id[scs.power_id].player,
-                                                                   'power': _(scs.power.abbreviation)} for scs in list(toppers)])
+            first_str = ', '.join([power_str(scs.power) for scs in toppers])
             return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
                                                                                              'top': toppers[0].count,
                                                                                              'player': first_str}

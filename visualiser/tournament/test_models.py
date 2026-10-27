@@ -42,6 +42,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                SeederBias, Series, SupplyCentreOwnership, Team,
                                Tournament, TournamentPlayer, TScoringSumGames,
                                AwardRecipient, TournamentAward, TScoringSumRounds,
+                               _power_str,
                                find_game_scoring_system,
                                find_round_scoring_system,
                                find_tournament_scoring_system,
@@ -8827,6 +8828,44 @@ class GameTests(TestCase):
         dp.drawing_powers.add(self.england)
         self.assertIn('conceded ', g.result_str())
         dp.delete()
+
+    def _result_str_without_powers(self, g):
+        """Return g.result_str() as it would be if no GamePlayers had been assigned powers"""
+        powers = {gp.pk: gp.power for gp in g.gameplayer_set.all()}
+        g.gameplayer_set.update(power=None)
+        try:
+            return g.result_str()
+        finally:
+            for gp in g.gameplayer_set.all():
+                gp.power = powers[gp.pk]
+                gp.save(update_fields=['power'])
+
+    def test_game_result_str_soloed_no_powers(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        soloer = g.soloer()
+        result = self._result_str_without_powers(g)
+        self.assertIn(f' won by {soloer.power.name} with ', result)
+        self.assertNotIn(str(soloer.player), result)
+
+    def test_game_result_str_conceded_no_powers(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=Seasons.SPRING,
+                                         passed=True,
+                                         proposer=self.england)
+        dp.drawing_powers.add(self.england)
+        self.assertEqual(self._result_str_without_powers(g), 'Game conceded to England')
+        dp.delete()
+
+    # _power_str()
+    def test_power_str(self):
+        self.assertEqual(_power_str(self.austria, self.p1), f'{self.p1} (A)')
+
+    def test_power_str_no_player(self):
+        self.assertEqual(_power_str(self.austria, None), self.austria.name)
 
     def test_game_result_str_failed_draw(self):
         t = Tournament.objects.get(name='t1')
