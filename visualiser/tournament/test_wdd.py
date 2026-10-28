@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import requests
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django_countries.fields import Country
 
@@ -51,6 +51,26 @@ class WDDTests(TestCase):
         """Timeout when contacting WDD should not block validation."""
         with patch('tournament.wdd.requests.head',
                    side_effect=requests.exceptions.Timeout):
+            self.assertIsNone(validate_wdd_player_id(1))
+
+    def test_validate_wdd_player_id_connection_error_assumed_valid(self):
+        with patch('tournament.wdd.requests.head',
+                   side_effect=requests.exceptions.ConnectionError):
+            self.assertIsNone(validate_wdd_player_id(1))
+
+    def test_validate_wdd_player_id_unavailable_assumed_valid(self):
+        with patch('tournament.wdd.requests.head',
+                   return_value=Mock(status_code=503)):
+            self.assertIsNone(validate_wdd_player_id(1))
+
+    def test_validate_wdd_player_id_redirect_invalid(self):
+        with patch('tournament.wdd.requests.head',
+                   return_value=Mock(status_code=302)):
+            self.assertRaises(ValidationError, validate_wdd_player_id, 1)
+
+    def test_validate_wdd_player_id_ok_valid(self):
+        with patch('tournament.wdd.requests.head',
+                   return_value=Mock(status_code=200)):
             self.assertIsNone(validate_wdd_player_id(1))
 
     @tag('wdd')

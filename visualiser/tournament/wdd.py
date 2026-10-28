@@ -170,10 +170,11 @@ def _validate_wdd_id(url, param, value):
                           headers={'User-Agent': settings.USER_AGENT},
                           allow_redirects=False,
                           timeout=1.0)
-    except requests.exceptions.Timeout:
+    except requests.exceptions.RequestException:
         # Assume the id is ok
         return
-    if r.status_code != requests.codes.ok:
+    # The WDD redirects to its home page for an unknown id
+    if 300 <= r.status_code < 400:
         raise ValidationError(_(u'%(value)d is not a valid WDD %(param)s, code %(status)d'),
                               params={'value': value,
                                       'param': param,
