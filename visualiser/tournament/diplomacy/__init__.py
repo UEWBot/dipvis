@@ -9,4 +9,4 @@ from .tasks.validate_ranking import validate_ranking
 from .tasks.validate_sc_count import validate_sc_count
 from .tasks.validate_year import validate_year
 from .tasks.validate_year_including_start import validate_year_including_start
-from .values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
+from .values.diplomacy_values import FIRST_YEAR, TOTAL_GREAT_POWERS, TOTAL_SCS, WINNING_SCS

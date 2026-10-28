@@ -17,8 +17,10 @@
 from django.core.validators import MaxValueValidator
 
 from ..models.great_power import GreatPower
+from ..values.diplomacy_values import TOTAL_GREAT_POWERS
 
 
+# Referenced by old migrations
 def num_greatpowers():
     return GreatPower.objects.count()
 
@@ -26,5 +28,5 @@ def num_greatpowers():
 """
 Checks that value doesn't exceed the number of GreatPowers
 """
-# Workaround migration issue by using intermediate callable
-validate_max_greatpowers = MaxValueValidator(num_greatpowers)
+# A constant, because Django's system checks evaluate a callable limit, before any tables exist
+validate_max_greatpowers = MaxValueValidator(TOTAL_GREAT_POWERS)

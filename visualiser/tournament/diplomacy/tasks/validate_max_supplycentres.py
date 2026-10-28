@@ -17,8 +17,10 @@
 from django.core.validators import MaxValueValidator
 
 from ..models.supply_centre import SupplyCentre
+from ..values.diplomacy_values import TOTAL_SCS
 
 
+# Referenced by old migrations
 def num_supplycentres():
     return SupplyCentre.objects.count()
 
@@ -26,5 +28,5 @@ def num_supplycentres():
 """
 Checks that value doesn't exceed the number of SupplyCentres
 """
-# Workaround migration issue by using intermediate callable
-validate_max_supplycentres = MaxValueValidator(num_supplycentres)
+# A constant, because Django's system checks evaluate a callable limit, before any tables exist
+validate_max_supplycentres = MaxValueValidator(TOTAL_SCS)
