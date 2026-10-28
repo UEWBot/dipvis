@@ -99,6 +99,7 @@ class ScoringVisibility(models.TextChoices):
     """Which scores are shown"""
     CURRENT = 'C', gettext_lazy('"If all games ended now" scores')
     LAST_ROUND = 'R', gettext_lazy('Scores after the last finished round')
+    SECRET = 'S', gettext_lazy('Scoring systems, scores, and ranks only visible to tournament managers')
 
 
 class Formats(models.TextChoices):
@@ -1188,12 +1189,13 @@ class Tournament(models.Model):
     @property
     def show_current_scores(self):
         """Whether "if all games ended now" scores are shown"""
-        return self.scoring_visibility == ScoringVisibility.CURRENT
+        # With SECRET, only managers see any scores, and they want the latest
+        return self.scoring_visibility != ScoringVisibility.LAST_ROUND
 
     @property
     def scores_are_public(self):
         """Whether the scoring systems, scores, and ranks are visible to everyone"""
-        return True
+        return self.scoring_visibility != ScoringVisibility.SECRET
 
     def scores_visible_to(self, user):
         """Whether the user can see the scoring systems, scores, and ranks"""

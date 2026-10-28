@@ -3448,6 +3448,17 @@ class TournamentTests(TestCase):
         self.assertIs(True, t.show_current_scores)
         t.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.assertIs(False, t.show_current_scores)
+        t.scoring_visibility = ScoringVisibility.SECRET
+        self.assertIs(True, t.show_current_scores)
+
+    # Tournament.scores_are_public
+    def test_tournament_scores_are_public(self):
+        t = Tournament(scoring_visibility=ScoringVisibility.CURRENT)
+        self.assertIs(True, t.scores_are_public)
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
+        self.assertIs(True, t.scores_are_public)
+        t.scoring_visibility = ScoringVisibility.SECRET
+        self.assertIs(False, t.scores_are_public)
 
     # Tournament.scores_visible_to()
     def test_tournament_scores_visible_to_public(self):
@@ -3455,13 +3466,13 @@ class TournamentTests(TestCase):
         self.assertIs(True, t.scores_are_public)
         self.assertIs(True, t.scores_visible_to(AnonymousUser()))
 
-    def test_tournament_scores_visible_to_not_public(self):
+    def test_tournament_scores_visible_to_secret(self):
         t = Tournament.objects.first()
         manager = User.objects.create_user(username='scores_manager')
         t.managers.add(manager)
-        with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
-            self.assertIs(False, t.scores_visible_to(AnonymousUser()))
-            self.assertIs(True, t.scores_visible_to(manager))
+        t.scoring_visibility = ScoringVisibility.SECRET
+        self.assertIs(False, t.scores_visible_to(AnonymousUser()))
+        self.assertIs(True, t.scores_visible_to(manager))
         # Clean up
         manager.delete()
 

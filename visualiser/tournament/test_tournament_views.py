@@ -2969,6 +2969,27 @@ class TournamentViewTests(TestCase):
         for entry in data['results']:
             self.assertIn('score', entry)
 
+    def test_secret_scoring(self):
+        self.t4.scoring_visibility = ScoringVisibility.SECRET
+        self.t4.save(update_fields=['scoring_visibility'])
+        try:
+            response = self.client.get(reverse('tournament_scores', args=(self.t4.pk,)),
+                                       secure=True)
+            self.assertEqual(response.status_code, 404)
+            response = self.client.get(reverse('tournament_detail', args=(self.t4.pk,)),
+                                       secure=True)
+            self.assertNotContains(response, 'Tournament scoring')
+            self.client.login(username=self.USERNAME2, password=self.PWORD2)
+            response = self.client.get(reverse('tournament_scores', args=(self.t4.pk,)),
+                                       secure=True)
+            self.assertEqual(response.status_code, 200)
+            response = self.client.get(reverse('tournament_detail', args=(self.t4.pk,)),
+                                       secure=True)
+            self.assertContains(response, 'Tournament scoring')
+        finally:
+            self.t4.scoring_visibility = ScoringVisibility.CURRENT
+            self.t4.save(update_fields=['scoring_visibility'])
+
     def test_tournament_awards(self):
         """Should be viewable without logging in"""
         response = self.client.get(reverse('tournament_awards',
