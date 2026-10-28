@@ -111,6 +111,18 @@ def get_modifiable_tournament_or_404(pk, user):
     raise Http404
 
 
+def get_scores_visible_tournament_or_404(pk, user):
+    """
+    Get the specified Tournament object, if it exists and the user can see it and its scores.
+
+    If it doesn't exist, or the user can't see it or its scores, raise Http404.
+    """
+    t = get_visible_tournament_or_404(pk, user)
+    if t.scores_visible_to(user):
+        return t
+    raise Http404
+
+
 # Tournament views
 
 @require_safe
@@ -127,7 +139,7 @@ def tournament_scores(request,
                       refresh=False,
                       redirect_url_name='tournament_scores_refresh'):
     """Display scores of a tournament"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_scores_visible_tournament_or_404(tournament_id, request.user)
     # No point refreshing if nothing can change
     if t.is_finished and (redirect_url_name == 'tournament_scores_refresh'):
         refresh = False
@@ -192,7 +204,7 @@ def team_scores(request,
                 refresh=False,
                 redirect_url_name='team_scores_refresh'):
     """Display team scores of a tournament"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_scores_visible_tournament_or_404(tournament_id, request.user)
     # No point refreshing if nothing can change
     if t.is_finished and (redirect_url_name == 'team_scores_refresh'):
         refresh = False
@@ -243,7 +255,7 @@ def team_scores(request,
 @require_safe
 def graph(request, tournament_id):
     """Score graph for the specified tournament, as a PNG image"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_scores_visible_tournament_or_404(tournament_id, request.user)
     with io.BytesIO() as f:
         # plot the scores
         fig = figure.Figure()
@@ -288,7 +300,7 @@ def tournament_score_graph(request,
                            refresh=False,
                            redirect_url_name='tournament_score_graph_refresh'):
     """Display the score graph for a tournament"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_scores_visible_tournament_or_404(tournament_id, request.user)
     if t.is_finished and (redirect_url_name == 'tournament_score_graph_refresh'):
         # Don't bother refreshing if nothing can change
         refresh = False
@@ -358,7 +370,7 @@ def tournament_best_countries(request,
     If the tournament is complete, it always puts any players with "best country"
     awards at the top.
     """
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_scores_visible_tournament_or_404(tournament_id, request.user)
     # No point refreshing if nothing can change
     if t.is_finished and (redirect_url_name == 'tournament_best_countries_refresh'):
         refresh = False
@@ -435,7 +447,7 @@ def tournament_background(request, tournament_id, as_ticker=False):
 def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    context = {'tournament': t, 'subject': 'News', 'content': news(t)}
+    context = {'tournament': t, 'subject': 'News', 'content': news(t, include_scores=t.scores_visible_to(request.user))}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('tournament_ticker',
@@ -974,6 +986,7 @@ def api(request, tournament_id, version):
     if version != 1:
         raise Http404(f'Invalid API version {version}')
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    show_scores = t.scores_visible_to(request.user)
     rds = t.round_set.all()
     rounds = {}
     for num, r in enumerate(rds, 1):
@@ -1001,7 +1014,7 @@ def api(request, tournament_id, version):
                              'wdr_id': gp.player.wdr_player_id,
                              'location': gp.player.location}
                     score_is_final = gp.score_is_final()
-                    if score_is_final:
+                    if score_is_final and show_scores:
                         entry['score'] = gp.score
                 else:
                     score_is_final = g.is_finished
@@ -1017,8 +1030,9 @@ def api(request, tournament_id, version):
                              'started': g.started_at,
                              'players': players,
                              'draw': draw}
-        rounds[num] = {'scoring_system': r.scoring_system,
-                       'games': games}
+        rounds[num] = {'games': games}
+        if show_scores:
+            rounds[num]['scoring_system'] = r.scoring_system
     results = []
     tournament_players = t.tournamentplayer_set.select_related('player').order_by()
     for tp in tournament_players:
@@ -1035,12 +1049,17 @@ def api(request, tournament_id, version):
                  'player_wdr_id': player.wdr_player_id,
                  'player_wdr_url': player.wdr_url(),
                  'location': tp.location,
-                 'ranking': tp.rank,
-                 'score': tp.score,
-                 'awards': [],
-                 'score_breakdown': []}
-        if entry['ranking'] == Tournament.UNRANKED:
-            entry['ranking'] = None
+                 'awards': []}
+        results.append(entry)
+        for award in tp.awards.all():
+            award_entry = {'name': award.name,
+                           'power': str(award.power)}
+            entry['awards'].append(award_entry)
+        if not show_scores:
+            continue
+        entry['ranking'] = None if tp.rank == Tournament.UNRANKED else tp.rank
+        entry['score'] = tp.score
+        entry['score_breakdown'] = []
         rps = player.roundplayer_set.order_by('player')
         for num, r in enumerate(rds, 1):
             try:
@@ -1058,11 +1077,6 @@ def api(request, tournament_id, version):
                                                      'game': gp.game.name,
                                                      'score': gp.score,
                                                      'dropped': gp.score_dropped})
-        for award in tp.awards.all():
-            award_entry = {'name': award.name,
-                           'power': str(award.power)}
-            entry['awards'].append(award_entry)
-        results.append(entry)
     managers = []
     for u in t.managers.all():
         try:
@@ -1083,12 +1097,13 @@ def api(request, tournament_id, version):
             'start_date': t.start_date,
             'end_date': t.end_date,
             'location': t.location,
-            'tournament_scoring_system': t.tournament_scoring_system,
-            'round_scoring_system': t.round_scoring_system,
             'dbn_coverage': [d.dbn_url for d in t.dbncoverage_set.all()],
             'managers': managers,
             'rounds': rounds,
             'results': results}
+    if show_scores:
+        data['tournament_scoring_system'] = t.tournament_scoring_system
+        data['round_scoring_system'] = t.round_scoring_system
     return JsonResponse(data)
 
 

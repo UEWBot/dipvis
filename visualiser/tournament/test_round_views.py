@@ -17,7 +17,7 @@
 import datetime as dt
 import requests
 from urllib.parse import urlencode
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from django.contrib.auth.models import Permission, User
 from django.contrib.messages import get_messages
@@ -492,6 +492,20 @@ class RoundViewTests(TestCase):
         u.user_permissions.add(Permission.objects.get(codename='add_game'))
         response = self.client.get(url, secure=True)
         self.assertContains(response, seed_url)
+
+    def test_detail_scores_hidden(self):
+        with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
+            response = self.client.get(reverse('round_detail', args=(self.t1.pk, 1)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Scoring system:')
+        self.assertNotContains(response, reverse('round_scores', args=(self.t1.pk, 1)))
+
+    def test_round_scores_scores_hidden(self):
+        with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
+            response = self.client.get(reverse('round_scores', args=(self.t2.pk, 2)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 404)
 
     def test_board_call_csv(self):
         response = self.client.get(reverse('board_call_csv',

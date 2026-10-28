@@ -40,7 +40,7 @@ MASK_ALL_NEWS = (1 << 8) - 1
 MASK_OWNERSHIP = MASK_SC_CHANGES | MASK_SC_CHANGE_COUNTS | MASK_SC_OWNER_COUNTS
 
 
-def _tournament_news(t):
+def _tournament_news(t, include_scores=True):
     """
     Returns a list of news strings for the tournament
     """
@@ -57,7 +57,7 @@ def _tournament_news(t):
                       'are': tense_str})
     if current_round:
         # Include who is leading the tournament
-        include_leader = True
+        include_leader = include_scores
         if current_round.in_progress():
             # And which round is currently being played
             results.append(_(u'Round %(r_num)d of %(rounds)d is currently being played.')
@@ -69,11 +69,11 @@ def _tournament_news(t):
                               'rounds': t.round_set.count(),
                               'date': str(current_round.start)})
         # Get the news for the current round
-        results += _round_news(current_round)
+        results += _round_news(current_round, include_scores=include_scores)
     # If the tournament is over, just report the top three players, plus awards
     elif t.is_finished:
         for tp in t.tournamentplayer_set.select_related('player').order_by():
-            if tp.rank in [1, 2, 3]:
+            if include_scores and (tp.rank in [1, 2, 3]):
                 results.append(_(u'%(player)s came %(rank)s, with a score of %(score).2f.')
                                % {'player': str(tp.player),
                                   'rank': rank_str(tp.rank),
@@ -84,7 +84,7 @@ def _tournament_news(t):
             for a in tp.awards.all():
                 if len(awards_str):
                     awards_str += ', '
-                if a.power:
+                if a.power and include_scores:
                     gp = tp.gameplayers().filter(power=a.power).order_by('-score').first()
                     awards_str += _('%(award)s (with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d)') % {'award': a.name,
                                                                                                                                            'game': gp.game.name,
@@ -140,7 +140,7 @@ def _round_leader_str(r):
                                                                                            'players': player_str}
 
 
-def _round_news(r):
+def _round_news(r, include_scores=True):
     """
     Returns a list of news strings for the round.
 
@@ -148,7 +148,7 @@ def _round_news(r):
     """
     results = []
     r_num = r.number()
-    if r.show_scores():
+    if include_scores and r.show_scores():
         # Include who has done best in the round (so far)
         ls = _round_leader_str(r)
         if ls:
@@ -395,12 +395,16 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     return results
 
 
-def news(obj, for_year=None):
-    """Return a list of events in obj"""
+def news(obj, for_year=None, include_scores=True):
+    """
+    Return a list of events in obj
+
+    If include_scores is False, nothing about scores or ranks is included.
+    """
     if isinstance(obj, Tournament):
-        return _tournament_news(obj)
+        return _tournament_news(obj, include_scores=include_scores)
     if isinstance(obj, Round):
-        return _round_news(obj)
+        return _round_news(obj, include_scores=include_scores)
     if isinstance(obj, Game):
         return _game_news(obj, for_year=for_year)
     raise NotImplementedError

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load score_visibility %}
 
 {% block title %}{% blocktrans with game=game %}Game {{ game }} SC Chart - DipTV{% endblocktrans %}{% endblock title %}
 
@@ -21,7 +22,7 @@
     {% endfor %}
   </tr></thead>
   <tbody>
-    {% if game.the_round.show_scores %}
+    {% if game.the_round.show_scores and game.the_round.tournament|scores_visible_to:user %}
       <tr class="odd_row">
         <th style="text-align:center;">{% trans "Score" %}</th>
         {% for gameplayer in players %}

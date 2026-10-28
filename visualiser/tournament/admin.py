@@ -165,7 +165,8 @@ class ScoreVisibilityAdminMixin(TournamentPermissionAdminMixin):
     """Restrict score visibility for non-managers when current scores are hidden."""
 
     def has_tournament_view_permission(self, request, obj, tournament):
-        if (not tournament.show_current_scores) and (not tournament.can_be_managed_by(request.user)):
+        public = tournament.show_current_scores and tournament.scores_are_public
+        if not (public or tournament.can_be_managed_by(request.user)):
             return False
         return super().has_tournament_view_permission(request, obj, tournament)
 

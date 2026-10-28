@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load score_visibility %}
 
 {% block title %}{% blocktrans with tournament=tournament round=round.number %}Round {{ round }} of {{ tournament }} Views - DipTV{% endblocktrans %}{% endblock title %}
 
@@ -8,7 +9,9 @@
 
 <p>{% trans "Start time:" %} {{ round.start }}</p>
 
-<p>{% trans "Scoring system:" %} <a href="{{ round.game_scoring_system_obj.get_absolute_url }}">{{ round.scoring_system }}</a></p>
+{% if tournament|scores_visible_to:user %}
+  <p>{% trans "Scoring system:" %} <a href="{{ round.game_scoring_system_obj.get_absolute_url }}">{{ round.scoring_system }}</a></p>
+{% endif %}
 
 <p>{% if round.dias %}{% trans "All surviving players are included if a game ends in a draw." %}
    {% else %}{% trans "Surviving players may vote themselves out of draws." %}
@@ -62,7 +65,9 @@
   <li><a href="{% url 'board_call' tournament.id round.number %}">{% trans "Board Call" %}</a></li>
   <li><a href="{% url 'board_call_by_player' tournament.id round.number %}">{% trans "Board Call by Player" %}</a></li>
   <li><a href="{% url 'game_index' tournament.id round.number %}">{% trans "Game Index" %}</a></li>
-  <li><a href="{% url 'round_scores' tournament.id round.number %}">{% trans "Scores after the round" %}</a></li>
+  {% if tournament|scores_visible_to:user %}
+    <li><a href="{% url 'round_scores' tournament.id round.number %}">{% trans "Scores after the round" %}</a></li>
+  {% endif %}
 </ul>
 
 <p>{% trans "CSV file download:" %}</p>

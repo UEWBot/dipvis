@@ -1,17 +1,22 @@
 {% extends "base.html" %}
 {% load i18n %}
 {% load humanize %}
+{% load score_visibility %}
 
 {% block title %}{% blocktrans with tp=player %}{{ tp }} - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
+{% with show_scores=tournament|scores_visible_to:user %}
 {% if tournament.is_finished or tournament.show_current_scores %}
   {% if player.unranked %}
-    <p>{% blocktrans %}Rank: Unranked{% endblocktrans %}</p>
+    {% if show_scores %}
+      <p>{% blocktrans %}Rank: Unranked{% endblocktrans %}</p>
+    {% endif %}
     <p>{% trans "Ineligible for awards." %}</p>
   {% else %}
-    {% if player.score_is_final %}
+    {% if not show_scores %}
+    {% elif player.score_is_final %}
       <p>{% blocktrans with rank=player.rank|ordinal %}Rank: {{ rank }}{% endblocktrans %}</p>
     {% else %}
       <p>{% blocktrans with rank=player.rank|ordinal %}Current rank: {{ rank }}{% endblocktrans %}</p>
@@ -36,7 +41,7 @@
         {% if gp.power %}
 	  <li>
             {{ gp.result_str_long|safe }}
-            {% if gp.is_best_country %}
+            {% if show_scores and gp.is_best_country %}
               {% if tournament.is_finished %}
                 {% blocktrans with power=gp.power%}(Best {{ power }}){% endblocktrans %}
               {% else %}
@@ -72,4 +77,5 @@
 </form>
 
 <p><a href="{{player.player.get_absolute_url }}">{% trans "Player Background" %}</a></p>
+{% endwith %}
 {% endblock content %}

@@ -17,9 +17,9 @@
 import datetime as dt
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum
@@ -3449,6 +3449,22 @@ class TournamentTests(TestCase):
         t.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.assertIs(False, t.show_current_scores)
 
+    # Tournament.scores_visible_to()
+    def test_tournament_scores_visible_to_public(self):
+        t = Tournament.objects.first()
+        self.assertIs(True, t.scores_are_public)
+        self.assertIs(True, t.scores_visible_to(AnonymousUser()))
+
+    def test_tournament_scores_visible_to_not_public(self):
+        t = Tournament.objects.first()
+        manager = User.objects.create_user(username='scores_manager')
+        t.managers.add(manager)
+        with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
+            self.assertIs(False, t.scores_visible_to(AnonymousUser()))
+            self.assertIs(True, t.scores_visible_to(manager))
+        # Clean up
+        manager.delete()
+
     # Tournament.show_game_urls()
     def test_tournament_show_game_urls_flag_unset(self):
         t = Tournament.objects.first()
@@ -5337,6 +5353,10 @@ class TournamentTests(TestCase):
         self.assertIn('Defending Champion is the defending Defending Champion Series champion, '
                   'having won Previous Series Event 2024',
                       results)
+
+        with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
+            results = current.background(mask=MASK_SERIES_WINS)
+        self.assertFalse(any('won' in r for r in results))
 
         # Clean up
         s.delete()

@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime as dt
+from unittest.mock import PropertyMock, patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Permission
@@ -350,6 +351,40 @@ class TournamentAdminTests(TestCase):
             manager.delete()
             other_user.delete()
             superuser.delete()
+
+    def test_score_model_admin_scores_not_public(self):
+        today = dt.date.today()
+        manager = User.objects.create_user(username='not-public-manager', is_staff=True)
+        other_user = User.objects.create_user(username='not-public-other', is_staff=True)
+        tournament = Tournament.objects.create(name='Scores not public test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=True,
+                                               scoring_visibility=ScoringVisibility.CURRENT)
+        tournament.managers.add(manager)
+        player = Player.objects.create(first_name='NotPublic', last_name='Player')
+        tp = TournamentPlayer.objects.create(tournament=tournament, player=player)
+        view_tp_perm = Permission.objects.get(codename='view_tournamentplayer')
+        manager.user_permissions.add(view_tp_perm)
+        other_user.user_permissions.add(view_tp_perm)
+        admin_instance = TournamentPlayerAdmin(TournamentPlayer, AdminSite())
+        manager_request = RequestFactory().get('/admin/tournament/')
+        manager_request.user = manager
+        other_request = RequestFactory().get('/admin/tournament/')
+        other_request.user = other_user
+        try:
+            self.assertTrue(admin_instance.has_view_permission(other_request, tp))
+            with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
+                self.assertFalse(admin_instance.has_view_permission(other_request, tp))
+                self.assertTrue(admin_instance.has_view_permission(manager_request, tp))
+        finally:
+            tournament.delete()
+            player.delete()
+            manager.delete()
+            other_user.delete()
 
     def test_score_model_admin_queryset_hides_hidden_scores_for_non_managers(self):
         today = dt.date.today()

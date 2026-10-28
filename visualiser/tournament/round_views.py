@@ -49,6 +49,7 @@ from tournament.game_seeder import GameSeeder, SeedMethod
 from tournament.models import (Game, GamePlayer, Pool, PowerAssignMethods,
                                Round, RoundPlayer, Tournament, TournamentPlayer)
 from tournament.tournament_views import (get_modifiable_tournament_or_404,
+                                         get_scores_visible_tournament_or_404,
                                          get_visible_tournament_or_404)
 
 
@@ -858,7 +859,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
 def round_scores(request, tournament_id, round_num):
     """Display scores after the specified round"""
     # TODO can we share code with tournament_scores() ?
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_scores_visible_tournament_or_404(tournament_id, request.user)
     tps = list(t.tournamentplayer_set.order_by('-score',
                                                'player__last_name',
                                                'player__first_name').select_related('player'))

@@ -55,6 +55,8 @@ def circuit_player_detail(request, circuit_id, circuit_player_id):
 def circuit_scores(request, circuit_id):
     """Show Circuit scores and tournament-by-tournament derivation."""
     circuit = get_object_or_404(Circuit, pk=circuit_id)
+    if not circuit.scores_visible_to(request.user):
+        raise Http404
     tournaments = list(circuit.tournaments.order_by('start_date', 'id'))
     cps = list(circuit.circuitplayer_set.select_related('player').order_by('-score',
                                                                             'player__last_name',
@@ -113,7 +115,11 @@ def api(request, circuit_id, version):
                                                                args=(version, t.pk,)))}
         tournaments.append(entry)
     results = []
-    for player, (rank, score) in c.ranks_and_scores().items():
+    if not c.scores_visible_to(request.user):
+        rankings = {}
+    else:
+        rankings = c.ranks_and_scores()
+    for player, (rank, score) in rankings.items():
         # TODO add 'score_breakdown' array
         entry = {'player_name': str(player),
                  'player_id': player.pk,

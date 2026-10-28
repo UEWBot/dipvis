@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load score_visibility %}
 
 {% block title %}{% blocktrans with tournament=tournament game=game.name %}{{ game }} at {{ tournament }} Views - DipTV{% endblocktrans %}{% endblock title %}
 
@@ -23,7 +24,8 @@
     <dd><a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a>{% if tournament.is_virtual %} ( {% if gp.player.backstabbr_profile_url %}<a href="{{ gp.player.backstabbr_profile_url }}">{{ gp.player.backstabbr_username }}</a>{% else %}{{ gp.player.backstabbr_username }}{% endif %} ){% endif %}</dd>
     {% if game.the_round.is_team_round %}<dd>{{ gp.team.name }}</dd>{% endif %}
     <dd>{{ gp.result_str }}</dd>
-    {% if game.is_finished and game.the_round.show_scores %}
+    {% if not tournament|scores_visible_to:user %}
+    {% elif game.is_finished and game.the_round.show_scores %}
       <dd>{{ gp.score|floatformat:2 }} {% trans "points" %}</dd>
       <dd>{% if gp.is_best_country %}{% blocktrans with power=gp.power %}Best {{ power}}{% endblocktrans %}{% endif %}</dd>
     {% elif gp.power %}

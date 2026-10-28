@@ -17,7 +17,7 @@
 import uuid
 import datetime as dt
 from urllib.parse import urlencode
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from django.contrib.auth.models import Permission, User
 from django.contrib.messages import get_messages
@@ -915,6 +915,16 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournament_players/detail.html')
         self.assertContains(response, 'Rank:')
         self.assertNotContains(response, 'Current rank:')
+        self.assertContains(response, 'Round 1')
+
+    def test_details_finished_rank_scores_hidden(self):
+        tp = self.t4.tournamentplayer_set.get(player=self.p1)
+        with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
+            response = self.client.get(reverse('tournament_player_detail',
+                                               args=(self.t4.pk, tp.pk)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Rank:')
         self.assertContains(response, 'Round 1')
 
     def test_details_power_not_assigned(self):

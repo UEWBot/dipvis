@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load score_visibility %}
 
 {% block title %}{% blocktrans with tournament=tournament %}{{ tournament }} Game Results - DipTV{% endblocktrans %}{% endblock title %}
 
@@ -26,7 +27,7 @@
           <td>
             {% for gp in r %}
               {{ gp.result_str_long|safe }}
-              {% if gp.is_best_country %}
+              {% if tournament|scores_visible_to:user and gp.is_best_country %}
                 {% blocktrans with power=gp.power %}(Best {{ power }}){% endblocktrans %}
               {% endif %}
 	      {% if not forloop.last %}<br>{% endif %}

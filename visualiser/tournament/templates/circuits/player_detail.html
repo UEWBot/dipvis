@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load score_visibility %}
 
 {% block title %}{{ circuit_player }} - DipTV{% endblock title %}
 
 {% block content %}
 <h1>{{ circuit_player }}</h1>
 <p><a href="{{ circuit.get_absolute_url }}">{{ circuit }}</a></p>
-<p>{% trans "Score:" %} {{ circuit_player.score|floatformat:2 }}</p>
+{% if circuit|scores_visible_to:user %}
+  <p>{% trans "Score:" %} {{ circuit_player.score|floatformat:2 }}</p>
+{% endif %}
 <p><a href="{{circuit_player.player.get_absolute_url }}">{% trans "Player Background" %}</a></p>
 {% endblock content %}

@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime as dt
+from unittest.mock import PropertyMock, patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -96,7 +97,22 @@ class SeriesViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'series/detail.html')
 
-    def test_players_invalid_series(self):
+    def test_detail_winner(self):
+        t = Tournament.objects.get(name='t1')
+        t.is_finished = True
+        t.save(update_fields=['is_finished'])
+        tp = t.tournamentplayer_set.get()
+        tp.calculated_rank = 1
+        tp.save(update_fields=['calculated_rank'])
+        url = reverse('series_detail', args=(self.s1.slug,))
+        response = self.client.get(url, secure=True)
+        self.assertContains(response, f'Won by {tp.player}')
+        with patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False):
+            response = self.client.get(url, secure=True)
+        self.assertNotContains(response, 'Won by')
+        # Clean up
+        t.is_finished = False
+        t.save(update_fields=['is_finished'])
         response = self.client.get(reverse('series_players',
                                            args=(self.INVALID_S_SLUG,)),
                                    secure=True)

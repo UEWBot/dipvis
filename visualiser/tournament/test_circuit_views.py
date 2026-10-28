@@ -2,7 +2,9 @@
 # Copyright (C) 2026 Chris Brand
 
 import datetime as dt
+from unittest.mock import PropertyMock, patch
 
+from django.contrib.auth.models import User
 from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
@@ -208,3 +210,44 @@ class CircuitViewTests(TestCase):
         response = self.client.get(reverse('api_circuit', args=(1000, self.circuit.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    # Circuits including Tournaments whose scores are hidden
+    def _scores_hidden(self):
+        return patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False)
+
+    def test_circuit_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('circuit_scores', args=(self.circuit.id,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_circuit_scores_hidden_superuser(self):
+        User.objects.create_user(username='circuit_super', password='pw', is_superuser=True)
+        self.client.login(username='circuit_super', password='pw')
+        with self._scores_hidden():
+            response = self.client.get(reverse('circuit_scores', args=(self.circuit.id,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_circuit_detail_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('circuit_detail', args=(self.circuit.id,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('circuit_scores', args=(self.circuit.id,)))
+
+    def test_circuit_player_detail_scores_hidden(self):
+        cp = CircuitPlayer.objects.filter(circuit=self.circuit, player=self.p1).first()
+        with self._scores_hidden():
+            response = self.client.get(reverse('circuit_player_detail',
+                                               args=(self.circuit.id, cp.id)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Score:')
+
+    def test_api_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('api_circuit', args=(1, self.circuit.pk,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([], response.json()['results'])

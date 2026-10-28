@@ -1190,6 +1190,15 @@ class Tournament(models.Model):
         """Whether "if all games ended now" scores are shown"""
         return self.scoring_visibility == ScoringVisibility.CURRENT
 
+    @property
+    def scores_are_public(self):
+        """Whether the scoring systems, scores, and ranks are visible to everyone"""
+        return True
+
+    def scores_visible_to(self, user):
+        """Whether the user can see the scoring systems, scores, and ranks"""
+        return self.scores_are_public or self.can_be_managed_by(user)
+
     def save(self, *args, **kwargs):
         """
         Save the object to the database.
@@ -1767,13 +1776,15 @@ class Tournament(models.Model):
             # Add in background for any series this Tournament is in
             for s in self.series_set.all():
                 defending_tournament = s.tournaments.filter(start_date__lt=self.start_date).order_by('-start_date').first()
-                if defending_tournament:
+                if defending_tournament and defending_tournament.scores_are_public:
                     p = defending_tournament.winner()
                     if p and self.tournamentplayer_set.filter(player=p).exists():
                         results.append(_('%(name)s is the defending %(series)s champion, having won %(tourney)s')
                                        % {'name': p, 'series': s,
                                           'tourney': defending_tournament})
                 for t in s.tournaments.all():
+                    if not t.scores_are_public:
+                        continue
                     p = t.winner()
                     if not p:
                         continue

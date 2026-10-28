@@ -282,6 +282,10 @@ class Circuit(models.Model):
         """Returns the canonical URL for the object"""
         return reverse('circuit_detail', args=[str(self.id)])
 
+    def scores_visible_to(self, user):
+        """Whether the user can see the Circuit scores, which are hidden while any of its Tournaments' are"""
+        return user.is_superuser or all(t.scores_are_public for t in self.tournaments.all())
+
     def scoring_system_obj(self):
         """
         Return the CircuitScoringSystem object for the Circuit

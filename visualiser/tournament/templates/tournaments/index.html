@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load score_visibility %}
 
 {% block title %}{% trans "Diplomacy Tournament Visualiser - DipTV" %}{% endblock title %}
 
@@ -11,7 +12,9 @@
       {% for t in tournament_list %}
         <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
           {% if t.is_finished or t.in_progress %}
-            <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
+            {% if t|scores_visible_to:user %}
+              <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
+            {% endif %}
             {% if not t.is_finished %}
               <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
             {% endif %}
@@ -48,7 +51,9 @@
         {% for t in unpublished_list %}
           <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
             {% if t.is_finished or t.in_progress %}
-              <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
+              {% if t|scores_visible_to:user %}
+                <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
+              {% endif %}
               {% if not t.is_finished %}
                 <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
               {% endif %}

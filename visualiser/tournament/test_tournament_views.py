@@ -18,7 +18,7 @@ import json
 import uuid
 import warnings
 import datetime as dt
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 from urllib.parse import urlencode
 
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
@@ -2857,6 +2857,117 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('api_tournament', args=(7, self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    # Tournaments whose scores aren't public
+    SCORE_PAGES = ['tournament_scores',
+                   'tournament_scores_refresh',
+                   'tournament_overview',
+                   'tournament_overview_3',
+                   'tournament_best_countries',
+                   'tournament_best_countries_refresh',
+                   'tournament_score_graph',
+                   'tournament_score_graph_refresh',
+                   'graph_img_score']
+
+    def _scores_hidden(self):
+        return patch.object(Tournament, 'scores_are_public', new_callable=PropertyMock, return_value=False)
+
+    def test_score_pages_scores_hidden(self):
+        with self._scores_hidden():
+            for url_name in self.SCORE_PAGES:
+                with self.subTest(url_name=url_name):
+                    response = self.client.get(reverse(url_name, args=(self.t4.pk,)),
+                                               secure=True)
+                    self.assertEqual(response.status_code, 404)
+
+    def test_score_pages_scores_hidden_manager(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        with self._scores_hidden():
+            for url_name in self.SCORE_PAGES:
+                with self.subTest(url_name=url_name):
+                    response = self.client.get(reverse(url_name, args=(self.t4.pk,)),
+                                               secure=True)
+                    self.assertEqual(response.status_code, 200)
+
+    def test_detail_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('tournament_detail', args=(self.t4.pk,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Tournament scoring')
+        for url_name in ['tournament_scores', 'tournament_best_countries',
+                         'tournament_score_graph']:
+            with self.subTest(url_name=url_name):
+                self.assertNotContains(response, reverse(url_name, args=(self.t4.pk,)))
+        self.assertContains(response, reverse('tournament_game_results', args=(self.t4.pk,)))
+
+    def test_detail_unfinished_scores_hidden(self):
+        self.assertIs(False, self.t1.is_finished)
+        with self._scores_hidden():
+            response = self.client.get(reverse('tournament_detail', args=(self.t1.pk,)),
+                                       secure=True)
+        self.assertContains(response, reverse('framesets', args=(self.t1.pk,)))
+        self.assertNotContains(response, reverse('tournament_scores', args=(self.t1.pk,)))
+
+    def test_game_results_scores_hidden(self):
+        response = self.client.get(reverse('tournament_game_results', args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertContains(response, '(Best ')
+        with self._scores_hidden():
+            response = self.client.get(reverse('tournament_game_results', args=(self.t4.pk,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '(Best ')
+
+    def test_view_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('tournament_views', args=(self.t4.pk,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('tournament_overview', args=(self.t4.pk,)))
+        self.assertNotContains(response, reverse('tournament_scores_refresh', args=(self.t4.pk,)))
+
+    def test_index_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('index'), secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse('tournament_scores', args=(self.t4.pk,)))
+
+    def test_news_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('tournament_news', args=(self.t1.pk,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'score')
+
+    def test_api_scores_hidden(self):
+        with self._scores_hidden():
+            response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertNotIn('tournament_scoring_system', data)
+        self.assertNotIn('round_scoring_system', data)
+        for num, r in data['rounds'].items():
+            self.assertNotIn('scoring_system', r)
+            for g in r['games'].values():
+                for entry in g['players'].values():
+                    self.assertNotIn('score', entry)
+        self.assertTrue(data['results'])
+        for entry in data['results']:
+            for key in ['ranking', 'score', 'score_breakdown']:
+                with self.subTest(player=entry['player_name'], key=key):
+                    self.assertNotIn(key, entry)
+
+    def test_api_scores_hidden_manager(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        with self._scores_hidden():
+            response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                       secure=True)
+        data = response.json()
+        self.assertIn('tournament_scoring_system', data)
+        for entry in data['results']:
+            self.assertIn('score', entry)
 
     def test_tournament_awards(self):
         """Should be viewable without logging in"""

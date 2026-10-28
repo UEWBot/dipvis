@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load score_visibility %}
 
 {% block title %}{% blocktrans with tournament=tournament %}{{ tournament }} - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
+{% with show_scores=tournament|scores_visible_to:user %}
 <h1>{{ tournament }}</h1>
 
 <p>{{ tournament.start_date }} - {{tournament.end_date }}</p>
@@ -34,9 +36,11 @@
 
 <p><a href="{% url 'tournament_players' tournament.id %}">{{ tournament.tournamentplayer_set.count }}{% trans " players registered." %}</a></p>
 <p>{% trans "Format: " %}{% if tournament.is_virtual %}{% trans "Virtual Face-to-face" %}{% else %}{% trans "Face-to-face" %}{% endif %}</p>
-<p>{% trans "Tournament scoring: " %}{{ tournament.tournament_scoring_system_obj }}{% if tournament.handicaps %}{% trans ", with handicaps" %}{% endif %}</p>
-{% if tournament.round_scoring_system_obj %}
-  <p>{% trans "Round scoring: " %}{{ tournament.round_scoring_system_obj }}</p>
+{% if show_scores %}
+  <p>{% trans "Tournament scoring: " %}{{ tournament.tournament_scoring_system_obj }}{% if tournament.handicaps %}{% trans ", with handicaps" %}{% endif %}</p>
+  {% if tournament.round_scoring_system_obj %}
+    <p>{% trans "Round scoring: " %}{{ tournament.round_scoring_system_obj }}</p>
+  {% endif %}
 {% endif %}
 {% if tournament.draw_secrecy == "C" %}
   <p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p>
@@ -69,18 +73,24 @@
 <br>
 <p>{% trans "Views:" %}</p>
 <ul>
-  {% if tournament.is_finished %}
-    <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Final Standings" %}</a></li>
-  {% else %}
+  {% if not tournament.is_finished %}
     <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>
-    <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
   {% endif %}
-  <li><a href="{% url 'tournament_score_graph' tournament.id %}">{% trans "Score Graph" %}</a></li>
-  {% if tournament.team_size %}
-    <li><a href="{% url 'team_scores' tournament.id %}">{% trans "Team Scores" %}</a></li>
+  {% if show_scores %}
+    {% if tournament.is_finished %}
+      <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Final Standings" %}</a></li>
+    {% else %}
+      <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
+    {% endif %}
+    <li><a href="{% url 'tournament_score_graph' tournament.id %}">{% trans "Score Graph" %}</a></li>
+    {% if tournament.team_size %}
+      <li><a href="{% url 'team_scores' tournament.id %}">{% trans "Team Scores" %}</a></li>
+    {% endif %}
   {% endif %}
   <li><a href="{% url 'tournament_awards' tournament.id %}">{% trans "Awards" %}</a></li>
-  <li><a href="{% url 'tournament_best_countries' tournament.id %}">{% trans "Best Countries" %}</a></li>
+  {% if show_scores %}
+    <li><a href="{% url 'tournament_best_countries' tournament.id %}">{% trans "Best Countries" %}</a></li>
+  {% endif %}
   <li><a href="{% url 'tournament_game_results' tournament.id %}">{% trans "Game Summary" %}</a></li>
   <li><a href="{% url 'tournament_news' tournament.id %}">{% trans "News" %}</a></li>
   <li><a href="{% url 'tournament_background' tournament.id %}">{% trans "Background" %}</a></li>
@@ -131,4 +141,5 @@
   </ul>
 {% endif %}
 <p><a href="https://raw.githubusercontent.com/UEWBot/dipvis/master/TD_USER_GUIDE">{% trans "Tournament Director's User Guide" %}</a></p>
+{% endwith %}
 {% endblock content %}

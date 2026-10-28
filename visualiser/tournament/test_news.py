@@ -301,6 +301,15 @@ class NewsTests(TestCase):
         self.assertIn('Current top score for round 2 is 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody, Owen Pennies.', res)
         self.assertIn('Highest centre count in round 2 is 4 for R in g13, R in g14.', res)
 
+    def test_tournament_news_in_progress_without_scores(self):
+        t = Tournament.objects.get(name='t1')
+        res = _tournament_news(t, include_scores=False)
+        self.assertIn('Round 2 of 4 is currently being played.', res)
+        self.assertIn('Highest centre count in round 2 is 4 for R in g13, R in g14.', res)
+        for s in res:
+            with self.subTest(news=s):
+                self.assertNotIn('score', s)
+
     def test_tournament_news_ended(self):
         t = Tournament.objects.get(name='t3')
         a1 = Award.objects.create(name='Longest Hair')
@@ -323,6 +332,14 @@ class NewsTests(TestCase):
         self.assertIn('7 players were registered to play in the tournament.', res)
         self.assertIn('Iris Jackson won Best France (with 3 centres and a score of 0.00 in game g31 of round 1), Longest Hair.', res)
         self.assertIn('George Hotel won Best Germany (with 3 centres and a score of 0.00 in game g31 of round 1).', res)
+        res = _tournament_news(t, include_scores=False)
+        self.assertIn('7 players were registered to play in the tournament.', res)
+        self.assertIn('Iris Jackson won Best France, Longest Hair.', res)
+        self.assertIn('George Hotel won Best Germany.', res)
+        for s in res:
+            with self.subTest(news=s):
+                self.assertNotIn('score', s)
+                self.assertNotIn(' came ', s)
         # Cleanup
         t.tournamentaward_set.all().delete()
 
@@ -458,6 +475,15 @@ class NewsTests(TestCase):
         self.assertIn('Game g31 ended. Board top is 4 centres, for Charles Dog (R).', res)
         self.assertIn('Final top score for round 1 is 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody.', res)
         # Note that g32 has no GamePlayers
+
+    def test_round_news_finished_without_scores(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        res = _round_news(r, include_scores=False)
+        self.assertIn('Round 1 has ended.', res)
+        for s in res:
+            with self.subTest(news=s):
+                self.assertNotIn('score', s)
 
     # _game_news()
     def test_game_news(self):
