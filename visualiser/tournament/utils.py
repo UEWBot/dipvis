@@ -622,7 +622,7 @@ def clone_tournament(t):
                                       round_scoring_system=t.round_scoring_system,
                                       non_player_round_score=t.non_player_round_score,
                                       non_player_round_score_once=t.non_player_round_score_once,
-                                      show_current_scores=t.show_current_scores,
+                                      scoring_visibility=t.scoring_visibility,
                                       draw_secrecy=t.draw_secrecy,
                                       is_finished=t.is_finished,
                                       is_published=False,

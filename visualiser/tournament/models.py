@@ -95,6 +95,12 @@ class BestCountryCriteria(models.TextChoices):
     DOTS = 'D', gettext_lazy('Highest centre count')
 
 
+class ScoringVisibility(models.TextChoices):
+    """Which scores are shown"""
+    CURRENT = 'C', gettext_lazy('"If all games ended now" scores')
+    LAST_ROUND = 'R', gettext_lazy('Scores after the last finished round')
+
+
 class Formats(models.TextChoices):
     """Tournament formats"""
     FTF = 'F', gettext_lazy('Face to Face')
@@ -1082,9 +1088,11 @@ class Tournament(models.Model):
     non_player_round_score_once = models.BooleanField(default=False,
                                                       help_text=gettext_lazy('Can a player only get the sitting out score for one round?'),
                                                       verbose_name=gettext_lazy('non player round score once'))
-    show_current_scores = models.BooleanField(default=True,
-                                              help_text=gettext_lazy('Show "if all games ended now" scores rather than after-last-round scores'),
-                                              verbose_name=gettext_lazy('show current scores'))
+    scoring_visibility = models.CharField(max_length=1,
+                                          choices=ScoringVisibility.choices,
+                                          default=ScoringVisibility.CURRENT,
+                                          help_text=gettext_lazy('Which scores to show'),
+                                          verbose_name=gettext_lazy('scoring visibility'))
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=gettext_lazy(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
@@ -1162,6 +1170,8 @@ class Tournament(models.Model):
                                    name='%(class)s_best_country_criterion_valid'),
             models.CheckConstraint(check=Q(format__in=Formats.values),
                                    name='%(class)s_format_valid'),
+            models.CheckConstraint(check=Q(scoring_visibility__in=ScoringVisibility.values),
+                                   name='%(class)s_scoring_visibility_valid'),
             models.CheckConstraint(check=Q(end_date__gte=F('start_date')),
                                    name='%(class)s_starts_before_end'),
             models.CheckConstraint(check=Q(team_size__isnull=False) | Q(num_games_in_team_score__isnull=True),
@@ -1174,6 +1184,11 @@ class Tournament(models.Model):
 
     def __str__(self):
         return f'{self.name} {self.start_date.year}'
+
+    @property
+    def show_current_scores(self):
+        """Whether "if all games ended now" scores are shown"""
+        return self.scoring_visibility == ScoringVisibility.CURRENT
 
     def save(self, *args, **kwargs):
         """

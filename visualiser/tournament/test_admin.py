@@ -30,7 +30,8 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS, Award,
                                BestCountryCriteria, DrawSecrecy, Formats, Game,
                                GamePlayer, PowerAssignMethods, Round,
-                               RoundPlayer, Team, Tournament, TournamentPlayer)
+                               RoundPlayer, ScoringVisibility, Team, Tournament,
+                               TournamentPlayer)
 from tournament.players import Player
 
 HOURS_24 = dt.timedelta(hours=24)
@@ -57,7 +58,7 @@ class TournamentAdminTests(TestCase):
                                     'round_scoring_system': NO_SCORING_SYSTEM_STR,
                                     'non_player_round_score': '0.0',
                                     'non_player_round_score_once': '',
-                                    'show_current_scores': 'on',
+                                    'scoring_visibility': ScoringVisibility.CURRENT,
                                     'draw_secrecy': DrawSecrecy.SECRET,
                                     'best_country_criterion': BestCountryCriteria.SCORE,
                                     'discord_url': '',
@@ -281,7 +282,7 @@ class TournamentAdminTests(TestCase):
                                                tournament_scoring_system='Sum all round scores',
                                                draw_secrecy=DrawSecrecy.SECRET,
                                                is_published=True,
-                                               show_current_scores=False,
+                                               scoring_visibility=ScoringVisibility.LAST_ROUND,
                                                team_size=2)
 
         player = Player.objects.create(first_name='Score',
@@ -367,7 +368,7 @@ class TournamentAdminTests(TestCase):
                                                       tournament_scoring_system='Sum all round scores',
                                                       draw_secrecy=DrawSecrecy.SECRET,
                                                       is_published=True,
-                                                      show_current_scores=False,
+                                                      scoring_visibility=ScoringVisibility.LAST_ROUND,
                                                       team_size=2)
         visible_tournament = Tournament.objects.create(name='Visible score list test',
                                                        start_date=today,
@@ -376,7 +377,7 @@ class TournamentAdminTests(TestCase):
                                                        tournament_scoring_system='Sum all round scores',
                                                        draw_secrecy=DrawSecrecy.SECRET,
                                                        is_published=True,
-                                                       show_current_scores=True,
+                                                       scoring_visibility=ScoringVisibility.CURRENT,
                                                        team_size=2)
 
         hidden_player = Player.objects.create(first_name='Hidden',

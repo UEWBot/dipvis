@@ -25,8 +25,8 @@ from tournament.models import (Award, AwardRecipient, CentreCount,
                                DBNCoverage, DrawProposal, Game, GameImage,
                                GamePlayer, Pool, Round, RoundPlayer,
                                SeederBias, Series, SupplyCentreOwnership,
-                               Team, Tournament, TournamentAward,
-                               TournamentPlayer)
+                               ScoringVisibility, Team, Tournament,
+                               TournamentAward, TournamentPlayer)
 from tournament.players import (Player, PlayerAward, PlayerEventRanking,
                                 PlayerGameResult, PlayerRanking, PlayerTitle,
                                 WDDPlayer)
@@ -177,7 +177,7 @@ class ScoreVisibilityAdminMixin(TournamentPermissionAdminMixin):
         t_attr = self.tournament_attr.replace('.', '__')
         return qs.filter(
             Q(**{f'{t_attr}__managers': request.user}) |
-            Q(**{f'{t_attr}__show_current_scores': True})
+            Q(**{f'{t_attr}__scoring_visibility': ScoringVisibility.CURRENT})
         ).distinct()
 
 
@@ -352,7 +352,7 @@ class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
               ('seed_games', 'default_game_set', 'power_assignment'),
               ('tournament_scoring_system', 'handicaps', 'round_scoring_system',
                'non_player_round_score', 'non_player_round_score_once'),
-              ('show_current_scores', 'draw_secrecy', 'best_country_criterion'),
+              ('scoring_visibility', 'draw_secrecy', 'best_country_criterion'),
               ('discord_url', 'is_published', 'delay_game_url_publication'),
               ('managers', 'editable', 'no_email'),
               ('wdd_tournament_id', 'wdr_tournament_id'))

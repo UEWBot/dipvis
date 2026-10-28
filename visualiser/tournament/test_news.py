@@ -23,7 +23,8 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
                                AwardRecipient, CentreCount, DrawProposal,
                                DrawSecrecy, Game, GamePlayer, Round,
-                               RoundPlayer, Seasons, SupplyCentreOwnership,
+                               RoundPlayer, ScoringVisibility, Seasons,
+                               SupplyCentreOwnership,
                                Tournament, TournamentAward, TournamentPlayer)
 from tournament.news import (MASK_ALL_NEWS, _game_news, _round_leader_str,
                              _round_news, _sc_gains_and_losses,
@@ -437,13 +438,13 @@ class NewsTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r = t.round_set.all()[0]
         self.assertIs(False, r.is_finished)
-        self.assertIs(True, t.show_current_scores)
-        t.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, t.scoring_visibility)
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
         t.save()
         res = _round_news(r)
         self.assertNotIn('Current top score for round 1 is 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody, Owen Pennies.', res)
         # Note that g12 has no CentreCounts, so we should get background for that game, not news
-        t.show_current_scores = True
+        t.scoring_visibility = ScoringVisibility.CURRENT
         t.save()
 
     def test_round_news_finished(self):

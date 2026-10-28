@@ -34,6 +34,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                T_SCORING_SYSTEMS, Award, BestCountryCriteria,
                                CentreCount, DBNCoverage, DrawProposal,
                                DrawSecrecy, Formats, Game, GameImage,
+                               ScoringVisibility,
                                GamePlayer, InvalidPowerAssignmentMethod,
                                InvalidPreferenceList, InvalidScoringSystem,
                                InvalidYear, Phases, Pool, PowerAlreadyAssigned,
@@ -3441,6 +3442,13 @@ class TournamentTests(TestCase):
         # Clean up
         pool.delete()
 
+    # Tournament.show_current_scores
+    def test_tournament_show_current_scores(self):
+        t = Tournament(scoring_visibility=ScoringVisibility.CURRENT)
+        self.assertIs(True, t.show_current_scores)
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
+        self.assertIs(False, t.show_current_scores)
+
     # Tournament.show_game_urls()
     def test_tournament_show_game_urls_flag_unset(self):
         t = Tournament.objects.first()
@@ -6069,22 +6077,22 @@ class TournamentPlayerTests(TestCase):
         """score_to_show() with finished tournament"""
         t = Tournament.objects.get(name='t3')
         self.assertIs(True, t.is_finished)
-        self.assertIs(True, t.show_current_scores)
-        t.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, t.scoring_visibility)
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
         t.save()
         tp = t.tournamentplayer_set.get(player=self.p5)
         score = tp.score_to_show()
         # TODO set scores so we can tell that we got the right one
         self.assertEqual(score, tp.score)
         # Cleanup
-        t.show_current_scores = True
+        t.scoring_visibility = ScoringVisibility.CURRENT
         t.save()
 
     def test_tournamentplayer_score_to_show_current(self):
-        """score_to_show() with tournament.show_current_scores True"""
+        """score_to_show() with tournament.scoring_visibility CURRENT"""
         t = Tournament.objects.get(name='t3')
         self.assertIs(True, t.is_finished)
-        self.assertIs(True, t.show_current_scores)
+        self.assertEqual(ScoringVisibility.CURRENT, t.scoring_visibility)
         t.is_finished = False
         t.save()
         tp = t.tournamentplayer_set.get(player=self.p5)
@@ -6096,12 +6104,12 @@ class TournamentPlayerTests(TestCase):
         t.save()
 
     def test_tournamentplayer_score_to_show_last_round(self):
-        """score_to_show() with ongoing Tournament, show_current_scores False"""
+        """score_to_show() with ongoing Tournament, scoring_visibility LAST_ROUND"""
         t = Tournament.objects.get(name='t3')
         self.assertIs(True, t.is_finished)
-        self.assertIs(True, t.show_current_scores)
+        self.assertEqual(ScoringVisibility.CURRENT, t.scoring_visibility)
         t.is_finished = False
-        t.show_current_scores = False
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
         t.save()
         tp = t.tournamentplayer_set.get(player=self.p5)
         score = tp.score_to_show()
@@ -6110,10 +6118,10 @@ class TournamentPlayerTests(TestCase):
         self.assertEqual(score, rp.tournament_score)
         # Cleanup
         t.is_finished = True
-        t.show_current_scores = True
+        t.scoring_visibility = ScoringVisibility.CURRENT
         t.save()
 
-    # TODO In an ongoing Tournament with show_current_scores False, if there are no finished rounds,
+    # TODO In an ongoing Tournament with scoring_visibility LAST_ROUND, if there are no finished rounds,
     #       score_to_show() should return zero
 
     # TournamentPlayer.team()
@@ -7204,20 +7212,20 @@ class RoundTests(TestCase):
     def test_round_show_scores_round_finished(self):
         """Return True if the Round is finished"""
         t = Tournament.objects.get(name='t1')
-        self.assertIs(True, t.show_current_scores)
-        t.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, t.scoring_visibility)
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
         t.save()
         r = t.round_numbered(3)
         self.assertIs(True, r.is_finished)
         self.assertIs(True, r.show_scores())
         # Cleanup
-        t.show_current_scores = True
+        t.scoring_visibility = ScoringVisibility.CURRENT
         t.save()
 
-    def test_round_show_scores_show_current_scores(self):
-        """Should return True if the Tournament has show_current_scores set"""
+    def test_round_show_scores_scoring_visibility_current(self):
+        """Should return True if the Tournament has scoring_visibility CURRENT"""
         t = Tournament.objects.get(name='t1')
-        self.assertIs(True, t.show_current_scores)
+        self.assertEqual(ScoringVisibility.CURRENT, t.scoring_visibility)
         r = t.round_numbered(4)
         self.assertIs(False, r.is_finished)
         self.assertIs(True, r.show_scores())
@@ -7225,14 +7233,14 @@ class RoundTests(TestCase):
     def test_round_show_scores_round_not_finished(self):
         """Return False otherwise"""
         t = Tournament.objects.get(name='t1')
-        self.assertIs(True, t.show_current_scores)
-        t.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, t.scoring_visibility)
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
         t.save()
         r = t.round_numbered(4)
         self.assertIs(False, r.is_finished)
         self.assertIs(False, r.show_scores())
         # Cleanup
-        t.show_current_scores = True
+        t.scoring_visibility = ScoringVisibility.CURRENT
         t.save()
 
     # Round.number()

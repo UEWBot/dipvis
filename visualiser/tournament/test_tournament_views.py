@@ -35,7 +35,8 @@ from tournament.models import (G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR,
                                CentreCount, DBNCoverage,
                                DrawProposal, DrawSecrecy, Game, GamePlayer,
                                PowerAssignMethods, Preference, Round,
-                               RoundPlayer, Seasons, SeederBias, Series, Team,
+                               RoundPlayer, Seasons, ScoringVisibility,
+                               SeederBias, Series, Team,
                                Tournament, TournamentAward, TournamentPlayer)
 from tournament.players import Player
 
@@ -706,7 +707,7 @@ class TournamentViewTests(TestCase):
         """Scores page for an in-progress Tournament"""
         self.assertIs(False, self.t1.handicaps)
         self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
-        self.assertIs(True, self.t1.show_current_scores)
+        self.assertEqual(ScoringVisibility.CURRENT, self.t1.scoring_visibility)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t1.pk,)),
                                    secure=True)
@@ -736,29 +737,29 @@ class TournamentViewTests(TestCase):
     def test_scores_old(self):
         """Scores page for an in-progress Tournament"""
         self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
-        self.assertIs(True, self.t1.show_current_scores)
-        self.t1.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, self.t1.scoring_visibility)
+        self.t1.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.t1.save()
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertTemplateUsed(response, 'tournaments/scores.html')
         # Cleanup
-        self.t1.show_current_scores = True
+        self.t1.scoring_visibility = ScoringVisibility.CURRENT
         self.t1.save()
 
     def test_scores_old2(self):
         """Scores page for an in-progress Tournament"""
         self.assertIs(True, self.t4.tournament_scoring_system_obj().uses_round_scores)
-        self.assertIs(True, self.t4.show_current_scores)
-        self.t4.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, self.t4.scoring_visibility)
+        self.t4.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.t4.save()
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertTemplateUsed(response, 'tournaments/scores.html')
         # Cleanup
-        self.t4.show_current_scores = True
+        self.t4.scoring_visibility = ScoringVisibility.CURRENT
         self.t4.save()
 
     def test_scores_rounds_ordered_by_start_not_creation_order(self):
@@ -1027,7 +1028,7 @@ class TournamentViewTests(TestCase):
         t = self.t4
         self.assertIs(True, t.is_finished)
         t.team_size = 2
-        t.show_current_scores = False
+        t.scoring_visibility = ScoringVisibility.LAST_ROUND
         t.save()
         TEAM_NAME = 'Spam, eggs, and spam'
         tm = Team.objects.create(tournament=self.t4,
@@ -1046,7 +1047,7 @@ class TournamentViewTests(TestCase):
         # Clean up
         tm.delete()
         t.team_size = None
-        t.show_current_scores = True
+        t.scoring_visibility = ScoringVisibility.CURRENT
         t.save()
 
     def test_team_scores_refresh(self):
@@ -1054,7 +1055,7 @@ class TournamentViewTests(TestCase):
         t = self.t4
         self.assertIs(True, t.is_finished)
         self.t4.team_size = 2
-        self.t4.show_current_scores = False
+        self.t4.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.t4.is_finished = False
         self.t4.save()
         TEAM_NAME = 'Spam, eggs, and spam'
@@ -1075,14 +1076,14 @@ class TournamentViewTests(TestCase):
         tm.delete()
         self.t4.is_finished = True
         self.t4.team_size = None
-        self.t4.show_current_scores = True
+        self.t4.scoring_visibility = ScoringVisibility.CURRENT
         self.t4.save()
 
     def test_team_scores_refresh_first_team_round(self):
         """Refresh, currently playing the first team round, non-current scores"""
         self.t4.team_size = 2
         self.t4.is_finished = False
-        self.t4.show_current_scores = False
+        self.t4.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.t4.save()
         self.r41.is_team_round = True
         self.r41.is_finished = False
@@ -1107,7 +1108,7 @@ class TournamentViewTests(TestCase):
         self.r41.is_team_round = False
         self.r41.save()
         self.t4.team_size = None
-        self.t4.show_current_scores = True
+        self.t4.scoring_visibility = ScoringVisibility.CURRENT
         self.t4.is_finished = True
         self.t4.save()
 
@@ -1308,8 +1309,8 @@ class TournamentViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournaments/best_countries.html')
 
     def test_best_countries_old(self):
-        self.assertIs(True, self.t4.show_current_scores)
-        self.t4.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, self.t4.scoring_visibility)
+        self.t4.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.t4.save()
         response = self.client.get(reverse('tournament_best_countries',
                                            args=(self.t4.pk,)),
@@ -1317,12 +1318,12 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/best_countries.html')
         # Cleanup
-        self.t4.show_current_scores = True
+        self.t4.scoring_visibility = ScoringVisibility.CURRENT
         self.t4.save()
 
     def test_best_countries_old2(self):
-        self.assertIs(True, self.t1.show_current_scores)
-        self.t1.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, self.t1.scoring_visibility)
+        self.t1.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.t1.save()
         response = self.client.get(reverse('tournament_best_countries',
                                            args=(self.t1.pk,)),
@@ -1330,7 +1331,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/best_countries.html')
         # Cleanup
-        self.t1.show_current_scores = True
+        self.t1.scoring_visibility = ScoringVisibility.CURRENT
         self.t1.save()
 
     def test_best_countries_refresh(self):
@@ -2938,8 +2939,8 @@ class TournamentViewTests(TestCase):
 
     def test_best_countries_scores_hidden_no_finished_round(self):
         # Games exist, but no Round has finished, so no results can be shown
-        self.assertIs(True, self.t4.show_current_scores)
-        self.t4.show_current_scores = False
+        self.assertEqual(ScoringVisibility.CURRENT, self.t4.scoring_visibility)
+        self.t4.scoring_visibility = ScoringVisibility.LAST_ROUND
         self.t4.save()
         finished = list(self.t4.round_set.filter(is_finished=True))
         self.t4.round_set.update(is_finished=False)
@@ -2951,7 +2952,7 @@ class TournamentViewTests(TestCase):
             for r in finished:
                 r.is_finished = True
                 r.save(update_fields=['is_finished'])
-            self.t4.show_current_scores = True
+            self.t4.scoring_visibility = ScoringVisibility.CURRENT
             self.t4.save()
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'No results yet')
