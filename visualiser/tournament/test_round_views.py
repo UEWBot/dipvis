@@ -18,7 +18,7 @@ import datetime as dt
 from urllib.parse import urlencode
 from unittest.mock import patch
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
@@ -478,6 +478,17 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 2)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    def test_detail_seed_games_permission(self):
+        u = User.objects.create_user(username='game_adder', password='pw')
+        url = reverse('round_detail', args=(self.t3.pk, 1))
+        seed_url = reverse('seed_games', args=(self.t3.pk, 1))
+        self.client.login(username='game_adder', password='pw')
+        response = self.client.get(url, secure=True)
+        self.assertNotContains(response, seed_url)
+        u.user_permissions.add(Permission.objects.get(codename='add_game'))
+        response = self.client.get(url, secure=True)
+        self.assertContains(response, seed_url)
 
     def test_board_call_csv(self):
         response = self.client.get(reverse('board_call_csv',

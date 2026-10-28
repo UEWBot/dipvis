@@ -81,7 +81,7 @@
   {% if perms.tournament.add_roundplayer %}
     <li><a href="{% url 'round_roll_call' tournament.id round.number %}">{% trans "Roll Call" %}</a> - {% trans "Use this to specify which of the players at the tournament are actually playing in this round." %}</li>
   {% endif %}
-  {% if perms.tournament.create_game %}
+  {% if perms.tournament.add_game %}
     {% if tournament.seed_games %}
       <li><a href="{% url 'seed_games' tournament.id round.number %}">{% trans "Seed Games" %}</a> - {% trans "Use this to get the software to assign players to games." %}
       {% if round.game_set.count %}

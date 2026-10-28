@@ -20,7 +20,7 @@ from urllib.parse import urlencode
 from unittest.mock import patch
 
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, tag
@@ -179,6 +179,17 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, NOTE)
         self.assertTemplateUsed(response, 'games/detail.html')
+
+    def test_detail_draw_vote_links(self):
+        u = User.objects.create_user(username='draw_voter', password='pw')
+        url = reverse('game_detail', args=(self.t1.pk, self.g1.name))
+        self.client.login(username='draw_voter', password='pw')
+        response = self.client.get(url, secure=True)
+        self.assertNotContains(response, reverse('draw_vote', args=(self.t1.pk, self.g1.name)))
+        u.user_permissions.add(Permission.objects.get(codename='add_drawproposal'))
+        response = self.client.get(url, secure=True)
+        self.assertContains(response, reverse('draw_vote', args=(self.t1.pk, self.g1.name)))
+        self.assertContains(response, reverse('concession', args=(self.t1.pk, self.g1.name)))
 
     def test_detail_no_powers(self):
         """Add some GamePlayers, but don't assign powers"""
