@@ -5107,7 +5107,7 @@ class TournamentTests(TestCase):
 
     def test_tournament_best_countries_without_games(self):
         t = Tournament.objects.get(name='t3')
-        self.assertEqual({}, t.best_countries())
+        self.assertEqual({p: [] for p in GreatPower.objects.all()}, t.best_countries())
 
     def test_tournament_best_countries_without_powers(self):
         t = Tournament.objects.get(name='t1')

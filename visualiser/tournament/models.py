@@ -1682,11 +1682,9 @@ class Tournament(models.Model):
         had completed.
         Note that this does not consider who was given any "best country" awards.
         """
-        tuples = {}
+        tuples = {power: [] for power in GreatPower.objects.all()}
         # If no Games exist, return a dict of empty lists
         if not Game.objects.filter(the_round__tournament=self).exists():
-            for power in GreatPower.objects.all():
-                tuples[power] = []
             return tuples
         # Populate tuples. Dict, keyed by GreatPower,
         # of lists of (GamePlayer, score, dots, unranked) 4-tuples
@@ -1700,7 +1698,7 @@ class Tournament(models.Model):
             if (after_round_num is not None) and (gp.game.the_round.number() > after_round_num):
                 continue
             tuple_ = (gp, gp.score, gp.final_sc_count(), unranked_by_player_id.get(gp.player_id, False))
-            tuples.setdefault(gp.power, []).append(tuple_)
+            tuples[gp.power].append(tuple_)
         for power in tuples:
             self._sort_best_country_list(tuples[power])
         retval = {}
@@ -1722,6 +1720,9 @@ class Tournament(models.Model):
             return retval
         # Filter out all except the best for each country
         for power in tuples:
+            if not tuples[power]:
+                retval[power] = []
+                continue
             best_gp, best_score, best_dots, best_unranked = tuples[power].pop(0)
             list_ = [best_gp]
             for gp, score, dots, unranked in tuples[power]:

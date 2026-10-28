@@ -2880,6 +2880,25 @@ class TournamentViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournaments/awards.html')
         self.assertContains(response, 'No players')
 
+    def test_best_countries_scores_hidden_no_finished_round(self):
+        # Games exist, but no Round has finished, so no results can be shown
+        self.assertIs(True, self.t4.show_current_scores)
+        self.t4.show_current_scores = False
+        self.t4.save()
+        finished = list(self.t4.round_set.filter(is_finished=True))
+        self.t4.round_set.update(is_finished=False)
+        try:
+            response = self.client.get(reverse('tournament_best_countries',
+                                               args=(self.t4.pk,)),
+                                       secure=True)
+        finally:
+            for r in finished:
+                r.is_finished = True
+                r.save(update_fields=['is_finished'])
+            self.t4.show_current_scores = True
+            self.t4.save()
+        self.assertEqual(response.status_code, 200)
+
     def test_enter_awards_post_not_logged_in(self):
         response = self.client.get(reverse('enter_awards',
                                            args=(self.t1.pk,)),
