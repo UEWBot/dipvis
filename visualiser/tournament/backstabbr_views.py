@@ -93,11 +93,14 @@ def graph(request, game_type, game_number):
     url = urlunparse(('https', backstabbr.BACKSTABBR_NETLOC, game_path, '', '', ''))
     try:
         g = backstabbr.Game(url)
+        # Read the game history
+        dots = _dots(g)
     except backstabbr.InvalidGameUrl as e:
         raise Http404 from e
-
-    # Read the game history
-    dots = _dots(g)
+    except backstabbr.BackstabbrNotAccessible:
+        return HttpResponse(_('Backstabbr could not be accessed.'), status=503)
+    except backstabbr.FailedToParse:
+        return HttpResponse(_('The Backstabbr game page could not be parsed.'), status=503)
 
     # TODO lots of overlap here with game_views.graph()
     with io.BytesIO() as f:

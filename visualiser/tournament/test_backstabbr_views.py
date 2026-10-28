@@ -15,10 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from urllib.parse import urlencode, urlunparse
+from unittest.mock import patch
 
 from django.test import TestCase, tag
 from django.urls import reverse
 
+from tournament import backstabbr
 from tournament.backstabbr import BACKSTABBR_NETLOC
 
 
@@ -78,6 +80,31 @@ class BackstabbrViewTests(TestCase):
                                            args=('game', INVALID_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    def test_graph_not_accessible(self):
+        with patch('tournament.backstabbr_views.backstabbr.Game',
+                   side_effect=backstabbr.BackstabbrNotAccessible):
+            response = self.client.get(reverse('graph_img_bs',
+                                               args=('game', SOLO_GAME_NUMBER, )),
+                                       secure=True)
+        self.assertEqual(response.status_code, 503)
+
+    def test_graph_failed_to_parse(self):
+        with patch('tournament.backstabbr_views.backstabbr.Game',
+                   side_effect=backstabbr.FailedToParse):
+            response = self.client.get(reverse('graph_img_bs',
+                                               args=('game', SOLO_GAME_NUMBER, )),
+                                       secure=True)
+        self.assertEqual(response.status_code, 503)
+
+    def test_graph_turn_not_accessible(self):
+        with patch('tournament.backstabbr_views.backstabbr.Game'):
+            with patch('tournament.backstabbr_views._dots',
+                       side_effect=backstabbr.BackstabbrNotAccessible):
+                response = self.client.get(reverse('graph_img_bs',
+                                                   args=('game', SOLO_GAME_NUMBER, )),
+                                           secure=True)
+        self.assertEqual(response.status_code, 503)
 
     def test_url_form(self):
         response = self.client.get(reverse('enter_url'),
