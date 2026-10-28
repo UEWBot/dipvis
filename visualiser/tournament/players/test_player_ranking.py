@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase, tag
+from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
 from tournament.players import Player, WDDPlayer
@@ -73,7 +73,6 @@ class PlayerRankingTests(TestCase):
         url = pr.wdd_url()
         self.assertEqual('', url)
 
-    @tag('slow', 'wdd')
     def test_playerranking_wdd_url_no_id(self):
         wdd = WDDPlayer.objects.first()
         p = wdd.player
