@@ -15,12 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import requests
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 
-from tournament.wdr import (validate_wdr_circuit_id, validate_wdr_player_id,
+from tournament.wdr import (InvalidWDRId, WDRNotAccessible,
+                            validate_wdr_circuit_id, validate_wdr_player_id,
                             validate_wdr_tournament_id, wdr_tournament_as_json)
 
 
@@ -32,6 +33,40 @@ class WDRTests(TestCase):
         with patch('tournament.wdr.requests.head',
                    side_effect=requests.exceptions.Timeout):
             self.assertIsNone(validate_wdr_player_id(0))
+
+    def test_validate_wdr_player_id_connection_error_assumed_valid(self):
+        with patch('tournament.wdr.requests.head',
+                   side_effect=requests.exceptions.ConnectionError):
+            self.assertIsNone(validate_wdr_player_id(0))
+
+    def test_validate_wdr_player_id_server_error_assumed_valid(self):
+        with patch('tournament.wdr.requests.head',
+                   return_value=Mock(status_code=500)):
+            self.assertIsNone(validate_wdr_player_id(0))
+
+    def test_validate_wdr_player_id_not_found_invalid(self):
+        with patch('tournament.wdr.requests.head',
+                   return_value=Mock(status_code=404)):
+            self.assertRaises(ValidationError, validate_wdr_player_id, 0)
+
+    def test_wdr_tournament_as_json_timeout(self):
+        with patch('tournament.wdr.requests.get',
+                   side_effect=requests.exceptions.Timeout):
+            self.assertRaises(WDRNotAccessible, wdr_tournament_as_json, 1545)
+
+    def test_wdr_tournament_as_json_server_error(self):
+        with patch('tournament.wdr.requests.get',
+                   return_value=Mock(status_code=503)):
+            self.assertRaises(WDRNotAccessible, wdr_tournament_as_json, 1545)
+
+    def test_wdr_tournament_as_json_not_found(self):
+        with patch('tournament.wdr.requests.get',
+                   return_value=Mock(status_code=404)):
+            self.assertRaises(InvalidWDRId, wdr_tournament_as_json, 0)
+
+    @tag('wdr')
+    def test_wdr_tournament_as_json_0(self):
+        self.assertRaises(InvalidWDRId, wdr_tournament_as_json, 0)
 
     # validate_wdr_circuit_id()
     @tag('wdr')
@@ -48,7 +83,7 @@ class WDRTests(TestCase):
     # validate_wdr_player_id()
     @tag('wdr')
     def test_validate_wdr_player_id_me(self):
-        self.assertIsNone(validate_wdr_player_id(4173))
+        self.assertIsNone(validate_wdr_player_id(7164))
 
     @tag('wdr')
     def test_validate_wdr_player_id_0(self):

@@ -32,17 +32,7 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 
 from tournament.diplomacy import WINNING_SCS
-from tournament.wdr import WDR_BASE_URL
-
-
-class InvalidWDRId(Exception):
-    """The WDR id provided for the player is unused on the WDR."""
-    pass
-
-
-class WDRNotAccessible(Exception):
-    """The WDR website cannot currently be accessed."""
-    pass
+from tournament.wdr import WDR_BASE_URL, InvalidWDRId, WDRNotAccessible
 
 
 class WDRBackground():
@@ -68,10 +58,12 @@ class WDRBackground():
                                          'Accept': 'application/json',
                                          'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
-        except requests.exceptions.Timeout as e:
+        except requests.exceptions.RequestException as e:
             raise WDRNotAccessible from e
-        if page.status_code != requests.codes.ok:
+        if page.status_code == requests.codes.not_found:
             raise InvalidWDRId(self.wdr_id, url, page.status_code)
+        if page.status_code != requests.codes.ok:
+            raise WDRNotAccessible(url, page.status_code)
         self.data = page.json()
 
     def wdd_id(self):

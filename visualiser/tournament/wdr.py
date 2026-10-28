@@ -31,20 +31,31 @@ WDR_NETLOC = 'www.world-diplomacy-reference.com'
 WDR_BASE_URL = 'https://' + WDR_NETLOC + '/'
 
 
+class InvalidWDRId(Exception):
+    """The WDR id provided is unused on the WDR."""
+    pass
+
+
+class WDRNotAccessible(Exception):
+    """The WDR website cannot currently be accessed."""
+    pass
+
+
 def _validate_wdr_id(path, param, value):
     """
     Checks the validity of a WDR id
     """
-    url = f'{WDR_BASE_URL}{path}/{value}'
+    # The API returns 404 for an unknown id (the HTML pages return 500)
+    url = f'{WDR_BASE_URL}api/v1/{path}/{value}'
     try:
         r = requests.head(url,
                           headers={'User-Agent': settings.USER_AGENT},
                           allow_redirects=False,
                           timeout=1.0)
-    except requests.exceptions.Timeout:
+    except requests.exceptions.RequestException:
         # Assume the id is ok
         return
-    if r.status_code != requests.codes.ok:
+    if r.status_code == requests.codes.not_found:
         raise ValidationError(_(u'%(value)d is not a valid WDR %(param)s, code %(status)d'),
                               params={'value': value,
                                       'param': param,
@@ -55,6 +66,7 @@ def validate_wdr_circuit_id(value):
     """
     Checks a WDR circuit id
     """
+    # The WDR treats circuits as tournaments
     _validate_wdr_id('tournaments', 'tournament', value)
 
 
@@ -75,13 +87,22 @@ def validate_wdr_tournament_id(value):
 def wdr_tournament_as_json(wdr_tournament_id):
     """
     Uses the WDR API to read the details of the specified tournament as JSON
+
+    Can raise InvalidWDRId or WDRNotAccessible.
     """
     url = WDR_BASE_URL + f'api/v1/tournaments/{wdr_tournament_id}'
-    page = requests.get(url,
-                        headers={'User-Agent': settings.USER_AGENT,
-                                 'Accept': 'application/json',
-                                 'Accept-Encoding': 'gzip'},
-                        timeout=4.0)
+    try:
+        page = requests.get(url,
+                            headers={'User-Agent': settings.USER_AGENT,
+                                     'Accept': 'application/json',
+                                     'Accept-Encoding': 'gzip'},
+                            timeout=4.0)
+    except requests.exceptions.RequestException as e:
+        raise WDRNotAccessible from e
+    if page.status_code == requests.codes.not_found:
+        raise InvalidWDRId(wdr_tournament_id, url, page.status_code)
+    if page.status_code != requests.codes.ok:
+        raise WDRNotAccessible(url, page.status_code)
     return page.json()
 
 

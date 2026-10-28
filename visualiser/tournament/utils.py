@@ -218,7 +218,14 @@ def add_missing_player_wdr_ids(dry_run=False):
     for t in Tournament.objects.filter(is_published=True).exclude(wdr_tournament_id=None):
         tps = t.tournamentplayer_set.filter(player__wdr_player_id=None)
         if len(tps):
-            data = wdr_tournament_as_json(t.wdr_tournament_id)
+            try:
+                data = wdr_tournament_as_json(t.wdr_tournament_id)
+            except WDRNotAccessible:
+                print(f'Failed to read {t} from the WDR')
+                continue
+            except InvalidWDRId:
+                print(f'{t} ({t.id}) has invalid WDR id {t.wdr_tournament_id}')
+                continue
             for tp in tps:
                 for player in data['tournament_classifications']:
                     p = tp.player

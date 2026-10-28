@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import requests
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.test import TestCase, tag
 
@@ -36,6 +36,21 @@ class WDRBackgroundTests(TestCase):
         with patch('tournament.players.wdr_background.requests.get',
                    side_effect=requests.exceptions.Timeout):
             self.assertRaises(WDRNotAccessible, WDRBackground, self.CHRIS_BRAND_WDR_ID)
+
+    def test_wdr_background_connection_error(self):
+        with patch('tournament.players.wdr_background.requests.get',
+                   side_effect=requests.exceptions.ConnectionError):
+            self.assertRaises(WDRNotAccessible, WDRBackground, self.CHRIS_BRAND_WDR_ID)
+
+    def test_wdr_background_server_error(self):
+        with patch('tournament.players.wdr_background.requests.get',
+                   return_value=Mock(status_code=503)):
+            self.assertRaises(WDRNotAccessible, WDRBackground, self.CHRIS_BRAND_WDR_ID)
+
+    def test_wdr_background_not_found(self):
+        with patch('tournament.players.wdr_background.requests.get',
+                   return_value=Mock(status_code=404)):
+            self.assertRaises(InvalidWDRId, WDRBackground, self.INVALID_WDR_ID)
 
     # WDRBackground.wdd_id()
     @tag('wdr')
