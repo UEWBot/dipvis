@@ -153,6 +153,7 @@ class AddPlayerBgTests(TestCase):
         self.assertEqual(0, england['board_tops']['count'])
 
     # add_player_bg()
+    @tag('wikipedia_live')
     def test_add_player_bg_wiki1(self):
         """Test adding PlayerTitles based on Wikipedia"""
         p = Player.objects.create(first_name='Brandon', last_name='Fogel')
@@ -167,6 +168,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    @tag('wikipedia_live')
     def test_add_player_bg_wiki2(self):
         """Test adding PlayerTitles based on Wikipedia"""
         p = Player.objects.create(first_name='Graham', last_name='Woodring')
@@ -179,6 +181,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    @tag('wikipedia_live')
     def test_add_player_bg_wiki3(self):
         """Test adding PlayerTitles based on Wikipedia"""
         p = Player.objects.create(first_name='Richard', last_name='Ackerlay')
@@ -191,6 +194,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    @tag('wikipedia_live')
     def test_add_player_no_wdr(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
@@ -798,7 +802,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    @tag('wdr')
+    @tag('wdr', 'wikipedia_live')
     def test_add_player_bg_wdr(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
@@ -819,7 +823,7 @@ class AddPlayerBgTests(TestCase):
         p.wdr_player_id = None
         p.save()
 
-    @tag('slow', 'wdr')
+    @tag('slow', 'wdr', 'wikipedia_live')
     def test_add_player_bg_no_podiums(self):
         # Spiros has no podium finishes
         p = Player.objects.create(first_name='Spiros',
@@ -832,7 +836,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    @tag('slow', 'wdr')
+    @tag('slow', 'wdr', 'wikipedia_live')
     def test_add_player_bg_with_podiums(self):
         # Matt has podium finishes in 2008
         p = Player.objects.create(first_name='Matt',
@@ -882,7 +886,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    @tag('slow', 'wdr')
+    @tag('slow', 'wdr', 'wikipedia_live')
     @patch('builtins.print')
     def test_add_player_bg_td(self, mock_print):
         # Matt has tournaments listings for tournaments when he was TD
@@ -951,7 +955,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    @tag('slow', 'wdr')
+    @tag('slow', 'wdr', 'wikipedia_live')
     @patch('builtins.print')
     def test_add_player_bg_unranked(self, mock_print):
         # Melinda has games listed with no ranking (n.c)
@@ -967,6 +971,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    @tag('wikipedia_live')
     def test_add_player_bg_unknown(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
         add_player_bg(p)
