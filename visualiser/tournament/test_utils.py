@@ -24,6 +24,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone as django_timezone
 
+from tournament import backstabbr
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                Award, AwardRecipient, CentreCount, DrawSecrecy,
@@ -720,6 +721,49 @@ class UtilsTests(TestCase):
         mock_print.assert_called_with('Reading results for 1901')
         # Cleanup
         t.delete()
+
+    def _populate_years_game(self, name):
+        now = django_timezone.now()
+        t = Tournament.objects.create(name=name,
+                                      start_date=now.date(),
+                                      end_date=now.date(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 is_finished=False,
+                                 start=now)
+        return Game.objects.create(name=name,
+                                   the_round=r,
+                                   the_set=GameSet.objects.first(),
+                                   started_at=r.start,
+                                   external_url='https://www.backstabbr.com/game/test3')
+
+    def test_populate_missed_years_failed_to_parse(self):
+        g = self._populate_years_game('util-populate-years-parse')
+        with patch.object(g, 'backstabbr_game', side_effect=backstabbr.FailedToParse):
+            with patch('builtins.print') as mock_print:
+                populate_missed_years(g)
+        mock_print.assert_called_once_with(f"Can't parse game {g} from Backstabbr")
+        # Cleanup
+        g.the_round.tournament.delete()
+
+    def test_populate_missed_years_turn_not_accessible(self):
+        g = self._populate_years_game('util-populate-years-turn')
+
+        def turn_details(season, year):
+            raise backstabbr.BackstabbrNotAccessible()
+
+        bg = SimpleNamespace(year=1903, turn_details=turn_details)
+        with patch.object(g, 'backstabbr_game', return_value=bg):
+            with patch('builtins.print') as mock_print:
+                populate_missed_years(g)
+        mock_print.assert_called_with(f"Can't read game {g} from Backstabbr")
+        self.assertEqual(mock_print.call_count, 2)
+        # Cleanup
+        g.the_round.tournament.delete()
 
     @patch('tournament.utils.add_missing_wdd_player_ids')
     def test_check_wdd_player_ids(self, mock_add_missing):

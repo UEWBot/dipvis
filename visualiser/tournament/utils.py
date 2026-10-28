@@ -296,6 +296,9 @@ def add_bs_profile_urls(dry_run=False):
         except backstabbr.InvalidGameUrl:
             print("Failed to extract backstabbr URL - skipping")
             continue
+        except backstabbr.FailedToParse:
+            print("Failed to parse backstabbr game page - skipping")
+            continue
         games += 1
         for gp in g.gameplayer_set.all():
             player, url = bg.players[map_to_backstabbr_power(gp.power)]
@@ -334,6 +337,9 @@ def populate_missed_years(game, dry_run=False):
     except backstabbr.BackstabbrNotAccessible:
         print(f"Can't read game {game} from Backstabbr")
         return
+    except backstabbr.FailedToParse:
+        print(f"Can't parse game {game} from Backstabbr")
+        return
     for year in range(FIRST_YEAR, bg.year):
         if not game.centrecount_set.filter(year=year).count() == 7:
             print(f'Reading results for {year}')
@@ -343,6 +349,12 @@ def populate_missed_years(game, dry_run=False):
                 parsed_turn = bg.turn_details(backstabbr.SPRING, year+1)
             except backstabbr.NoSuchSeason:
                 print("Failed to read that year from backstabbr")
+                continue
+            except backstabbr.BackstabbrNotAccessible:
+                print(f"Can't read game {game} from Backstabbr")
+                return
+            except backstabbr.FailedToParse:
+                print("Failed to parse that year from backstabbr")
                 continue
             sc_counts = parsed_turn[0]
             sc_ownership = parsed_turn[2]
