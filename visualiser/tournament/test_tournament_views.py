@@ -2878,7 +2878,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards.html')
-        self.assertContains(response, 'No players')
+        self.assertContains(response, 'No awards were given')
 
     def test_best_countries_scores_hidden_no_finished_round(self):
         # Games exist, but no Round has finished, so no results can be shown

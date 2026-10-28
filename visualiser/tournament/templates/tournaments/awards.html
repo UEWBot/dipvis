@@ -11,25 +11,27 @@
       <li>{{ a }}</li>
     {% endfor %}
   </ol>
-{% else %}
-<dl>
-  {% if tournament.is_finished %}
-    {% for tp in tournament.tournamentplayer_set.all %}
-      {% if tp.awardrecipient_set.count %}
-        <dt><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a></dt>
+{% elif tournament.is_finished %}
+  {% with winners=tournament.award_winners %}
+    {% if winners %}
+      <dl>
+        {% for tp in winners %}
+          <dt><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a></dt>
           {% for ar in tp.awardrecipient_set.all %}
             <dd>{{ ar.tournament_award.award }}{% if ar.game %} ({{ ar.game }}){% endif %}{% if ar.is_shared %} {% trans "(shared)" %}{% endif %}</dd>
           {% endfor %}
-        {% endif %}
-    {% empty %}
-      {% trans "No players" %}
-    {% endfor %}
-  {% else %}
+        {% endfor %}
+      </dl>
+    {% else %}
+      <p>{% trans "No awards were given" %}</p>
+    {% endif %}
+  {% endwith %}
+{% else %}
+  <dl>
     {% for tournament_award in tournament.tournamentaward_set.all %}
       <dt>{{ tournament_award.award }}</dt>
       <dd>{{ tournament_award.award.description }}</dd>
     {% endfor %}
-  {% endif %}
-</dl>
+  </dl>
 {% endif %}
 {% endblock content %}

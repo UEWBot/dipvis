@@ -1348,6 +1348,12 @@ class Tournament(models.Model):
         return Award.objects.filter(tournamentaward__tournament=self,
                                     power=None)
 
+    def award_winners(self):
+        """
+        Returns a QuerySet of TournamentPlayers who received at least one award.
+        """
+        return self.tournamentplayer_set.filter(awardrecipient__isnull=False).distinct()
+
     def _calculated_scores(self, for_players=None):
         """
         Calculates the tournament scores for players who have attended
