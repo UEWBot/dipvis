@@ -36,7 +36,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _, ngettext_lazy
-from django.views.decorators.http import require_http_methods, require_safe
+from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_board_call_email, warn_about_failed_emails
@@ -350,9 +350,7 @@ def get_seven(request, tournament_id, round_num):
                 changed.append(rp)
         log_objects_change(request.user, changed, ['Game count'],
                            form_name='GetSevenPlayersForm')
-        return HttpResponseRedirect(reverse('seed_games',
-                                            args=(tournament_id,
-                                                  round_num)))
+        return _seed_round(request, t, r, round_num, r.seed_generation)
     context['form'] = form
     return render(request,
                   'rounds/get_seven.html',
@@ -587,7 +585,11 @@ def _claim_seed_generation(the_round, generation):
 
 
 def _create_seeded_games(user, tournament, the_round, round_num):
-    """Replace the round's Games with one complete seeded set."""
+    """
+    Replace the round's Games with one complete seeded set.
+
+    Returns a dict, keyed by Game name, of seeding issues strings.
+    """
     old_games = list(the_round.game_set.all())
     old_gameplayers = [gp for game in old_games for gp in game.gameplayer_set.all()]
     log_objects_action(user, old_gameplayers, DELETION, [{'deleted': {}}],
@@ -601,7 +603,7 @@ def _create_seeded_games(user, tournament, the_round, round_num):
         default_set = GameSet.objects.get(name='Backstabbr')
     else:
         default_set = GameSet.objects.get(pk=1)
-    data = []
+    issues_by_game = {}
     games = _group_seeded_games(_seed_games(tournament, the_round))
     for n, (pool, game_players, issues) in enumerate(games, start=1):
         new_game = Game.objects.create(name=_generate_game_name(round_num, pool, n),
@@ -609,61 +611,100 @@ def _create_seeded_games(user, tournament, the_round, round_num):
                                        pool=pool,
                                        is_top_board=(pool is not None) and (pool.determines_top_rankings is not None),
                                        the_set=default_set)
-        current = {'name': new_game.name,
-                   'the_set': new_game.the_set,
-                   'top_board': new_game.is_top_board,
-                   'issues': '\n'.join(issues)}
+        issues_by_game[new_game.name] = '\n'.join(issues)
         for tournament_player, power in game_players:
-            game_player = GamePlayer.objects.create(player=tournament_player.player,
-                                                    game=new_game,
-                                                    power=power)
-            current[str(game_player.id)] = power
+            GamePlayer.objects.create(player=tournament_player.player,
+                                      game=new_game,
+                                      power=power)
         if _pool_power_assignment(tournament.power_assignment, pool) == PowerAssignMethods.PREFERENCES:
             new_game.assign_powers_from_prefs()
-            for tournament_player, _ in game_players:
-                game_player = GamePlayer.objects.get(player=tournament_player.player,
-                                                     game=new_game)
-                current[str(game_player.id)] = game_player.power
-        data.append(current)
         log_objects_action(user, [new_game], ADDITION, [{'added': {}}],
                            form_name='PowerAssignForm')
         log_objects_action(user, list(new_game.gameplayer_set.all()), ADDITION,
                            [{'added': {}}], form_name='PowerAssignForm')
-    PowerAssignFormset = formset_factory(PowerAssignForm,
-                                         formset=BasePowerAssignFormset,
-                                         extra=0)
-    return PowerAssignFormset(the_round=the_round, initial=data)
+    return issues_by_game
+
+
+def _seed_issues_key(the_round):
+    """Session key for the seeding issues of the_round"""
+    return f'seed_issues_{the_round.pk}'
+
+
+def _seed_round(request, tournament, the_round, round_num, generation):
+    """Seed the_round, then redirect to the page to review the resulting Games"""
+    with transaction.atomic():
+        if not _claim_seed_generation(the_round, generation):
+            return HttpResponse(_('This seed is no longer current.'), status=409)
+        issues = _create_seeded_games(request.user, tournament, the_round, round_num)
+    # The issues aren't stored in the database, so keep them for the review page
+    request.session[_seed_issues_key(the_round)] = issues
+    return HttpResponseRedirect(reverse('seed_games',
+                                        args=(tournament.id, round_num)))
+
+
+def _posted_seed_generation(request, the_round):
+    """The seed_generation from the POST data, the_round's current one if absent, or None if invalid"""
+    posted_generation = request.POST.get('seed_generation')
+    if posted_generation is None:
+        return the_round.seed_generation
+    try:
+        return int(posted_generation)
+    except ValueError:
+        return None
+
+
+def _power_assign_initial(request, the_round):
+    """Initial data for a PowerAssignFormset for the existing Games in the_round"""
+    issues = request.session.get(_seed_issues_key(the_round), {})
+    data = []
+    # Ordering must match that used inside the formset
+    for g in Game.objects.for_power_assignment().filter(the_round=the_round):
+        current = {'name': g.name,
+                   'the_set': g.the_set,
+                   'top_board': g.is_top_board,
+                   'external_url': g.external_url,
+                   'notes': g.notes,
+                   'issues': issues.get(g.name, '')}
+        for gp in g.gameplayer_set.order_by():
+            current[str(gp.id)] = gp.power
+        data.append(current)
+    return data
+
+
+@permission_required('tournament.add_game')
+@require_POST
+def create_seeded_games(request, tournament_id, round_num):
+    """Replace any existing Games in the round with a new seeding"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    # Check for a multiple of seven players,
+    # allowing for players sitting out or playing multiple games
+    player_count = r.roundplayer_set.aggregate(Sum('game_count'))['game_count__sum']
+    if (player_count is None) or (player_count % 7) != 0:
+        # We need players to sit out or play multiple games
+        return HttpResponseRedirect(reverse('get_seven',
+                                            args=(tournament_id,
+                                                  round_num)))
+    generation = _posted_seed_generation(request, r)
+    if generation is None:
+        return HttpResponse(_('This seed is no longer current.'), status=409)
+    return _seed_round(request, t, r, round_num, generation)
 
 
 @permission_required('tournament.add_game')
 @require_http_methods(['GET', 'HEAD', 'POST'])
 def seed_games(request, tournament_id, round_num):
-    """Seed players to the games for a round"""
+    """Review the seeded games for a round, and assign powers"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
+    PowerAssignFormset = formset_factory(PowerAssignForm,
+                                         formset=BasePowerAssignFormset,
+                                         extra=0)
+    data = _power_assign_initial(request, r)
     if request.method == 'POST':
-        posted_generation = request.POST.get('seed_generation')
-        if posted_generation is not None:
-            try:
-                posted_generation = int(posted_generation)
-            except ValueError:
-                return HttpResponse(_('This seed is no longer current.'), status=409)
-        else:
-            posted_generation = r.seed_generation
-        data = []
-        # Ordering must match that used inside the formset
-        for g in Game.objects.for_power_assignment().filter(the_round=r):
-            current = {'name': g.name,
-                       'the_set': g.the_set,
-                       'top_board': g.is_top_board,
-                       'external_url': g.external_url,
-                       'notes': g.notes}
-            for gp in g.gameplayer_set.order_by():
-                current[str(gp.id)] = gp.power
-            data.append(current)
-        PowerAssignFormset = formset_factory(PowerAssignForm,
-                                             formset=BasePowerAssignFormset,
-                                             extra=0)
+        posted_generation = _posted_seed_generation(request, r)
+        if posted_generation is None:
+            return HttpResponse(_('This seed is no longer current.'), status=409)
         formset = PowerAssignFormset(request.POST, the_round=r, initial=data)
         if formset.is_valid():
             with transaction.atomic():
@@ -726,6 +767,7 @@ def seed_games(request, tournament_id, round_num):
                 log_objects_change(request.user, changed_gameplayers,
                                    sorted(changed_gameplayer_fields),
                                    form_name='PowerAssignForm')
+            request.session.pop(_seed_issues_key(r), None)
             # Notify the players
             _send_board_call(request, r)
             # Redirect to the board call page
@@ -733,20 +775,7 @@ def seed_games(request, tournament_id, round_num):
                                                 args=(tournament_id,
                                                       round_num)))
     else:
-        # Check for a multiple of seven players,
-        # allowing for players sitting out or playing multiple games
-        player_count = r.roundplayer_set.aggregate(Sum('game_count'))['game_count__sum']
-        if (player_count is None) or (player_count % 7) != 0:
-            # We need players to sit out or play multiple games
-            return HttpResponseRedirect(reverse('get_seven',
-                                                args=(tournament_id,
-                                                      round_num)))
-        generation = r.seed_generation
-        with transaction.atomic():
-            if not _claim_seed_generation(r, generation):
-                return HttpResponse(_('This seed is no longer current.'), status=409)
-            r.seed_generation = generation + 1
-            formset = _create_seeded_games(request.user, t, r, round_num)
+        formset = PowerAssignFormset(the_round=r, initial=data)
 
     context = {'tournament': t, 'round': r, 'formset': formset}
     return render(request, 'rounds/seeded_games.html', context)

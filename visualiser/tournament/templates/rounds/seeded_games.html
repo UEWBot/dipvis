@@ -50,4 +50,13 @@
 {% if formset.forms %}
 <p>{% trans "* = Sandboxer" %}</p>
 {% endif %}
+<form method="post" action="{% url 'create_seeded_games' tournament.id round.number %}">
+  {% csrf_token %}
+  <input type="hidden" name="seed_generation" value="{{ round.seed_generation }}" />
+  {% if formset.forms %}
+    <button type="submit">{% trans "Reseed Games" %}</button> - {% trans "Use this to replace these games with a new seeding." %}
+  {% else %}
+    <button type="submit">{% trans "Seed Games" %}</button>
+  {% endif %}
+</form>
 {% endblock content %}

@@ -500,6 +500,7 @@ class RoundViewTests(TestCase):
         self.assertContains(response, 'T3R1G1')
         self.assertContains(response, ' (Complete)')
         self.assertContains(response, 'permanently delete the existing 1 games!')
+        self.assertContains(response, f'action="{reverse("create_seeded_games", args=(self.t3.pk, 1))}"')
         # Clean up
         g.pool = None
         g.save(update_fields=['pool'])
@@ -514,7 +515,7 @@ class RoundViewTests(TestCase):
     def test_detail_seed_games_permission(self):
         u = User.objects.create_user(username='game_adder', password='pw')
         url = reverse('round_detail', args=(self.t3.pk, 1))
-        seed_url = reverse('seed_games', args=(self.t3.pk, 1))
+        seed_url = reverse('create_seeded_games', args=(self.t3.pk, 1))
         self.client.login(username='game_adder', password='pw')
         response = self.client.get(url, secure=True)
         self.assertNotContains(response, seed_url)
@@ -1201,6 +1202,8 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('seed_games', args=(self.t1.pk, 1)))
+        # The round should have been seeded
+        self.assertTrue(self.r11.game_set.exists())
         # Check that the game_counts have been updated accordingly
         self.rp11.refresh_from_db()
         self.assertEqual(self.rp11.game_count, 1)
@@ -1568,12 +1571,19 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 302)
 
+    def test_create_seeded_games_not_logged_in(self):
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
     def test_seed_games_odd_number(self):
         """if we dont have a mutiple of 7 players, this view should redirect to fix that"""
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t1.pk, 1)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('get_seven', args=(self.t1.pk, 1)))
 
@@ -1586,9 +1596,9 @@ class RoundViewTests(TestCase):
                for rp in self.t2.round_numbered(3).roundplayer_set.all()]
         mock_seed_games.return_value = [(None, {(tp, None) for tp in tps}, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t2.pk, 3)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t2.pk, 3)),
+                                    secure=True, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Field labels should be linked to their inputs, with no colon
@@ -1605,6 +1615,83 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
+    def _mock_t2r3_seeding(self, mock_seed_games, issues=None):
+        tps = [self.t2.tournamentplayer_set.get(player=rp.player)
+               for rp in self.t2.round_numbered(3).roundplayer_set.all()]
+        mock_seed_games.return_value = [(None, {(tp, None) for tp in tps}, issues or [])]
+
+    def test_create_seeded_games_get(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('create_seeded_games', args=(self.t2.pk, 3)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
+
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_get_does_not_reseed(self, mock_seed_games):
+        self._mock_t2r3_seeding(mock_seed_games)
+        r = self.t2.round_numbered(3)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_seeded_games', args=(self.t2.pk, 3)),
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('seed_games', args=(self.t2.pk, 3)))
+        g = r.game_set.get()
+        r.refresh_from_db()
+        generation = r.seed_generation
+        for _ in range(2):
+            response = self.client.get(reverse('seed_games', args=(self.t2.pk, 3)),
+                                       secure=True)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, g.name)
+        self.assertEqual(mock_seed_games.call_count, 1)
+        self.assertEqual([g.pk], [game.pk for game in r.game_set.all()])
+        r.refresh_from_db()
+        self.assertEqual(generation, r.seed_generation)
+        # Clean up
+        g.delete()
+
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_shows_seeding_issues(self, mock_seed_games):
+        self._mock_t2r3_seeding(mock_seed_games, issues=['Seeding issue for testing'])
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_seeded_games', args=(self.t2.pk, 3)),
+                                    secure=True, follow=True)
+        self.assertContains(response, 'Seeding issue for testing')
+        self.assertContains(response, 'Reseed Games')
+        # Clean up
+        self.t2.round_numbered(3).game_set.all().delete()
+
+    @patch('tournament.round_views._seed_games')
+    def test_create_seeded_games_stale_generation(self, mock_seed_games):
+        self._mock_t2r3_seeding(mock_seed_games)
+        r = self.t2.round_numbered(3)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_seeded_games', args=(self.t2.pk, 3)),
+                                    {'seed_generation': str(r.seed_generation - 1)},
+                                    secure=True)
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(r.game_set.count(), 0)
+        mock_seed_games.assert_not_called()
+
+    @patch('tournament.round_views._seed_games')
+    def test_create_seeded_games_reseed(self, mock_seed_games):
+        self._mock_t2r3_seeding(mock_seed_games)
+        r = self.t2.round_numbered(3)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        self.client.post(reverse('create_seeded_games', args=(self.t2.pk, 3)),
+                         secure=True)
+        first = r.game_set.get()
+        r.refresh_from_db()
+        response = self.client.post(reverse('create_seeded_games', args=(self.t2.pk, 3)),
+                                    {'seed_generation': str(r.seed_generation)},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        second = r.game_set.get()
+        self.assertNotEqual(first.pk, second.pk)
+        # Clean up
+        second.delete()
+
     @patch('tournament.round_views._seed_games')
     def test_seed_games_manual_good_number(self, mock_seed_games):
         """Simple case with exactly seven players with MANUAL power assignment"""
@@ -1617,9 +1704,9 @@ class RoundViewTests(TestCase):
                for rp in self.t2.round_numbered(3).roundplayer_set.all()]
         mock_seed_games.return_value = [(None, {(tp, None) for tp in tps}, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t2.pk, 3)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t2.pk, 3)),
+                                    secure=True, follow=True)
         # Check that the powers are not selected in the form (this also checks for status 200)
         self.assertContains(response, 'option value="" selected')
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
@@ -1647,9 +1734,9 @@ class RoundViewTests(TestCase):
                   self.italy, self.russia, self.turkey]
         mock_seed_games.return_value = [(None, set(zip(tps, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t3.pk, 2)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t3.pk, 2)),
+                                    secure=True, follow=True)
         # Check that the powers are selected in the form (this also checks for status 200)
         self.assertNotContains(response, 'option value="" selected')
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
@@ -1681,9 +1768,9 @@ class RoundViewTests(TestCase):
         game2 = set(zip(tps[6:], powers))
         mock_seed_games.return_value = [(None, game1, []), (None, game2, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t1.pk, 1)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True, follow=True)
         # Check that the powers are selected in the form (this also checks for status 200)
         self.assertNotContains(response, 'option value="" selected')
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
@@ -1740,9 +1827,9 @@ class RoundViewTests(TestCase):
 
         # Tweak initial data for this test
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t1.pk, 1)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True, follow=True)
         # Check that the powers are selected in the form (this also checks for status 200)
         self.assertNotContains(response, 'option value="" selected')
         # Two Games should have been created
@@ -1811,9 +1898,9 @@ class RoundViewTests(TestCase):
         mock_seed_games.return_value = [(pool1, {(t, None) for t in tps1}, []),
                                         (pool2, {(t, None) for t in tps2}, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t1.pk, 1)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True, follow=True)
         # Form should be for one game in each of the two pools
         self.assertContains(response, 'fixed-R1')
         self.assertContains(response, 'R1GB')
@@ -1868,9 +1955,9 @@ class RoundViewTests(TestCase):
         mock_seed_games.return_value = [(pool1, set(zip(tps1, powers)), []),
                                         (pool2, set(zip(tps2, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t1.pk, 1)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True, follow=True)
         # Form should be for one game in each of the two pools
         self.assertContains(response, 'fixed-R1')
         self.assertContains(response, 'R1GB')
@@ -1924,9 +2011,9 @@ class RoundViewTests(TestCase):
         mock_seed_games.return_value = [(pool1, {(t, None) for t in tps1}, []),
                                         (pool2, set(zip(tps2, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t1.pk, 1)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True, follow=True)
         # 2 Games should be created, 1 in each Pool
         gs1 = pool1.game_set.all()
         self.assertEqual(gs1.count(), 1)
@@ -1986,7 +2073,7 @@ class RoundViewTests(TestCase):
             seeded.append((pool, set(zip(tps, powers if with_powers else [None] * 7)), []))
         mock_seed_games.return_value = seeded
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)), secure=True)
+        response = self.client.post(reverse('create_seeded_games', args=(self.t1.pk, 1)), secure=True, follow=True)
         self.assertEqual(response.status_code, 200)
         return pool1, pool2
 
@@ -2066,9 +2153,9 @@ class RoundViewTests(TestCase):
         mock_seed_games.return_value = [(pool1, set(zip(tps1, powers)), []),
                                         (pool2, set(zip(tps2, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t1.pk, 1)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t1.pk, 1)),
+                                    secure=True, follow=True)
         # 2 Games should be created, 1 in each Pool
         gs1 = pool1.game_set.all()
         self.assertEqual(gs1.count(), 1)
@@ -3136,9 +3223,9 @@ class RoundViewTests(TestCase):
         self.t3.default_game_set = self.ah
         self.t3.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t3.pk, 2)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t3.pk, 2)),
+                                    secure=True, follow=True)
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Game should be created with the specified GameSet
         g = self.t3.round_numbered(2).game_set.get()
@@ -3161,9 +3248,9 @@ class RoundViewTests(TestCase):
         self.t3.default_game_set = None
         self.t3.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games',
-                                           args=(self.t3.pk, 2)),
-                                   secure=True)
+        response = self.client.post(reverse('create_seeded_games',
+                                            args=(self.t3.pk, 2)),
+                                    secure=True, follow=True)
         self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Game should use pk=1 (default Gibsons) since t3 is not virtual
         g = self.t3.round_numbered(2).game_set.get()

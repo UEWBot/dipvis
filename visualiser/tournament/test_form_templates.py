@@ -146,7 +146,7 @@ class EmptyFormsetTemplateTests(SimpleTestCase):
                 html = render_to_string(template, {'tournament': tournament, 'formset': formset, **extra})
                 self.assertIn(f'<p>{message}</p>', html)
                 self.assertNotIn('<table', html)
-                self.assertNotIn('type="submit"', html)
+                self.assertNotIn('<input type="submit"', html)
 
     def test_no_awards(self):
         html = render_to_string('tournaments/awards_form.html',
