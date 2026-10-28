@@ -345,7 +345,7 @@ class TeamAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
 @admin.register(Tournament)
 class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     """Include Round as part of Tournament"""
-    inlines = [RoundInline, TournamentAwardInline]
+    inlines = [TournamentAwardInline, RoundInline]
     fields = (('name', 'format', 'location'),
               ('start_date', 'end_date'),
               ('team_size', 'num_games_in_team_score'),
