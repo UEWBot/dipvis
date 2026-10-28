@@ -5,7 +5,7 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round.number %}Round {{ round }} Board Call{% endblocktrans %}</h1>
-
+{% if round.game_set.exists %}
 <dl>
   {% for g in round.game_set.all %}
     <dt><a href="{{ g.get_absolute_url }}">{{ g.name}}</a></dt>
@@ -25,5 +25,8 @@
     </dd>
   {% endfor %}
 </dl>
+{% else %}
+<p>{% trans "No games exist in the round." %}</p>
+{% endif %}
 
 {% endblock content %}

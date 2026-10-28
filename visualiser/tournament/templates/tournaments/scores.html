@@ -11,6 +11,7 @@
   <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Current Scores" %}</h1>
 {% endif %}
 
+{% if scores %}
 <table class="form">
   <thead><tr>
     <th>{% trans "Rank" %}</th>
@@ -83,4 +84,7 @@
 <i>0.0</i> - {% trans "score if all games ended now" %}<br>
 <del>0.0</del> - {% trans "score dropped" %}<br>
 * - {% trans "did not play" %}</p>
+{% else %}
+<p>{% trans "No players are registered for this tournament." %}</p>
+{% endif %}
 {% endblock content %}

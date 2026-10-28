@@ -2944,6 +2944,16 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/board_call_by_player.html')
 
+    def test_board_calls_no_games(self):
+        self.assertEqual(self.r32.game_set.count(), 0)
+        for url_name in ['board_call', 'board_call_by_player']:
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name,
+                                                   args=(self.t3.pk, self.r32.number())),
+                                           secure=True)
+                self.assertContains(response, 'No games exist in the round.')
+                self.assertNotContains(response, '<dl>')
+
     @patch('tournament.round_views._seed_games')
     def test_seed_games_uses_default_game_set(self, mock_seed_games):
         """seed_games uses Tournament.default_game_set when set"""

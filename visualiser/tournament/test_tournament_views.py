@@ -2880,6 +2880,31 @@ class TournamentViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournaments/awards.html')
         self.assertContains(response, 'No awards were given')
 
+    def _empty_tournament(self, name, **kwargs):
+        today = dt.date.today()
+        return Tournament.objects.create(name=name,
+                                         start_date=today,
+                                         end_date=today + dt.timedelta(hours=24),
+                                         round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                         tournament_scoring_system='Sum all round scores',
+                                         draw_secrecy=DrawSecrecy.SECRET,
+                                         is_published=True,
+                                         **kwargs)
+
+    def test_empty_tournament_pages(self):
+        t = self._empty_tournament('t-empty-pages')
+        for url_name, text in [('tournament_awards', 'No awards'),
+                               ('tournament_wdd_awards', 'No awards'),
+                               ('tournament_best_countries', 'No results yet'),
+                               ('tournament_scores', 'No players are registered for this tournament.'),
+                               ('tournament_game_results', 'No players are registered for this tournament.')]:
+            with self.subTest(url_name=url_name):
+                response = self.client.get(reverse(url_name, args=(t.pk,)),
+                                           secure=True)
+                self.assertContains(response, text)
+                self.assertNotContains(response, '<table')
+        t.delete()
+
     def test_best_countries_scores_hidden_no_finished_round(self):
         # Games exist, but no Round has finished, so no results can be shown
         self.assertIs(True, self.t4.show_current_scores)
@@ -2898,6 +2923,7 @@ class TournamentViewTests(TestCase):
             self.t4.show_current_scores = True
             self.t4.save()
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No results yet')
 
     def test_enter_awards_post_not_logged_in(self):
         response = self.client.get(reverse('enter_awards',

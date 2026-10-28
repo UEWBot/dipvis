@@ -6,11 +6,15 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Awards" %}</h1>
 {% if numbered_list %}
-  <ol>
-    {% for a in tournament.non_power_awards %}
-      <li>{{ a }}</li>
-    {% endfor %}
-  </ol>
+  {% if tournament.non_power_awards %}
+    <ol>
+      {% for a in tournament.non_power_awards %}
+        <li>{{ a }}</li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p>{% trans "No awards" %}</p>
+  {% endif %}
 {% elif tournament.is_finished %}
   {% with winners=tournament.award_winners %}
     {% if winners %}
@@ -26,12 +30,14 @@
       <p>{% trans "No awards were given" %}</p>
     {% endif %}
   {% endwith %}
-{% else %}
+{% elif tournament.tournamentaward_set.exists %}
   <dl>
     {% for tournament_award in tournament.tournamentaward_set.all %}
       <dt>{{ tournament_award.award }}</dt>
       <dd>{{ tournament_award.award.description }}</dd>
     {% endfor %}
   </dl>
+{% else %}
+  <p>{% trans "No awards" %}</p>
 {% endif %}
 {% endblock content %}

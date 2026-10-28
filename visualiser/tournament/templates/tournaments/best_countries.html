@@ -5,6 +5,7 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Best Countries" %}</h1>
+{% if rows %}
 <table class="form">
   <thead><tr>
     {% for sp in powers %}
@@ -43,4 +44,7 @@
   </tbody>
 </table>
 <p>* - {% trans "unranked" %}</p>
+{% else %}
+<p>{% trans "No results yet" %}</p>
+{% endif %}
 {% endblock content %}
