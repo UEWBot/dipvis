@@ -15,8 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime as dt
+import smtplib
 
 from django.core import mail
+from django.core.mail.backends import locmem
 from django.test import TestCase, override_settings
 
 from tournament.diplomacy import GameSet, GreatPower
@@ -31,6 +33,15 @@ from tournament.players import Player
 
 
 TD_EMAIL = 'td@example.com'
+FAIL_FIRST_BACKEND = 'tournament.test_email.FailFirstEmailBackend'
+
+
+class FailFirstEmailBackend(locmem.EmailBackend):
+    """Fails to send the first message of each batch, as the SMTP backend does with fail_silently"""
+    def send_messages(self, email_messages):
+        if not self.fail_silently:
+            raise smtplib.SMTPException('Simulated failure')
+        return super().send_messages(email_messages[1:])
 
 
 @override_settings(HOSTNAME='example.com')
@@ -398,6 +409,18 @@ class EmailTests(TestCase):
         t.no_email = False
         t.save(update_fields=['no_email'])
 
+    @override_settings(EMAIL_HOST_USER=TD_EMAIL)
+    def test_send_board_call_email_result(self):
+        r = Round.objects.first()
+        self.assertEqual(send_board_call_email(r), (0, 2))
+
+    @override_settings(EMAIL_HOST_USER=TD_EMAIL, EMAIL_BACKEND=FAIL_FIRST_BACKEND)
+    def test_send_board_call_email_fails(self):
+        r = Round.objects.first()
+        with self.assertLogs('tournament.email', level='WARNING'):
+            self.assertEqual(send_board_call_email(r), (1, 2))
+        self.assertEqual(len(mail.outbox), 1)
+
     # TournamentPlayer.save() calls send_prefs_email()
     def test_send_prefs_email_no_prefs_new(self):
         """Save a TournamentPlayer with email in a tournament without prefs"""
@@ -421,6 +444,17 @@ class EmailTests(TestCase):
                                              tournament=self.t2)
         tp.save()
         self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(tp.prefs_email_result, (0, 1))
+        tp.delete()
+
+    @override_settings(EMAIL_BACKEND=FAIL_FIRST_BACKEND)
+    def test_send_prefs_email_prefs_new_fails(self):
+        """Create a TournamentPlayer in a Tournament with prefs, where the email fails"""
+        with self.assertLogs('tournament.email', level='WARNING'):
+            tp = TournamentPlayer.objects.create(player=self.p24,
+                                                 tournament=self.t2)
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(tp.prefs_email_result, (1, 1))
         tp.delete()
 
     # send_prefs_email()
@@ -429,6 +463,21 @@ class EmailTests(TestCase):
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
         self.assertIsNotNone(tp)
         send_prefs_email(tp)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_send_prefs_email_not_attempted_result(self):
+        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
+        self.assertEqual(send_prefs_email(tp, force=True), (0, 0))
+
+    def test_send_prefs_email_force_result(self):
+        tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
+        self.assertEqual(send_prefs_email(tp, force=True), (0, 1))
+
+    @override_settings(EMAIL_BACKEND=FAIL_FIRST_BACKEND)
+    def test_send_prefs_email_force_fails(self):
+        tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
+        with self.assertLogs('tournament.email', level='WARNING'):
+            self.assertEqual(send_prefs_email(tp, force=True), (1, 1))
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_no_address(self):
@@ -492,8 +541,18 @@ class EmailTests(TestCase):
     def test_send_roll_call_emails_no_address(self):
         tp = self.t1.tournamentplayer_set.filter(player__email='').first()
         self.assertIsNotNone(tp)
-        send_roll_call_emails(1, [tp])
+        self.assertEqual(send_roll_call_emails(1, [tp]), (0, 0))
         self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(EMAIL_BACKEND=FAIL_FIRST_BACKEND)
+    def test_send_roll_call_emails_fails(self):
+        self.t1.power_assignment = PowerAssignMethods.PREFERENCES
+        self.t1.save(update_fields=['power_assignment'])
+        tps = list(self.t1.tournamentplayer_set.exclude(player__email='')[:3])
+        self.assertEqual(len(tps), 3)
+        with self.assertLogs('tournament.email', level='WARNING'):
+            self.assertEqual(send_roll_call_emails(1, tps), (1, 3))
+        self.assertEqual(len(mail.outbox), 2)
 
     def test_send_roll_call_emails(self):
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()

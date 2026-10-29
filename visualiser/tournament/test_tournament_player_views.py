@@ -17,8 +17,10 @@
 import uuid
 import datetime as dt
 from urllib.parse import urlencode
+from unittest.mock import patch
 
 from django.contrib.auth.models import Permission, User
+from django.contrib.messages import get_messages
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -650,6 +652,42 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.url, url)
         # ... and the email should be sent
         self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(list(get_messages(response.wsgi_request)), [])
+
+    @patch('tournament.tournament_player_views.send_prefs_email', return_value=(1, 1))
+    def test_index_resend_prefs_email_fails(self, mock_send):
+        tp = self.t2.tournamentplayer_set.get(player=self.p1)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({f'prefs_{tp.pk}': 'Send prefs email',
+                          'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0})
+        response = self.client.post(url,
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        mock_send.assert_called_once_with(tp, force=True)
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)],
+                         ['The preferences email failed to send.'])
+
+    @patch('tournament.models.send_prefs_email', return_value=(1, 1))
+    def test_index_register_player_prefs_email_fails(self, mock_send):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0,
+                          'form-1-player': str(self.p2.pk)})
+        response = self.client.post(url,
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        mock_send.assert_called_once()
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)],
+                         ['1 of 1 preferences email failed to send.'])
 
     def test_index_flag_as_unranked(self):
         """Adding a manager as a TournamentPlayer should flag them as unranked"""

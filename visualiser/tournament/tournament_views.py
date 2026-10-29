@@ -39,11 +39,11 @@ from django.http import (Http404, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext_lazy
 from django.views.decorators.http import require_http_methods, require_safe
 
 from tournament.diplomacy import GameSet, GreatPower
-from tournament.email import send_roll_call_emails
+from tournament.email import send_roll_call_emails, warn_about_failed_emails
 from tournament.audit import log_form_action, log_formset_actions, log_objects_action, log_objects_change
 from tournament.forms import (AwardRecipientFormSet,
                               BasePlayerRoundScoreFormset,
@@ -554,9 +554,16 @@ def self_check_in_control(request, tournament_id):
             if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
                 if not rd.email_sent:
-                    send_roll_call_emails(i, list(t.tournamentplayer_set.order_by()))
-                    rd.email_sent = True
-                    fields.append('email_sent')
+                    failed, attempted = send_roll_call_emails(i, list(t.tournamentplayer_set.order_by()))
+                    warn_about_failed_emails(request,
+                                             (failed, attempted),
+                                             ngettext_lazy('%(failed)d of %(attempted)d self-check-in email failed to send.',
+                                                           '%(failed)d of %(attempted)d self-check-in emails failed to send.',
+                                                           'attempted'))
+                    # If they all failed, leave email_sent unset so they can be retried
+                    if (attempted == 0) or (failed < attempted):
+                        rd.email_sent = True
+                        fields.append('email_sent')
             rd.enable_check_in = value
             rd.save(update_fields=fields)
             changed_rounds.append((rd, fields))

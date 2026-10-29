@@ -20,6 +20,7 @@ from urllib.parse import urlencode
 from unittest.mock import patch
 
 from django.contrib.auth.models import Permission, User
+from django.contrib.messages import get_messages
 from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
@@ -774,6 +775,51 @@ class RoundViewTests(TestCase):
         self.rp111 = RoundPlayer.objects.create(player=self.p11, the_round=self.r11)
         self.rp112 = RoundPlayer.objects.create(player=self.p12, the_round=self.r11, game_count=0)
         self.rp113 = RoundPlayer.objects.create(player=self.p13, the_round=self.r11, game_count=2)
+
+    @patch('tournament.models.send_prefs_email', return_value=(1, 1))
+    def test_roll_call_post_prefs_email_fails(self, mock_send):
+        """roll_call() POST adding a new TournamentPlayer whose preferences email fails"""
+        self.assertFalse(TournamentPlayer.objects.filter(player=self.p14, tournament=self.t1).exists())
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'form-TOTAL_FORMS': '15',
+                          'form-INITIAL_FORMS': '13',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p1.pk),
+                          'form-0-present': 'ok',
+                          'form-1-player': str(self.p2.pk),
+                          'form-2-player': str(self.p3.pk),
+                          'form-3-player': str(self.p4.pk),
+                          'form-3-present': 'ok',
+                          'form-4-player': str(self.p5.pk),
+                          'form-4-present': 'ok',
+                          'form-5-player': str(self.p6.pk),
+                          'form-5-present': 'ok',
+                          'form-6-player': str(self.p7.pk),
+                          'form-6-present': 'ok',
+                          'form-7-player': str(self.p8.pk),
+                          'form-7-present': 'ok',
+                          'form-8-player': str(self.p9.pk),
+                          'form-8-present': 'ok',
+                          'form-9-player': str(self.p10.pk),
+                          'form-9-present': 'ok',
+                          'form-10-player': str(self.p11.pk),
+                          'form-10-present': 'ok',
+                          'form-11-player': str(self.p12.pk),
+                          'form-11-present': 'ok',
+                          'form-12-player': str(self.p13.pk),
+                          'form-12-present': 'ok',
+                          'form-13-player': str(self.p14.pk),
+                          'form-13-present': 'ok',
+                          'form-14-player': ''})
+        response = self.client.post(reverse('round_roll_call', args=(self.t1.pk, 1)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        mock_send.assert_called_once()
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)],
+                         ['1 of 1 preferences email failed to send.'])
 
     def test_roll_call_post_current_round_with_seeding(self):
         """roll_call POST for current round of a tournament with seeding"""
@@ -2084,6 +2130,37 @@ class RoundViewTests(TestCase):
         g.delete()
         self.t3.discord_url = ''
         self.t3.save(update_fields=['discord_url'])
+
+    @patch('tournament.round_views.send_board_call_email', return_value=(2, 3))
+    def test_seed_games_post_email_fails(self, mock_send):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        for p, power in [(self.p1, self.turkey), (self.p3, self.russia),
+                         (self.p4, self.italy), (self.p5, self.germany),
+                         (self.p6, self.france), (self.p7, self.england),
+                         (self.p9, self.austria)]:
+            GamePlayer.objects.create(player=p, game=g, power=power)
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': g.name,
+                'form-0-the_set': str(g.the_set.pk)}
+        for gp in g.gameplayer_set.all():
+            data[f'form-0-{gp.pk}'] = str(gp.power.pk)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded',
+                                    follow=True)
+        mock_send.assert_called_once()
+        self.assertTemplateUsed(response, 'rounds/board_call.html')
+        self.assertContains(response, '2 of 3 board call emails failed to send.')
+        # Clean up
+        g.delete()
 
     def test_seed_games_post_change_players(self):
         """Change the power assignment"""

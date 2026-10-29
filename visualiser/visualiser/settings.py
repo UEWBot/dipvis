@@ -156,6 +156,9 @@ LOCALE_PATHS = [
 
 STATIC_URL = '/static/'
 
+# Seconds to wait for the email server before giving up
+EMAIL_TIMEOUT = 10
+
 # Most players (counting those playing two games twice) that EXHAUSTIVE game
 # seeding will accept. Memory use grows combinatorially; 21 can exhaust RAM.
 GAME_SEEDER_MAX_EXHAUSTIVE_PLAYERS = 14

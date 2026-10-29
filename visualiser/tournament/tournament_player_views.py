@@ -25,12 +25,12 @@ from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext_lazy
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_http_methods
 
 from tournament.audit import log_formset_actions, log_objects_action
-from tournament.email import send_prefs_email
+from tournament.email import send_prefs_email, warn_about_failed_emails
 from tournament.forms import PaidForm, PlayerForm, PrefsForm
 from tournament.models import Tournament, TournamentPlayer
 from tournament.tournament_views import (get_modifiable_tournament_or_404,
@@ -63,7 +63,9 @@ def index(request, tournament_id):
                 # Extract the TournamentPlayer pk from the button name
                 pk = int(k[6:])
                 tp = TournamentPlayer.objects.get(pk=pk)
-                send_prefs_email(tp, force=True)
+                warn_about_failed_emails(request,
+                                         send_prefs_email(tp, force=True),
+                                         _('The preferences email failed to send.'))
                 redirect = True
                 break
             # Delete the specified TournamentPlayer
@@ -84,6 +86,7 @@ def index(request, tournament_id):
                 break
         # Create a TournamentPlayer for each player to register
         if formset.is_valid():
+            prefs_failed = prefs_attempted = 0
             for form in formset:
                 if form.has_changed():
                     player = form.cleaned_data['player']
@@ -91,12 +94,19 @@ def index(request, tournament_id):
                                                                          tournament=t)
                     if created:
                         log_objects_action(request.user, [tp], ADDITION, [{'added': {}}])
+                        prefs_failed += tp.prefs_email_result[0]
+                        prefs_attempted += tp.prefs_email_result[1]
                     else:
                         # TODO Because we don't pass the modified formset to render(),
                         # this error is never seen.
                         # In practice, though, the player *is* (already) registered...
                         form.add_error('player',
                                        _("Player already registered"))
+            warn_about_failed_emails(request,
+                                     (prefs_failed, prefs_attempted),
+                                     ngettext_lazy('%(failed)d of %(attempted)d preferences email failed to send.',
+                                                   '%(failed)d of %(attempted)d preferences emails failed to send.',
+                                                   'attempted'))
             redirect = True
         if redirect:
             # Redirect back here to flush the POST data

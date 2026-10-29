@@ -35,11 +35,11 @@ from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, ngettext_lazy
 from django.views.decorators.http import require_http_methods, require_safe
 
 from tournament.diplomacy import GameSet, GreatPower
-from tournament.email import send_board_call_email
+from tournament.email import send_board_call_email, warn_about_failed_emails
 from tournament.audit import log_objects_action, log_objects_change
 from tournament.forms import (BaseGamePlayersFormset, BasePlayerRoundFormset,
                               BasePowerAssignFormset, GamePlayersForm,
@@ -161,6 +161,7 @@ def roll_call(request, tournament_id, round_num):
                                  initial=player_data)
     if formset.is_valid():
         errors_added = False
+        prefs_failed = prefs_attempted = 0
         for form in formset:
             if form.has_changed():
                 p = form.cleaned_data['player']
@@ -170,6 +171,8 @@ def roll_call(request, tournament_id, round_num):
                 if tp_created:
                     log_objects_action(request.user, [tp], ADDITION, [{'added': {}}],
                                        form_name='PlayerRoundForm')
+                    prefs_failed += tp.prefs_email_result[0]
+                    prefs_attempted += tp.prefs_email_result[1]
                 if form.cleaned_data['present'] is True:
                     # Ensure that we have a corresponding RoundPlayer
                     is_standby = form.cleaned_data['standby']
@@ -201,6 +204,11 @@ def roll_call(request, tournament_id, round_num):
                         rp.delete()
                     except RoundPlayer.DoesNotExist:
                         pass
+        warn_about_failed_emails(request,
+                                 (prefs_failed, prefs_attempted),
+                                 ngettext_lazy('%(failed)d of %(attempted)d preferences email failed to send.',
+                                               '%(failed)d of %(attempted)d preferences emails failed to send.',
+                                               'attempted'))
         if not errors_added:
             if r.pool_set.exists():
                 # Split players between pools
@@ -540,8 +548,12 @@ def _send_board_call_to_discord(the_round):
 
 
 def _send_board_call(request, the_round):
-    """Email the board call and post it to Discord, warning the user if Discord fails"""
-    send_board_call_email(the_round)
+    """Email the board call and post it to Discord, warning the user of any failures"""
+    warn_about_failed_emails(request,
+                             send_board_call_email(the_round),
+                             ngettext_lazy('%(failed)d of %(attempted)d board call email failed to send.',
+                                           '%(failed)d of %(attempted)d board call emails failed to send.',
+                                           'attempted'))
     if not _send_board_call_to_discord(the_round):
         messages.warning(request, _('The board call could not be posted to Discord.'))
 

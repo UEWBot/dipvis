@@ -23,6 +23,7 @@ from urllib.parse import urlencode
 
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import Permission, User
+from django.contrib.messages import get_messages
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -2502,6 +2503,36 @@ class TournamentViewTests(TestCase):
                 for message in json.loads(entry.change_message))
             and {'form': {'name': 'EnableCheckInForm'}} in json.loads(entry.change_message)
             for entry in LogEntry.objects.filter(user=self.u3)))
+
+    @patch('tournament.tournament_views.send_roll_call_emails', return_value=(1, 3))
+    def test_self_check_in_control_some_emails_fail(self, mock_send):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        r = self.t2.round_numbered(1)
+        self.assertFalse(r.email_sent)
+        response = self.client.post(reverse('self_check_in_control', args=(self.t2.pk,)),
+                                    {'round_1': 'on'},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)],
+                         ['1 of 3 self-check-in emails failed to send.'])
+        r.refresh_from_db()
+        self.assertTrue(r.email_sent)
+
+    @patch('tournament.tournament_views.send_roll_call_emails', return_value=(3, 3))
+    def test_self_check_in_control_all_emails_fail(self, mock_send):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        r = self.t2.round_numbered(1)
+        self.assertFalse(r.email_sent)
+        response = self.client.post(reverse('self_check_in_control', args=(self.t2.pk,)),
+                                    {'round_1': 'on'},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)],
+                         ['3 of 3 self-check-in emails failed to send.'])
+        r.refresh_from_db()
+        self.assertTrue(r.enable_check_in)
+        # Left unset so they're retried
+        self.assertFalse(r.email_sent)
 
     def test_prefs_csv(self):
         response = self.client.get(reverse('prefs_csv',

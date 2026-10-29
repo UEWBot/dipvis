@@ -18,9 +18,41 @@
 Email-related functions for the Diplomacy Tournament Visualiser.
 """
 
+import logging
+
 from django.conf import settings
+from django.contrib import messages
 from django.core import mail
 from django.core.mail import EmailMessage, send_mail
+
+logger = logging.getLogger(__name__)
+
+
+def _send_messages(email_messages, description):
+    """
+    Send a list of EmailMessages, without raising exceptions on failure.
+
+    Returns a 2-tuple of (number that failed, number attempted).
+    """
+    if not email_messages:
+        return 0, 0
+    sent = mail.get_connection(fail_silently=True).send_messages(email_messages) or 0
+    failed = len(email_messages) - sent
+    if failed:
+        logger.warning('%d of %d %s emails failed to send', failed, len(email_messages), description)
+    return failed, len(email_messages)
+
+
+def warn_about_failed_emails(request, result, msg):
+    """
+    Tell the user if any emails failed to send.
+
+    result is a (number failed, number attempted) 2-tuple.
+    msg may use %(failed)d and %(attempted)d, and may be from ngettext_lazy(..., 'attempted').
+    """
+    failed, attempted = result
+    if failed:
+        messages.warning(request, msg % {'failed': failed, 'attempted': attempted})
 
 
 def _filtered_recipients(recipients, tournament):
@@ -46,7 +78,11 @@ def _add_game_to_email(game, tournament, the_list):
 
 
 def send_board_call_email(the_round):
-    """Send an email to all players in the round with the board calls"""
+    """
+    Send an email to all players in the round with the board calls
+
+    Returns a (number failed, number attempted) 2-tuple.
+    """
     # TODO Translation is complex, because we don't want to use the language of the
     # person who triggered sending the email but of the person it's going to
     # and right now we send one email to all the players
@@ -68,7 +104,7 @@ def send_board_call_email(the_round):
     # Put together the common body of the message
     all_games = 'The full round:\n' + '\n'.join([g[0] for g in games])
     # Create one message per game
-    messages = []
+    emails = []
     for game_text, recipients in games:
         if recipients:
             # If there's only one game, keep it simple
@@ -81,9 +117,8 @@ def send_board_call_email(the_round):
                                  from_email=email_from,
                                  to=[email_from],
                                  bcc=recipients)
-            messages.append(email)
-    if messages:
-        mail.get_connection().send_messages(messages)
+            emails.append(email)
+    return _send_messages(emails, 'board call')
 
 
 PREFS_EMAIL = """
@@ -112,35 +147,40 @@ def send_prefs_email(tournamentplayer, force=False):
     Won't send an email unless the Tournament.power_assignment is PREFERENCES.
     Unless force is True, will only send the email if one hasn't already been sent.
     Note that if force is True, any previous URL will no longer be valid.
+    Returns a (number failed, number attempted) 2-tuple.
     """
 
     t = tournamentplayer.tournament
     # Bail if preferences aren't needed for the Tournament
     if not t.powers_assigned_from_prefs():
-        return
+        return 0, 0
 
     body = PREFS_EMAIL
     subject = PREFS_SUBJECT
     addr = tournamentplayer.player.email
     # Can't do anything unless we have an email address for the player
     if not addr:
-        return
+        return 0, 0
     addr_list = [addr]
     # Check whether the tournament should send email at all
     # Still send if the recipient is a manager
     addr_list = _filtered_recipients(addr_list, t)
     if not (addr_list):
-        return
+        return 0, 0
     # Don't send again, unless told to
     if tournamentplayer.uuid_str and not force:
-        return
+        return 0, 0
     # Create the email and send it
     msg_body = body % {'tourney': t,
                        'url': tournamentplayer.get_prefs_url()}
-    send_mail(subject % t,
-              msg_body,
-              settings.EMAIL_HOST_USER,
-              addr_list)
+    if send_mail(subject % t,
+                 msg_body,
+                 settings.EMAIL_HOST_USER,
+                 addr_list,
+                 fail_silently=True):
+        return 0, 1
+    logger.warning('Preferences email to %s failed to send', tournamentplayer)
+    return 1, 1
 
 
 ROLL_CALL_EMAIL = """
@@ -156,8 +196,10 @@ Note: this address is unique to you - don't share it with anyone!
 def send_roll_call_emails(round_num, tournamentplayer_list):
     """
     Email the URL to self-check-in to the list of TournamentPlayers.
+
+    Returns a (number failed, number attempted) 2-tuple.
     """
-    messages = []
+    emails = []
     for tp in tournamentplayer_list:
         # TODO we could hoist some of this outside the loop if
         #      we assume that the list of TPs are all for the same Tournament
@@ -179,7 +221,6 @@ def send_roll_call_emails(round_num, tournamentplayer_list):
                              body=msg_body,
                              from_email=settings.EMAIL_HOST_USER,
                              to=addr_list)
-        messages.append(email)
+        emails.append(email)
     # Send them all
-    if messages:
-        mail.get_connection().send_messages(messages)
+    return _send_messages(emails, 'self-check-in')
