@@ -2370,6 +2370,7 @@ class RoundViewTests(TestCase):
                 self.t3.power_assignment = method
                 self.t3.save(update_fields=['power_assignment'])
                 response = self.client.get(url, secure=True)
+                self.assertContains(response, f'Assign Powers for Round 2 of {self.t3} - DipTV')
                 if expected:
                     self.assertContains(response, 'Powers are being assigned at the board.')
                     self.assertContains(response, f'<a href="{self.r32.get_absolute_url()}">round page</a>')

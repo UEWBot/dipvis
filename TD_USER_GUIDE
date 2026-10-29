@@ -219,7 +219,8 @@ This will take you to the "get seven" page. If you have an exact multiple of sev
 players (possibly including standby players), you can just seed the games from here.
 Otherwise, the system will prompt you to either have players sit out the round or to
 have players play multiple games. Just select them from the dropdown lists and hit "Seed Games".
-The system will go ahead and seed the boards. This page annotates players willing to
+The system will go ahead and seed the boards, and show them on the "Assign Powers" page.
+This page annotates players willing to
 record their game with an asterisk so that you can ensure that every board has somebody
 recording it if needed. If you want a different seeding, use the "Reseed Games" button
 to replace the games with a new seeding.

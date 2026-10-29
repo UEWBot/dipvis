@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament round=round.number %}Round {{ round }} of {{ tournament }} Games - DipTV{% endblocktrans %}{% endblock title %}
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}Assign Powers for Round {{ round }} of {{ tournament }} - DipTV{% endblocktrans %}{% endblock title %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Games" %}</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Assign Powers" %}</h1>
 
 <p>{% trans "Game Names cannot contain spaces and must be unique within the tournament." %}</p>
 {% if powers_at_board %}
