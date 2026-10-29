@@ -34,6 +34,9 @@ WDD_BASE_RANKING_PATH = 'php/ranking/'
 WDD_BASE_RESULTS_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RESULTS_PATH
 WDD_BASE_RANKING_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RANKING_PATH
 
+# Timeout in seconds for requests to the WDD
+WDD_TIMEOUT = 1.0
+
 WDD_MAX_ROUNDS = 8
 WDD_MAX_AWARDS = 12
 WDD_MAX_YEAR = 20
@@ -169,7 +172,7 @@ def _validate_wdd_id(url, param, value):
                           params={param: value},
                           headers={'User-Agent': settings.USER_AGENT},
                           allow_redirects=False,
-                          timeout=1.0)
+                          timeout=WDD_TIMEOUT)
     except requests.exceptions.RequestException:
         # Assume the id is ok
         return

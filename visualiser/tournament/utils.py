@@ -46,7 +46,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, Award, AwardRecipient,
 from tournament.players import (InvalidWDRId, Player, PlayerEventRanking,
                                 WDDPlayer, WDRBackground, WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
-from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
+from tournament.wdd import (WDD_TIMEOUT, UnrecognisedCountry, wdd_nation_to_country,
                             wdd_url_to_tournament_id)
 from tournament.wdr import wdr_tournament_as_json
 
@@ -194,7 +194,7 @@ def add_missing_player_wdd_ids(dry_run=False):
                 page = requests.get(url,
                                     headers={'User-Agent': settings.USER_AGENT,
                                              'Accept-Encoding': 'gzip'},
-                                    timeout=1.0)
+                                    timeout=WDD_TIMEOUT)
             except requests.exceptions.RequestException as e:
                 print(f'Failed to read {tp.tournament} from the WDD: {e}')
                 continue
