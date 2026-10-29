@@ -565,17 +565,17 @@ def self_check_in_control(request, tournament_id):
             fields = ['enable_check_in']
             if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
-                if not rd.email_sent:
+                if not rd.check_in_email_sent:
                     failed, attempted = send_roll_call_emails(i, list(t.tournamentplayer_set.order_by()))
                     warn_about_failed_emails(request,
                                              (failed, attempted),
                                              ngettext_lazy('%(failed)d of %(attempted)d self-check-in email failed to send.',
                                                            '%(failed)d of %(attempted)d self-check-in emails failed to send.',
                                                            'attempted'))
-                    # If they all failed, leave email_sent unset so they can be retried
+                    # If they all failed, leave check_in_email_sent unset so they can be retried
                     if (attempted == 0) or (failed < attempted):
-                        rd.email_sent = True
-                        fields.append('email_sent')
+                        rd.check_in_email_sent = True
+                        fields.append('check_in_email_sent')
             rd.enable_check_in = value
             rd.save(update_fields=fields)
             changed_rounds.append((rd, fields))

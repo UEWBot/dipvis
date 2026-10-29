@@ -686,7 +686,7 @@ def clone_tournament(t):
                                      earliest_end_time=r.earliest_end_time,
                                      latest_end_time=r.latest_end_time,
                                      enable_check_in=r.enable_check_in,
-                                     email_sent=r.email_sent,
+                                     check_in_email_sent=r.check_in_email_sent,
                                      is_finished=r.is_finished,
                                      is_team_round=r.is_team_round)
         for p in r.pool_set.order_by():

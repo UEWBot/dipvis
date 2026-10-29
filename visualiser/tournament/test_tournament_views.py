@@ -2500,7 +2500,7 @@ class TournamentViewTests(TestCase):
                                     secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(any(
-            any(message.get('changed', {}).get('fields') == ['Enable Check In', 'Email Sent']
+            any(message.get('changed', {}).get('fields') == ['Enable Check In', 'Check In Email Sent']
                 for message in json.loads(entry.change_message))
             and {'form': {'name': 'EnableCheckInForm'}} in json.loads(entry.change_message)
             for entry in LogEntry.objects.filter(user=self.u3)))
@@ -2509,7 +2509,7 @@ class TournamentViewTests(TestCase):
     def test_self_check_in_control_some_emails_fail(self, mock_send):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         r = self.t2.round_numbered(1)
-        self.assertFalse(r.email_sent)
+        self.assertFalse(r.check_in_email_sent)
         response = self.client.post(reverse('self_check_in_control', args=(self.t2.pk,)),
                                     {'round_1': 'on'},
                                     secure=True)
@@ -2517,13 +2517,13 @@ class TournamentViewTests(TestCase):
         self.assertEqual([str(m) for m in get_messages(response.wsgi_request)],
                          ['1 of 3 self-check-in emails failed to send.'])
         r.refresh_from_db()
-        self.assertTrue(r.email_sent)
+        self.assertTrue(r.check_in_email_sent)
 
     @patch('tournament.tournament_views.send_roll_call_emails', return_value=(3, 3))
     def test_self_check_in_control_all_emails_fail(self, mock_send):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         r = self.t2.round_numbered(1)
-        self.assertFalse(r.email_sent)
+        self.assertFalse(r.check_in_email_sent)
         response = self.client.post(reverse('self_check_in_control', args=(self.t2.pk,)),
                                     {'round_1': 'on'},
                                     secure=True)
@@ -2533,7 +2533,7 @@ class TournamentViewTests(TestCase):
         r.refresh_from_db()
         self.assertTrue(r.enable_check_in)
         # Left unset so they're retried
-        self.assertFalse(r.email_sent)
+        self.assertFalse(r.check_in_email_sent)
 
     def test_prefs_csv(self):
         response = self.client.get(reverse('prefs_csv',
