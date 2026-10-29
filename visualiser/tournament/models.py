@@ -111,8 +111,9 @@ class Formats(models.TextChoices):
 class PowerAssignMethods(models.TextChoices):
     """How powers are assigned to players"""
     AUTO = 'A', gettext_lazy('Minimising playing the same power')
-    MANUAL = 'M', gettext_lazy('Manually by TD or at the board')
+    MANUAL = 'M', gettext_lazy('Manually by the TD')
     PREFERENCES = 'P', gettext_lazy('Using player preferences and ranking')
+    AT_BOARD = 'B', gettext_lazy('At the board')
 
 
 class InvalidScoringSystem(Exception):
@@ -1241,7 +1242,14 @@ class Tournament(models.Model):
         Validate the object.
 
         round_scoring_system and tournament_scoring_system are compatible.
+        Powers can only be assigned at the board if the software seeds the games.
         """
+        if not self.seed_games:
+            if self.power_assignment == PowerAssignMethods.AT_BOARD:
+                raise ValidationError({'power_assignment': _('Assigning powers at the board is not supported unless games are seeded')})
+            if self.pk and Pool.objects.filter(the_round__tournament=self,
+                                               power_assignment=PowerAssignMethods.AT_BOARD).exists():
+                raise ValidationError({'seed_games': _('One or more pools assign powers at the board, which is not supported unless games are seeded')})
         if (not self.round_scoring_system) or (not self.tournament_scoring_system):
             # Required-field/blank handling is done by field validation.
             return
@@ -2835,7 +2843,10 @@ class Pool(models.Model):
         At most one Pool per Round with no board_count
         determines_top_rankings can only be set in a single Pool in the final Round,
         with board_count set, and cannot be higher than the number of players in the Pool
+        Powers can only be assigned at the board if the software seeds the games.
         """
+        if (self.power_assignment == PowerAssignMethods.AT_BOARD) and not self.the_round.tournament.seed_games:
+            raise ValidationError({'power_assignment': _('Assigning powers at the board is not supported unless games are seeded')})
         if self.board_count is None:
             if self.the_round.pool_set.filter(board_count__isnull=True).exclude(pk=self.pk).exists():
                 raise ValidationError({'board_count': _('A round may not have more than one pool without board_count set')})

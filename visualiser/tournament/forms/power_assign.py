@@ -23,7 +23,7 @@ from django.forms.formsets import BaseFormSet
 from django.utils.translation import gettext_lazy as _
 
 from tournament.diplomacy import GameSet, GreatPower
-from tournament.models import Game, validate_game_name
+from tournament.models import Game, PowerAssignMethods, validate_game_name
 
 
 class PowerAssignForm(forms.Form):
@@ -54,6 +54,7 @@ class PowerAssignForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         queryset = GreatPower.objects.all()
+        at_board = self.game.effective_power_assignment() == PowerAssignMethods.AT_BOARD
 
         field_order = ['name', 'the_set', 'top_board', 'external_url']
 
@@ -66,7 +67,9 @@ class PowerAssignForm(forms.Form):
                 suffix = '*'
             label = str(gp.player) + suffix
             self.fields[c] = forms.ModelChoiceField(label=label,
-                                                    queryset=queryset)
+                                                    queryset=queryset,
+                                                    required=not at_board,
+                                                    help_text=_('Assigned at the board') if at_board else '')
             field_order.append(c)
 
         # Put notes and issues at the end
@@ -79,10 +82,13 @@ class PowerAssignForm(forms.Form):
         powers = []
         for player in self.game.gameplayer_set.order_by():
             c = str(player.id)
-            power = cleaned_data.get(c)
             # If the field itself didn't validate, drop out
-            if power is None:
+            if c not in cleaned_data:
                 return cleaned_data
+            power = cleaned_data[c]
+            # Powers may be left blank when they're assigned at the board
+            if power is None:
+                continue
             if power in powers:
                 raise forms.ValidationError(_('Power %(power)s appears more than once'),
                                             code='duplicate_power_assignment',

@@ -633,6 +633,12 @@ def _seed_issues_key(the_round):
     return f'seed_issues_{the_round.pk}'
 
 
+def _any_powers_at_board(the_round):
+    """Are powers assigned at the board for any Game in the_round?"""
+    return any(g.effective_power_assignment() == PowerAssignMethods.AT_BOARD
+               for g in the_round.game_set.select_related('pool'))
+
+
 def _seed_round(request, tournament, the_round, round_num, generation):
     """Seed the_round, then redirect to the page to review the resulting Games"""
     with transaction.atomic():
@@ -743,7 +749,8 @@ def seed_games(request, tournament_id, round_num):
                                               'rounds/seeded_games.html',
                                               {'tournament': t,
                                                'round': r,
-                                               'formset': formset})
+                                               'formset': formset,
+                                               'powers_at_board': _any_powers_at_board(r)})
                             g.save()
                             changed_games.append(g)
                             changed_game_fields.update(set(f.changed_data) & non_player_fields)
@@ -780,7 +787,10 @@ def seed_games(request, tournament_id, round_num):
     else:
         formset = PowerAssignFormset(the_round=r, initial=data)
 
-    context = {'tournament': t, 'round': r, 'formset': formset}
+    context = {'tournament': t,
+               'round': r,
+               'formset': formset,
+               'powers_at_board': _any_powers_at_board(r)}
     return render(request, 'rounds/seeded_games.html', context)
 
 

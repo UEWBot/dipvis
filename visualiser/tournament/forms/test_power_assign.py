@@ -25,7 +25,8 @@ from django.test import TestCase
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
-                               DrawSecrecy, Game, GamePlayer, Round,
+                               DrawSecrecy, Game, GamePlayer, Pool,
+                               PowerAssignMethods, Round,
                                RoundPlayer, Tournament, TournamentPlayer)
 from tournament.players import Player
 
@@ -283,6 +284,57 @@ class PowerAssignFormTest(TestCase):
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, None, 'Power France appears more than once')
+
+    def _set_power_assignment(self, method):
+        t = self.g.the_round.tournament
+        t.power_assignment = method
+        t.save(update_fields=['power_assignment'])
+
+    def test_blank_powers_manual(self):
+        """Powers are required unless they're assigned at the board"""
+        self._set_power_assignment(PowerAssignMethods.MANUAL)
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'issues': ''}
+        form = PowerAssignForm(data, game=self.g)
+        self.assertIs(False, form.is_valid())
+        self.assertEqual(len(form.errors), 7)
+
+    def test_blank_powers_at_board(self):
+        self._set_power_assignment(PowerAssignMethods.AT_BOARD)
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                str(self.gp1.pk): str(self.turkey.pk),
+                'issues': ''}
+        form = PowerAssignForm(data, game=self.g)
+        for gp in self.g.gameplayer_set.all():
+            with self.subTest(gp=str(gp)):
+                self.assertIs(False, form.fields[str(gp.pk)].required)
+        self.assertIs(True, form.is_valid())
+        self.assertIsNone(form.cleaned_data[str(self.gp2.pk)])
+
+    def test_reject_duplicate_powers_at_board(self):
+        """Blank powers are fine, but any that are entered must still be different"""
+        self._set_power_assignment(PowerAssignMethods.AT_BOARD)
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                str(self.gp1.pk): str(self.france.pk),
+                str(self.gp4.pk): str(self.france.pk),
+                'issues': ''}
+        form = PowerAssignForm(data, game=self.g)
+        self.assertIs(False, form.is_valid())
+        self.assertFormError(form, None, 'Power France appears more than once')
+
+    def test_blank_powers_at_board_pool(self):
+        """A Pool's power assignment overrides the Tournament's"""
+        self._set_power_assignment(PowerAssignMethods.MANUAL)
+        pool = Pool.objects.create(the_round=self.g.the_round,
+                                   name='Top',
+                                   power_assignment=PowerAssignMethods.AT_BOARD)
+        self.g.pool = pool
+        self.g.save(update_fields=['pool'])
+        form = PowerAssignForm(game=self.g)
+        self.assertIs(False, form.fields[str(self.gp1.pk)].required)
 
 
 class BasePowerAssignFormsetTest(TestCase):

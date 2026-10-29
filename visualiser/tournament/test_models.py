@@ -5833,6 +5833,32 @@ class TournamentTests(TestCase):
                        draw_secrecy=DrawSecrecy.SECRET)
         self.assertRaises(ValidationError, t.clean)
 
+    def test_tournament_clean_at_board_seeded(self):
+        today = dt.date.today()
+        t = Tournament(name='Test tournament',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system="Add all game scores",
+                       tournament_scoring_system="Sum best 2 rounds",
+                       draw_secrecy=DrawSecrecy.SECRET,
+                       seed_games=True,
+                       power_assignment=PowerAssignMethods.AT_BOARD)
+        t.clean()
+
+    def test_tournament_clean_at_board_not_seeded(self):
+        today = dt.date.today()
+        t = Tournament(name='Test tournament',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system="Add all game scores",
+                       tournament_scoring_system="Sum best 2 rounds",
+                       draw_secrecy=DrawSecrecy.SECRET,
+                       seed_games=False,
+                       power_assignment=PowerAssignMethods.AT_BOARD)
+        with self.assertRaises(ValidationError) as cm:
+            t.clean()
+        self.assertIn('power_assignment', cm.exception.message_dict)
+
     # Tournament.save()
     # On save(), all round scores and the tournament score should be recalculated
     def test_tournament_save(self):
@@ -7606,6 +7632,28 @@ class PoolTests(TestCase):
         self.assertEqual(g1.effective_power_assignment(), PowerAssignMethods.MANUAL)
         self.assertEqual(g2.effective_power_assignment(), PowerAssignMethods.AUTO)
         self.assertEqual(g3.effective_power_assignment(), PowerAssignMethods.AUTO)
+
+    def test_pool_clean_at_board_seeded(self):
+        self.assertIs(True, self.t.seed_games)
+        self.pool1.power_assignment = PowerAssignMethods.AT_BOARD
+        self.pool1.clean()
+
+    def test_pool_clean_at_board_not_seeded(self):
+        self.t.seed_games = False
+        self.t.save(update_fields=['seed_games'])
+        self.pool1.power_assignment = PowerAssignMethods.AT_BOARD
+        with self.assertRaises(ValidationError) as cm:
+            self.pool1.clean()
+        self.assertIn('power_assignment', cm.exception.message_dict)
+
+    def test_tournament_clean_not_seeded_with_at_board_pool(self):
+        """Turning off seeding is rejected if a Pool assigns powers at the board"""
+        self.pool1.power_assignment = PowerAssignMethods.AT_BOARD
+        self.pool1.save(update_fields=['power_assignment'])
+        self.t.seed_games = False
+        with self.assertRaises(ValidationError) as cm:
+            self.t.clean()
+        self.assertIn('seed_games', cm.exception.message_dict)
 
     def test_pool_clean_top_board(self):
         self.pool1.determines_top_rankings = 1

@@ -13,7 +13,7 @@
       <table>
         <thead><tr>
           {% for gp in g.gameplayer_set.all %}
-            <th>{{ gp.power }}</th>
+            <th>{% if gp.power %}{{ gp.power }}{% else %}{% trans "Power TBD" %}{% endif %}</th>
           {% endfor %}
         </tr></thead>
         <tbody><tr>

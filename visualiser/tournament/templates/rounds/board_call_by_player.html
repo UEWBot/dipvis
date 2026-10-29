@@ -11,7 +11,7 @@
     {% if rp.gameplayers.exists %}
       <dt>{{ rp.player }}</dt>
       {% for gp in rp.gameplayers.all %}
-        <dd>{% blocktrans with game=gp.game.name power=gp.power %}{{ power }} in game {{ game }}{% endblocktrans %}</dd>
+        <dd>{% if gp.power %}{% blocktrans with game=gp.game.name power=gp.power %}{{ power }} in game {{ game }}{% endblocktrans %}{% else %}{% blocktrans with game=gp.game.name %}Power TBD in game {{ game }}{% endblocktrans %}{% endif %}</dd>
       {% endfor %}
     {% endif %}
   {% endfor %}

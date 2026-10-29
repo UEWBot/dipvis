@@ -83,6 +83,10 @@ or "if all games ended now", so choose which of those you prefer.
 Decide whether you want the system to seed the games or not, how Great Powers
 will be assigned, what you're going to tell players about failed DrawProposals,
 and whether best countries are determined by score or centre count.
+Great Powers can be assigned automatically (minimising players playing the same
+Great Power repeatedly), from player preferences, manually by the TD, or at the
+board by the players themselves. Assigning powers at the board is only supported
+if the system seeds the games.
 
 If there's a Discord channel for the tournament, you can create a webhook to that
 channel on Discord and add it to the tournament. This will allow the system to
@@ -217,12 +221,27 @@ Otherwise, the system will prompt you to either have players sit out the round o
 have players play multiple games. Just select them from the dropdown lists and hit "Seed Games".
 The system will go ahead and seed the boards. This page annotates players willing to
 record their game with an asterisk so that you can ensure that every board has somebody
-recording it if needed. Note that you can refresh this page to re-do the seeding if needed.
+recording it if needed. If you want a different seeding, use the "Reseed Games" button
+to replace the games with a new seeding.
 You can also make changes manually. For a vFTF tournament with games on Backstabbr or a
 tournament with games captured in sandboxes, you can enter links to the games on backstabbr
 on this page to make it easier to import centre-count information. Once you're happy, press
-"Submit" and the Games will be created, including sending out emails to the players (unless
-your Tournament has the "no email" option selected) and posting to the Discord webhook (if any).
+"Submit" and the Games will be created, including sending out the board call by email to the
+players (unless your Tournament has the "no email" option selected) and posting it to the
+Discord webhook (if any).
+
+If Great Powers are being assigned at the board, you don't need to select them on this
+page. Submit the page without them to send out the board call, and the board call will
+list the powers as "Power TBD". Once the players have chosen their powers, return to
+this page using the "Assign Powers" link on the round page, enter the powers, and
+submit again.
+
+The board call is only sent automatically the first time that you submit the Games for
+a Round, so you can return to the "Assign Powers" page to correct mistakes or to enter
+powers chosen at the board without players getting another board call. If you do want
+to send it again (for example after swapping players between boards), use the "Resend
+Board Call" button on the board call page. Reseeding the games means that the next
+submission will send a new board call.
 
 Team Entry
 ----------

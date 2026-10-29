@@ -7,6 +7,10 @@
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Games" %}</h1>
 
 <p>{% trans "Game Names cannot contain spaces and must be unique within the tournament." %}</p>
+{% if powers_at_board %}
+<p>{% trans "Powers are being assigned at the board. You can optionally assign powers here, or send the board call out without them and enter them later." %}
+{% blocktrans with url=round.get_absolute_url %}To enter them later, use the "Assign Powers" link on the <a href="{{ url }}">round page</a>.{% endblocktrans %}</p>
+{% endif %}
 <p>{% trans "Game Set should be chosen to ensure the great power colours are as expected. If the set being used does not appear in the drop-down, you can add it (provided you have a picture of the initial position) at" %} <a href="{% url 'admin:tournament_gameset_add' %}">{% trans "this page" %}</a>.</p>
 
 <form method="post" action="{% url 'seed_games' tournament.id round.number %}">

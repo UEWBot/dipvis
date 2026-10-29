@@ -2308,6 +2308,91 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
+    def test_seed_games_post_at_board(self):
+        """With AT_BOARD, the games can be saved and announced without powers"""
+        self.t3.power_assignment = PowerAssignMethods.AT_BOARD
+        self.t3.save(update_fields=['power_assignment'])
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        for p in [self.p1, self.p3, self.p4, self.p5, self.p6, self.p7, self.p9]:
+            GamePlayer.objects.create(player=p, game=g)
+        self._set_emails_for_roundplayers(self.r32.roundplayer_set.all())
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': g.name,
+                'form-0-the_set': str(g.the_set.pk)}
+        for gp in g.gameplayer_set.all():
+            data[f'form-0-{gp.pk}'] = ''
+        outbox_before = len(mail.outbox)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded',
+                                    follow=True)
+        self.assertTemplateUsed(response, 'rounds/board_call.html')
+        self.assertContains(response, 'Power TBD', count=7)
+        self.assertFalse(g.gameplayer_set.filter(power__isnull=False).exists())
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertEqual(mail.outbox[-1].body.count('Power TBD'), 7)
+        # Clean up
+        g.delete()
+
+    def test_board_call_by_player_powers_tbd(self):
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        GamePlayer.objects.create(player=self.p1, game=g)
+        response = self.client.get(reverse('board_call_by_player', args=(self.t3.pk, 2)),
+                                   secure=True)
+        self.assertContains(response, 'Power TBD in game T3R2G1')
+        self.assertNotContains(response, 'None')
+        # Clean up
+        g.delete()
+
+    def test_seed_games_at_board_instructions(self):
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        for p in [self.p1, self.p3, self.p4, self.p5, self.p6, self.p7, self.p9]:
+            GamePlayer.objects.create(player=p, game=g)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        url = reverse('seed_games', args=(self.t3.pk, 2))
+        for method, expected in [(PowerAssignMethods.MANUAL, False),
+                                 (PowerAssignMethods.AT_BOARD, True)]:
+            with self.subTest(method=method):
+                self.t3.power_assignment = method
+                self.t3.save(update_fields=['power_assignment'])
+                response = self.client.get(url, secure=True)
+                if expected:
+                    self.assertContains(response, 'Powers are being assigned at the board.')
+                    self.assertContains(response, f'<a href="{self.r32.get_absolute_url()}">round page</a>')
+                else:
+                    self.assertNotContains(response, 'Powers are being assigned at the board.')
+        # Clean up
+        g.delete()
+
+    def test_detail_assign_powers_link(self):
+        url = reverse('round_detail', args=(self.t3.pk, 2))
+        assign_url = reverse('seed_games', args=(self.t3.pk, 2))
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(url, secure=True)
+        self.assertNotContains(response, f'href="{assign_url}"')
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        response = self.client.get(url, secure=True)
+        self.assertContains(response, f'href="{assign_url}"')
+        # Clean up
+        g.delete()
+
     def test_seed_games_post_board_call_sent_once(self):
         """Saving the powers again shouldn't resend the board call"""
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
