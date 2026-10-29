@@ -3251,6 +3251,10 @@ class Game(models.Model):
             return self.pool.effective_power_assignment()
         return self.the_round.tournament.power_assignment
 
+    def all_powers_assigned(self):
+        """Returns True if every GamePlayer has been assigned a GreatPower"""
+        return not self.gameplayer_set.filter(power__isnull=True).exists()
+
     def board_call_msg(self):
         """
         The Game name, players, and powers as a message

@@ -2478,6 +2478,45 @@ class GameViewTests(TestCase):
         self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()
 
+    def test_data_entry_needs_powers(self):
+        """Data entry pages redirect to the game page until every player has a power"""
+        g = Game.objects.create(name='NoPowers',
+                                started_at=self.r1.start,
+                                the_round=self.r1,
+                                the_set=GameSet.objects.first())
+        GamePlayer.objects.create(player=Player.objects.create(first_name='Ann', last_name='Assigned'),
+                                  game=g,
+                                  power=self.austria)
+        GamePlayer.objects.create(player=Player.objects.create(first_name='Uma', last_name='Unassigned'),
+                                  game=g)
+        self.assertTrue(self.t1.seed_games)
+        assign_url = reverse('seed_games', args=(self.t1.pk, self.r1.number()))
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        for url_name, method in [('enter_scs', 'get'),
+                                 ('enter_sc_owners', 'get'),
+                                 ('draw_vote', 'get'),
+                                 ('concession', 'get'),
+                                 ('scrape_external_site', 'post')]:
+            with self.subTest(url_name=url_name):
+                response = getattr(self.client, method)(reverse(url_name, args=(self.t1.pk, g.name)),
+                                                        secure=True,
+                                                        follow=True)
+                self.assertEqual(response.redirect_chain[0], (g.get_absolute_url(), 302))
+                self.assertContains(response, 'Powers must be assigned to every player', count=1)
+                self.assertContains(response, f'<a href="{assign_url}">assign them here</a>')
+        # Without seeding, the link is to the page to modify the game
+        self.t1.seed_games = False
+        self.t1.save(update_fields=['seed_games'])
+        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, g.name)),
+                                   secure=True,
+                                   follow=True)
+        self.assertContains(response,
+                            f'<a href="{reverse("change_game", args=(self.t1.pk, g.name))}">assign them here</a>')
+        # Clean up
+        self.t1.seed_games = True
+        self.t1.save(update_fields=['seed_games'])
+        g.delete()
+
     def test_api(self):
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1903).count(), 0)
         self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)

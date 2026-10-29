@@ -22,6 +22,7 @@ import io
 
 import matplotlib.figure as figure
 
+from django.contrib import messages
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
@@ -33,6 +34,7 @@ from django.http import (Http404, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
@@ -302,6 +304,24 @@ def _blank_row_num(queryset, final_year):
     return years_to_go
 
 
+def _powers_needed_redirect(request, tournament, game):
+    """
+    Returns a redirect to the game page, with an error message, if any powers are unassigned.
+
+    Returns None if all powers have been assigned.
+    """
+    if game.all_powers_assigned():
+        return None
+    if tournament.seed_games:
+        url = reverse('seed_games', args=(tournament.id, game.the_round.number()))
+    else:
+        url = reverse('change_game', args=(tournament.id, game.name))
+    messages.error(request,
+                   format_html(_('Powers must be assigned to every player before this information can be entered. You can <a href="{}">assign them here</a>.'),
+                               url))
+    return HttpResponseRedirect(game.get_absolute_url())
+
+
 @permission_required('tournament.change_game')
 @require_http_methods(['GET', 'HEAD', 'POST'])
 def change_game(request, tournament_id, game_name):
@@ -317,6 +337,8 @@ def sc_owners(request, tournament_id, game_name):
     """Provide a form to enter SC ownership for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    if redirect := _powers_needed_redirect(request, t, g):
+        return redirect
     sco_set = g.supplycentreownership_set.order_by()
     final_year = g.the_round.final_year
     SCOwnerFormset = formset_factory(SCOwnerForm,
@@ -397,6 +419,8 @@ def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    if redirect := _powers_needed_redirect(request, t, g):
+        return redirect
     cc_set = g.centrecount_set.order_by()
     final_year = g.the_round.final_year
     SCCountFormset = formset_factory(SCCountForm,
@@ -571,6 +595,8 @@ def draw_vote(request, tournament_id, game_name, concession):
     """Provide a form to enter a draw vote for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    if redirect := _powers_needed_redirect(request, t, g):
+        return redirect
     last_image = g.gameimage_set.order_by('year', '-season', 'phase').last()
     years_played = g.years_played()
     final_year = years_played[-1]
@@ -922,6 +948,8 @@ def scrape_external_site(request, tournament_id, game_name):
     """Import CentreCounts from another site"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    if redirect := _powers_needed_redirect(request, t, g):
+        return redirect
     # Do we have a Backstabbr URL ?
     if backstabbr.is_backstabbr_url(g.external_url):
         try:

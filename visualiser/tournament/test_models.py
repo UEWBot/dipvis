@@ -8813,6 +8813,21 @@ class GameTests(TestCase):
         # As the Game has not yeat reached 1905, we should get the most recent state
         self.assertEqual(len(g.survivors(1905)), len(g.survivors()))
 
+    # Game.all_powers_assigned()
+    def test_game_all_powers_assigned(self):
+        g = Game.objects.create(name='PowersTest',
+                                the_round=self.r32,
+                                the_set=self.set1)
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.austria)
+        self.assertTrue(g.all_powers_assigned())
+        gp2 = GamePlayer.objects.create(player=self.p2, game=g)
+        self.assertFalse(g.all_powers_assigned())
+        gp2.power = self.england
+        gp2.save(update_fields=['power'])
+        self.assertTrue(g.all_powers_assigned())
+        # Clean up
+        g.delete()
+
     # Game.board_call_msg()
     def test_game_board_call_msg(self):
         t = Tournament.objects.get(name='t1')
