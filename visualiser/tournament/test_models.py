@@ -7590,6 +7590,23 @@ class PoolTests(TestCase):
     def test_pool_clean_no_board_count(self):
         self.pool2.clean()
 
+    # Pool.effective_power_assignment() and Game.effective_power_assignment()
+    def test_effective_power_assignment(self):
+        self.assertEqual(self.t.power_assignment, PowerAssignMethods.AUTO)
+        self.pool1.power_assignment = PowerAssignMethods.MANUAL
+        self.pool1.save(update_fields=['power_assignment'])
+        g1 = Game.objects.create(name='InPool1', the_round=self.r, pool=self.pool1,
+                                 the_set=GameSet.objects.first())
+        g2 = Game.objects.create(name='InPool2', the_round=self.r, pool=self.pool2,
+                                 the_set=GameSet.objects.first())
+        g3 = Game.objects.create(name='NoPool', the_round=self.r,
+                                 the_set=GameSet.objects.first())
+        self.assertEqual(self.pool1.effective_power_assignment(), PowerAssignMethods.MANUAL)
+        self.assertEqual(self.pool2.effective_power_assignment(), PowerAssignMethods.AUTO)
+        self.assertEqual(g1.effective_power_assignment(), PowerAssignMethods.MANUAL)
+        self.assertEqual(g2.effective_power_assignment(), PowerAssignMethods.AUTO)
+        self.assertEqual(g3.effective_power_assignment(), PowerAssignMethods.AUTO)
+
     def test_pool_clean_top_board(self):
         self.pool1.determines_top_rankings = 1
         self.pool1.save()

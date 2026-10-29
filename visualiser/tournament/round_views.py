@@ -470,15 +470,6 @@ def _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool=None):
     return retval
 
 
-def _pool_power_assignment(tournament_power_assignment, pool):
-    """
-    Returns the PowerAssignmentMethod to use for the pool (which may be None)
-    """
-    if (pool is not None) and (pool.power_assignment != ''):
-        return pool.power_assignment
-    return tournament_power_assignment
-
-
 def _seed_games(tournament, the_round):
     """
     Wrapper round GameSeeder to do the actual seeding for a round
@@ -486,15 +477,13 @@ def _seed_games(tournament, the_round):
     Returns a list of games, where each game is a 3-tuple containing a pool (possibly None),
     a set of (player, power) 2-tuples and a list of issues.
     """
-    power_assignment = tournament.power_assignment
     seeder = _create_game_seeder(tournament, the_round)
     # Pools with a board_count first
     pool_set = the_round.pool_set.order_by('-board_count')
     if pool_set:
         retval = []
         for pool in pool_set:
-            if _pool_power_assignment(power_assignment,
-                                      pool) == PowerAssignMethods.AUTO:
+            if pool.effective_power_assignment() == PowerAssignMethods.AUTO:
                 retval += _seed_games_and_powers_for_pool(seeder,
                                                           tournament,
                                                           the_round,
@@ -505,7 +494,7 @@ def _seed_games(tournament, the_round):
                                                the_round,
                                                pool)
         return retval
-    if power_assignment == PowerAssignMethods.AUTO:
+    if tournament.power_assignment == PowerAssignMethods.AUTO:
         return _seed_games_and_powers_for_pool(seeder, tournament, the_round)
     return _seed_games_for_pool(seeder, tournament, the_round)
 
@@ -630,7 +619,7 @@ def _create_seeded_games(user, tournament, the_round, round_num):
             GamePlayer.objects.create(player=tournament_player.player,
                                       game=new_game,
                                       power=power)
-        if _pool_power_assignment(tournament.power_assignment, pool) == PowerAssignMethods.PREFERENCES:
+        if new_game.effective_power_assignment() == PowerAssignMethods.PREFERENCES:
             new_game.assign_powers_from_prefs()
         log_objects_action(user, [new_game], ADDITION, [{'added': {}}],
                            form_name='PowerAssignForm')

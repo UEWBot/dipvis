@@ -2822,6 +2822,12 @@ class Pool(models.Model):
     def __str__(self):
         return _(f'{self.the_round} {self.name}')
 
+    def effective_power_assignment(self):
+        """The PowerAssignMethods value for Games in this Pool"""
+        if self.power_assignment:
+            return self.power_assignment
+        return self.the_round.tournament.power_assignment
+
     def clean(self):
         """
         Checks Pool attributes
@@ -3227,6 +3233,12 @@ class Game(models.Model):
             if sc.count > 0:
                 result.append(sc)
         return result
+
+    def effective_power_assignment(self):
+        """The PowerAssignMethods value for this Game"""
+        if self.pool:
+            return self.pool.effective_power_assignment()
+        return self.the_round.tournament.power_assignment
 
     def board_call_msg(self):
         """
