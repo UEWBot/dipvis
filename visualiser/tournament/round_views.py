@@ -25,6 +25,7 @@ from itertools import combinations
 import requests
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION
 from django.core.exceptions import ValidationError
@@ -513,9 +514,13 @@ def _generate_game_name(round_num, pool, i):
 
 
 def _send_board_call_to_discord(the_round):
-    """Send a board call message to the discord webhook for the tournament, if any"""
+    """
+    Send a board call message to the discord webhook for the tournament, if any
+
+    Returns False if posting to Discord failed, True otherwise.
+    """
     if not the_round.tournament.discord_url:
-        return
+        return True
     text = the_round.board_call_msg()
     data = {
         "content": text,
@@ -530,6 +535,15 @@ def _send_board_call_to_discord(the_round):
     except requests.exceptions.RequestException as e:
         # The board call is also emailed, so don't fail the request
         logger.warning('Failed to send board call for %s to Discord: %s', the_round, e)
+        return False
+    return True
+
+
+def _send_board_call(request, the_round):
+    """Email the board call and post it to Discord, warning the user if Discord fails"""
+    send_board_call_email(the_round)
+    if not _send_board_call_to_discord(the_round):
+        messages.warning(request, _('The board call could not be posted to Discord.'))
 
 
 @permission_required('tournament.add_game')
@@ -614,8 +628,7 @@ def seed_games(request, tournament_id, round_num):
                                sorted(changed_gameplayer_fields),
                                form_name='PowerAssignForm')
             # Notify the players
-            send_board_call_email(r)
-            _send_board_call_to_discord(r)
+            _send_board_call(request, r)
             # Redirect to the board call page
             return HttpResponseRedirect(reverse('board_call',
                                                 args=(tournament_id,
@@ -810,8 +823,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
             # Now all GamePlayer scores have been updated, update the RoundPlayer scores
             r.update_scores()
             # Notify the players
-            send_board_call_email(r)
-            _send_board_call_to_discord(r)
+            _send_board_call(request, r)
             log_objects_change(request.user, changed_games,
                                sorted(changed_game_fields),
                                form_name='GamePlayersForm')

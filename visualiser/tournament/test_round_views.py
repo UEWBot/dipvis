@@ -2049,6 +2049,42 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
+    @patch('tournament.round_views.requests.post',
+           side_effect=requests.exceptions.ConnectionError)
+    def test_seed_games_post_discord_fails(self, mock_post):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        self.t3.discord_url = 'https://discord.example/webhook'
+        self.t3.save(update_fields=['discord_url'])
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        for p, power in [(self.p1, self.turkey), (self.p3, self.russia),
+                         (self.p4, self.italy), (self.p5, self.germany),
+                         (self.p6, self.france), (self.p7, self.england),
+                         (self.p9, self.austria)]:
+            GamePlayer.objects.create(player=p, game=g, power=power)
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': g.name,
+                'form-0-the_set': str(g.the_set.pk)}
+        for gp in g.gameplayer_set.all():
+            data[f'form-0-{gp.pk}'] = str(gp.power.pk)
+        with self.assertLogs('tournament.round_views', level='WARNING'):
+            response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                        urlencode(data),
+                                        secure=True,
+                                        content_type='application/x-www-form-urlencoded',
+                                        follow=True)
+        self.assertTemplateUsed(response, 'rounds/board_call.html')
+        self.assertContains(response, 'The board call could not be posted to Discord.')
+        # Clean up
+        g.delete()
+        self.t3.discord_url = ''
+        self.t3.save(update_fields=['discord_url'])
+
     def test_seed_games_post_change_players(self):
         """Change the power assignment"""
         # Eight players, one sitting out, AUTO power assignment
@@ -3018,14 +3054,14 @@ class RoundViewTests(TestCase):
     def test_send_board_call_to_discord_no_url_does_not_post(self, mock_post):
         self.t1.discord_url = ''
         self.t1.save(update_fields=['discord_url'])
-        _send_board_call_to_discord(self.r11)
+        self.assertIs(True, _send_board_call_to_discord(self.r11))
         mock_post.assert_not_called()
 
     @patch('tournament.round_views.requests.post')
     def test_send_board_call_to_discord_posts_expected_payload(self, mock_post):
         self.t1.discord_url = 'https://discord.example/webhook'
         self.t1.save(update_fields=['discord_url'])
-        _send_board_call_to_discord(self.r11)
+        self.assertIs(True, _send_board_call_to_discord(self.r11))
         mock_post.assert_called_once()
         self.assertEqual(mock_post.call_args.args[0], 'https://discord.example/webhook')
         self.assertIn('json', mock_post.call_args.kwargs)
@@ -3039,7 +3075,7 @@ class RoundViewTests(TestCase):
         self.t1.discord_url = 'https://discord.example/webhook'
         self.t1.save(update_fields=['discord_url'])
         with self.assertLogs('tournament.round_views', level='WARNING'):
-            _send_board_call_to_discord(self.r11)
+            self.assertIs(False, _send_board_call_to_discord(self.r11))
         mock_post.assert_called_once()
 
     @patch('tournament.round_views.requests.post')
@@ -3048,4 +3084,4 @@ class RoundViewTests(TestCase):
         self.t1.discord_url = 'https://discord.example/webhook'
         self.t1.save(update_fields=['discord_url'])
         with self.assertLogs('tournament.round_views', level='WARNING'):
-            _send_board_call_to_discord(self.r11)
+            self.assertIs(False, _send_board_call_to_discord(self.r11))
