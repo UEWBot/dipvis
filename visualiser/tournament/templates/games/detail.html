@@ -71,13 +71,22 @@
 {% if user.is_active and tournament.editable %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
-  {% if perms.tournament.add_centrecount %}
+  {% with powers_assigned=game.all_powers_assigned %}
+  {% if not powers_assigned %}
+    {% if tournament.seed_games %}
+      {% url 'seed_games' tournament.id game.the_round.number as assign_url %}
+    {% else %}
+      {% url 'change_game' tournament.id game.name as assign_url %}
+    {% endif %}
+    <li>{% blocktrans %}Not every player has been assigned a power yet. Supply centres and votes can be entered once you <a href="{{ assign_url }}">assign the powers</a>.{% endblocktrans %}</li>
+  {% endif %}
+  {% if perms.tournament.add_centrecount and powers_assigned %}
     <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a> - {% trans "Use this to update the supply centre chart for the game or to flag the game as ended" %}</li>
   {% endif %}
-  {% if perms.tournament.add_supplycentreownership %}
+  {% if perms.tournament.add_supplycentreownership and powers_assigned %}
     <li><a href="{% url 'enter_sc_owners' tournament.id game.name %}">{% trans "Enter SC Ownership" %}</a> - {% trans "Use this to update the supply centre ownership for the game." %}</li>
   {% endif %}
-  {% if perms.tournament.add_centrecount %}
+  {% if perms.tournament.add_centrecount and powers_assigned %}
     {% if game.external_url %}
       <li><form class="inline-form" method="post" action="{% url 'scrape_external_site' tournament.id game.name %}">{% csrf_token %}<button type="submit">{% trans "Import SC Counts from Backstabbr" %}</button></form> - {% trans "Use this to update the supply centre chart from a game on Backstabbr." %}</li>
     {% endif %}
@@ -85,10 +94,11 @@
   {% if perms.tournament.add_gameimage %}
     <li><a href="{% url 'add_game_image' tournament.id game.name %}">{% trans "Upload Game Image" %}</a> - {% trans "Use this to add a picture of the game in progress." %}</li>
   {% endif %}
-  {% if perms.tournament.add_drawproposal %}
+  {% if perms.tournament.add_drawproposal and powers_assigned %}
     <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a> - {% trans "Use this to record draw votes, whether they succeed or fail." %}</li>
     <li><a href="{% url 'concession' tournament.id game.name %}">{% trans "Enter Concession Vote" %}</a> - {% trans "Use this to record concession votes, whether they succeed or fail." %}</li>
   {% endif %}
+  {% endwith %}
   {% if perms.tournament.change_game %}
     <li><a href="{% url 'change_game' tournament.id game.name %}">{% trans "Modify Game" %}</a> - {% trans "Use this to change the players assigned to games (e.g. to replace a player) or the great power assignments." %}</li>
   {% endif %}

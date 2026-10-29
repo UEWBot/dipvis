@@ -230,6 +230,38 @@ class GameViewTests(TestCase):
         for p in [p1, p2, p3, p4, p5, p6, p7]:
             p.delete()
 
+    def test_detail_data_entry_links_need_powers(self):
+        """Links that need powers are replaced by a note until every player has one"""
+        g = Game.objects.create(name='NoPowers',
+                                started_at=self.r1.start,
+                                the_round=self.r1,
+                                the_set=GameSet.objects.first())
+        GamePlayer.objects.create(player=Player.objects.create(first_name='Ann', last_name='Assigned'),
+                                  game=g,
+                                  power=self.austria)
+        gp = GamePlayer.objects.create(player=Player.objects.create(first_name='Uma', last_name='Unassigned'),
+                                       game=g)
+        url = reverse('game_detail', args=(self.t1.pk, g.name))
+        power_urls = [reverse(url_name, args=(self.t1.pk, g.name))
+                      for url_name in ['enter_scs', 'enter_sc_owners', 'draw_vote', 'concession']]
+        assign_url = reverse('seed_games', args=(self.t1.pk, self.r1.number()))
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(url, secure=True)
+        self.assertContains(response, 'Not every player has been assigned a power yet.')
+        self.assertContains(response, f'<a href="{assign_url}">assign the powers</a>')
+        for power_url in power_urls:
+            self.assertNotContains(response, power_url)
+        # Unaffected by powers
+        self.assertContains(response, reverse('add_game_image', args=(self.t1.pk, g.name)))
+        gp.power = self.england
+        gp.save(update_fields=['power'])
+        response = self.client.get(url, secure=True)
+        self.assertNotContains(response, 'Not every player has been assigned a power yet.')
+        for power_url in power_urls:
+            self.assertContains(response, power_url)
+        # Clean up
+        g.delete()
+
     def test_detail_non_existent_game(self):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, 'Game42')),

@@ -235,7 +235,9 @@ If Great Powers are being assigned at the board, you don't need to select them o
 page. Submit the page without them to send out the board call, and the board call will
 list the powers as "Power TBD". Once the players have chosen their powers, return to
 this page using the "Assign Powers" link on the round page, enter the powers, and
-submit again.
+submit again. Until every player in a game has a power, you won't be able to enter
+supply centre counts or ownership, import them from Backstabbr, or record draw or
+concession votes for that game.
 
 The board call is only sent automatically the first time that you submit the Games for
 a Round, so you can return to the "Assign Powers" page to correct mistakes or to enter
