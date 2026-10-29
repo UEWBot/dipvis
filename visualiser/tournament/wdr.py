@@ -30,6 +30,9 @@ from tournament.diplomacy import GreatPower
 WDR_NETLOC = 'www.world-diplomacy-reference.com'
 WDR_BASE_URL = 'https://' + WDR_NETLOC + '/'
 
+# Timeout in seconds for requests to the WDR. Some players have a long history
+WDR_TIMEOUT = 10.0
+
 
 class InvalidWDRId(Exception):
     """The WDR id provided is unused on the WDR."""
@@ -51,7 +54,7 @@ def _validate_wdr_id(path, param, value):
         r = requests.head(url,
                           headers={'User-Agent': settings.USER_AGENT},
                           allow_redirects=False,
-                          timeout=1.0)
+                          timeout=WDR_TIMEOUT)
     except requests.exceptions.RequestException:
         # Assume the id is ok
         return
@@ -96,7 +99,7 @@ def wdr_tournament_as_json(wdr_tournament_id):
                             headers={'User-Agent': settings.USER_AGENT,
                                      'Accept': 'application/json',
                                      'Accept-Encoding': 'gzip'},
-                            timeout=4.0)
+                            timeout=WDR_TIMEOUT)
     except requests.exceptions.RequestException as e:
         raise WDRNotAccessible from e
     if page.status_code == requests.codes.not_found:

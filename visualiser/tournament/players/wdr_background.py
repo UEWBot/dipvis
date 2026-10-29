@@ -32,17 +32,13 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 
 from tournament.diplomacy import WINNING_SCS
-from tournament.wdr import WDR_BASE_URL, InvalidWDRId, WDRNotAccessible
+from tournament.wdr import WDR_BASE_URL, WDR_TIMEOUT, InvalidWDRId, WDRNotAccessible
 
 
 class WDRBackground():
     """
     Get background on a player from the World Diplomacy Reference.
     """
-
-    # timeout in seconds for read requests to WDR
-    # Some players have a long history
-    TIMEOUT = 10.0
 
     def __init__(self, wdr_id):
         self.wdr_id = wdr_id
@@ -57,7 +53,7 @@ class WDRBackground():
                                 headers={'User-Agent': settings.USER_AGENT,
                                          'Accept': 'application/json',
                                          'Accept-Encoding': 'gzip'},
-                                timeout=self.TIMEOUT)
+                                timeout=WDR_TIMEOUT)
         except requests.exceptions.RequestException as e:
             raise WDRNotAccessible from e
         if page.status_code == requests.codes.not_found:
