@@ -35,7 +35,7 @@ WDD_BASE_RESULTS_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RESULTS_PATH
 WDD_BASE_RANKING_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RANKING_PATH
 
 # Timeout in seconds for requests to the WDD
-WDD_TIMEOUT = 1.0
+WDD_TIMEOUT = 4.0
 
 WDD_MAX_ROUNDS = 8
 WDD_MAX_AWARDS = 12
