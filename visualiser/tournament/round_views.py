@@ -19,6 +19,7 @@ Round Views for the Diplomacy Tournament Visualiser.
 """
 
 import csv
+import logging
 from itertools import combinations
 
 import requests
@@ -51,6 +52,11 @@ from tournament.tournament_views import (get_modifiable_tournament_or_404,
 
 
 REFRESH_TIME = 60
+
+# Timeout in seconds when posting to Discord
+DISCORD_TIMEOUT = 5.0
+
+logger = logging.getLogger(__name__)
 
 
 def get_round_or_404(tournament, round_num):
@@ -515,9 +521,15 @@ def _send_board_call_to_discord(the_round):
         "content": text,
         "username": "Diplomacy TV"
            }
-    requests.post(the_round.tournament.discord_url,
-                  json=data,
-                  headers={'User-Agent': settings.USER_AGENT})
+    try:
+        response = requests.post(the_round.tournament.discord_url,
+                                 json=data,
+                                 headers={'User-Agent': settings.USER_AGENT},
+                                 timeout=DISCORD_TIMEOUT)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        # The board call is also emailed, so don't fail the request
+        logger.warning('Failed to send board call for %s to Discord: %s', the_round, e)
 
 
 @permission_required('tournament.add_game')

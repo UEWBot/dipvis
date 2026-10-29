@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime as dt
+import requests
 from urllib.parse import urlencode
 from unittest.mock import patch
 
@@ -3030,3 +3031,21 @@ class RoundViewTests(TestCase):
         self.assertIn('json', mock_post.call_args.kwargs)
         self.assertEqual(mock_post.call_args.kwargs['json']['username'], 'Diplomacy TV')
         self.assertIn('content', mock_post.call_args.kwargs['json'])
+        self.assertIn('timeout', mock_post.call_args.kwargs)
+
+    @patch('tournament.round_views.requests.post',
+           side_effect=requests.exceptions.ConnectionError)
+    def test_send_board_call_to_discord_connection_error(self, mock_post):
+        self.t1.discord_url = 'https://discord.example/webhook'
+        self.t1.save(update_fields=['discord_url'])
+        with self.assertLogs('tournament.round_views', level='WARNING'):
+            _send_board_call_to_discord(self.r11)
+        mock_post.assert_called_once()
+
+    @patch('tournament.round_views.requests.post')
+    def test_send_board_call_to_discord_error_status(self, mock_post):
+        mock_post.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError
+        self.t1.discord_url = 'https://discord.example/webhook'
+        self.t1.save(update_fields=['discord_url'])
+        with self.assertLogs('tournament.round_views', level='WARNING'):
+            _send_board_call_to_discord(self.r11)
