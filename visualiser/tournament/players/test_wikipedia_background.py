@@ -125,6 +125,36 @@ class WikipediaBackgroundTests(TestCase):
         mock_print.assert_any_call('JSONDecodeError:')
         mock_print.assert_any_call('not json')
 
+    def test_wikipedia_cache_error_status_keeps_existing_cache(self):
+        cache = self._offline_cache()
+        old_soup = cache.the_soup
+        old_revision = cache.revision
+        old_last_read = cache.last_read
+        bad_page = self._mock_page(text='<html><body><p>Too many requests</p></body></html>')
+        bad_page.ok = False
+        with patch('tournament.players.wikipedia_background.requests.get', return_value=bad_page):
+            cache._read_page()
+        self.assertIs(cache.the_soup, old_soup)
+        self.assertEqual(old_revision, cache.revision)
+        self.assertGreaterEqual(cache.last_read, old_last_read)
+
+    def test_wikipedia_cache_latest_revision_error_status(self):
+        cache = self._offline_cache()
+        page = Mock()
+        page.ok = False
+        page.json.return_value = {'items': [{'rev': '1298445999'}]}
+        with patch('tournament.players.wikipedia_background.requests.get', return_value=page):
+            self.assertEqual('', cache._latest_revision())
+
+    def test_wikipedia_cache_latest_revision_unexpected_json(self):
+        cache = self._offline_cache()
+        for body in [{'type': 'error'}, {'items': []}, []]:
+            with self.subTest(body=body):
+                page = Mock()
+                page.json.return_value = body
+                with patch('tournament.players.wikipedia_background.requests.get', return_value=page):
+                    self.assertEqual('', cache._latest_revision())
+
     def test_wikipedia_cache_soup_read_recently(self):
         """A recently-read page should be returned without checking the revision"""
         wiki_cache = self._offline_cache()

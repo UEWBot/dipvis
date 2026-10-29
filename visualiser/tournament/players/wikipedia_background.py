@@ -69,8 +69,11 @@ class WikipediaCache():
                                 timeout=self.TIMEOUT)
         except requests.exceptions.RequestException:
             return
-        # Any successful HTTP response counts as a read attempt for backoff.
+        # Any HTTP response, even an error, counts as a read attempt for backoff.
         self.last_read = dt.datetime.now()
+        if not page.ok:
+            # Keep any existing cached page and revision
+            return
         try:
             etag = page.headers["ETag"]
         except KeyError:
@@ -96,13 +99,18 @@ class WikipediaCache():
                                 timeout=self.TIMEOUT)
         except requests.exceptions.RequestException:
             return ''
+        if not page.ok:
+            return ''
         try:
             json = page.json()
         except requests.exceptions.JSONDecodeError:
             print('JSONDecodeError:')
             print(page.text)
             return ''
-        return json['items'][0]['rev']
+        try:
+            return json['items'][0]['rev']
+        except (KeyError, IndexError, TypeError):
+            return ''
 
     def soup(self):
         """Get the soup of the wikipedia page"""
