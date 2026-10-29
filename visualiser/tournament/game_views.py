@@ -34,7 +34,7 @@ from django.http import (Http404, HttpResponse, HttpResponseRedirect,
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.views.decorators.http import require_http_methods, require_safe
+from django.views.decorators.http import require_http_methods, require_POST, require_safe
 
 from tournament import backstabbr, webdip
 from tournament.audit import log_form_action, log_objects_action, log_objects_change
@@ -917,6 +917,7 @@ def _scrape_failure(request, tournament, game, reason):
 
 
 @permission_required('tournament.add_centrecount')
+@require_POST
 def scrape_external_site(request, tournament_id, game_name):
     """Import CentreCounts from another site"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)

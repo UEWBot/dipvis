@@ -79,7 +79,7 @@
   {% endif %}
   {% if perms.tournament.add_centrecount %}
     {% if game.external_url %}
-      <li><a href="{% url 'scrape_external_site' tournament.id game.name %}">{% trans "Import SC Counts from Backstabbr" %}</a> - {% trans "Use this to update the supply centre chart from a game on Backstabbr." %}</li>
+      <li><form class="inline-form" method="post" action="{% url 'scrape_external_site' tournament.id game.name %}">{% csrf_token %}<button type="submit">{% trans "Import SC Counts from Backstabbr" %}</button></form> - {% trans "Use this to update the supply centre chart from a game on Backstabbr." %}</li>
     {% endif %}
   {% endif %}
   {% if perms.tournament.add_gameimage %}
