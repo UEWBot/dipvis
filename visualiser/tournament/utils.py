@@ -190,10 +190,17 @@ def add_missing_player_wdd_ids(dry_run=False):
             continue
         for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
             url = tp.tournament.wdd_url()
-            page = requests.get(url,
-                                headers={'User-Agent': settings.USER_AGENT,
-                                         'Accept-Encoding': 'gzip'},
-                                timeout=1.0)
+            try:
+                page = requests.get(url,
+                                    headers={'User-Agent': settings.USER_AGENT,
+                                             'Accept-Encoding': 'gzip'},
+                                    timeout=1.0)
+            except requests.exceptions.RequestException as e:
+                print(f'Failed to read {tp.tournament} from the WDD: {e}')
+                continue
+            if page.status_code != requests.codes.ok:
+                print(f'Failed to read {tp.tournament} from the WDD: {page.status_code} {url}')
+                continue
             soup = BeautifulSoup(page.text, "html.parser")
             for a in soup.find_all('a'):
                 if not a.string:

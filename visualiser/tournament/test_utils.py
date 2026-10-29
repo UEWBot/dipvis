@@ -18,7 +18,9 @@ import datetime as dt
 import os
 import tempfile
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+import requests
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -34,6 +36,7 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
 from tournament.players import Player, PlayerEventRanking, WDDPlayer
 from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
                               add_wdr_tournament_ids,
+                              add_missing_player_wdd_ids,
                               add_missing_player_wdr_ids,
                               check_wdd_player_ids,
                               clean_duplicate_player,
@@ -425,6 +428,48 @@ class UtilsTests(TestCase):
         p_missing.delete()
         p_has_wdd.delete()
         p_no_round.delete()
+
+    def _wdd_tournament_with_player(self):
+        now = django_timezone.now()
+        t = Tournament.objects.create(name='util-add-missing-wdd',
+                                      start_date=now.date(),
+                                      end_date=now.date(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      wdd_tournament_id=12345)
+        p = Player.objects.create(first_name='Mia',
+                                  last_name='MissingWdd')
+        TournamentPlayer.objects.create(player=p, tournament=t)
+        return t, p
+
+    @patch('builtins.print')
+    def test_add_missing_player_wdd_ids(self, mock_print):
+        t, p = self._wdd_tournament_with_player()
+        page = Mock(status_code=requests.codes.ok,
+                    text='<a href="player_fiche.php?id_player=4321">Mia MissingWdd</a>')
+        with patch('tournament.utils.requests.get', return_value=page):
+            add_missing_player_wdd_ids()
+        self.assertEqual(4321, p.wddplayer_set.get().wdd_player_id)
+
+    @patch('builtins.print')
+    def test_add_missing_player_wdd_ids_connection_error(self, mock_print):
+        t, p = self._wdd_tournament_with_player()
+        with patch('tournament.utils.requests.get',
+                   side_effect=requests.exceptions.ConnectionError):
+            add_missing_player_wdd_ids()
+        self.assertFalse(p.wddplayer_set.exists())
+        mock_print.assert_any_call(f'Failed to read {t} from the WDD: ')
+
+    @patch('builtins.print')
+    def test_add_missing_player_wdd_ids_error_status(self, mock_print):
+        t, p = self._wdd_tournament_with_player()
+        page = Mock(status_code=requests.codes.internal_server_error,
+                    text='<a href="player_fiche.php?id_player=4321">Mia MissingWdd</a>')
+        with patch('tournament.utils.requests.get', return_value=page):
+            add_missing_player_wdd_ids()
+        self.assertFalse(p.wddplayer_set.exists())
+        mock_print.assert_any_call(f'Failed to read {t} from the WDD: 500 {t.wdd_url()}')
 
     def test_find_users_without_players(self):
         u1 = User.objects.create_user(username='player')
