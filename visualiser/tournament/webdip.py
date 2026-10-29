@@ -29,6 +29,9 @@ from tournament.diplomacy import WINNING_SCS
 
 WEBDIPLOMACY_NETLOC = 'webdiplomacy.net'
 
+# Timeout in seconds for requests to WebDiplomacy
+WEBDIP_TIMEOUT = 2.0
+
 # Names used for Great Powers on WebDiplomacy
 POWERS = ['Austria',
           'England',
@@ -147,7 +150,7 @@ class Game():
                                     headers={'User-Agent': settings.USER_AGENT,
                                              'Accept-Encoding': 'gzip'},
                                     allow_redirects=False,
-                                    timeout=2.0)
+                                    timeout=WEBDIP_TIMEOUT)
             except requests.exceptions.RequestException as e:
                 last_error = e
                 continue
