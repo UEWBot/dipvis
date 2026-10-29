@@ -67,7 +67,7 @@ class WikipediaCache():
                                 headers={'User-Agent': settings.USER_AGENT,
                                          'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
-        except requests.exceptions.Timeout:
+        except requests.exceptions.RequestException:
             return
         # Any successful HTTP response counts as a read attempt for backoff.
         self.last_read = dt.datetime.now()
@@ -94,7 +94,7 @@ class WikipediaCache():
                                          'Accept': 'application/json',
                                          'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
-        except requests.exceptions.Timeout:
+        except requests.exceptions.RequestException:
             return ''
         try:
             json = page.json()

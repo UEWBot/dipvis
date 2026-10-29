@@ -69,6 +69,19 @@ class WikipediaBackgroundTests(TestCase):
                    side_effect=requests.exceptions.Timeout):
             self.assertEqual('', cache._latest_revision())
 
+    def test_wikipedia_cache_read_page_connection_error(self):
+        with patch('tournament.players.wikipedia_background.requests.get',
+                   side_effect=requests.exceptions.ConnectionError):
+            cache = WikipediaCache()
+            self.assertIsNone(cache.the_soup)
+            self.assertRaises(WikipediaNotAccessible, cache.soup)
+
+    def test_wikipedia_cache_latest_revision_connection_error(self):
+        cache = self._offline_cache()
+        with patch('tournament.players.wikipedia_background.requests.get',
+                   side_effect=requests.exceptions.ConnectionError):
+            self.assertEqual('', cache._latest_revision())
+
     def test_wikipedia_cache_missing_etag_keeps_existing_cache(self):
         good_page = Mock()
         good_page.text = '<html><body><p>good-content</p></body></html>'
