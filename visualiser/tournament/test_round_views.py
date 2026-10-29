@@ -1693,6 +1693,21 @@ class RoundViewTests(TestCase):
         second.delete()
 
     @patch('tournament.round_views._seed_games')
+    def test_create_seeded_games_resets_board_call_sent(self, mock_seed_games):
+        """New Games need a new board call"""
+        self._mock_t2r3_seeding(mock_seed_games)
+        r = self.t2.round_numbered(3)
+        r.board_call_sent = True
+        r.save(update_fields=['board_call_sent'])
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        self.client.post(reverse('create_seeded_games', args=(self.t2.pk, 3)),
+                         secure=True)
+        r.refresh_from_db()
+        self.assertFalse(r.board_call_sent)
+        # Clean up
+        r.game_set.all().delete()
+
+    @patch('tournament.round_views._seed_games')
     def test_seed_games_manual_good_number(self, mock_seed_games):
         """Simple case with exactly seven players with MANUAL power assignment"""
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
@@ -2290,6 +2305,47 @@ class RoundViewTests(TestCase):
         mock_send.assert_called_once()
         self.assertTemplateUsed(response, 'rounds/board_call.html')
         self.assertContains(response, '2 of 3 board call emails failed to send.')
+        # Clean up
+        g.delete()
+
+    def test_seed_games_post_board_call_sent_once(self):
+        """Saving the powers again shouldn't resend the board call"""
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        self.assertFalse(self.r32.board_call_sent)
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        for p, power in [(self.p1, self.turkey), (self.p3, self.russia),
+                         (self.p4, self.italy), (self.p5, self.germany),
+                         (self.p6, self.france), (self.p7, self.england),
+                         (self.p9, self.austria)]:
+            GamePlayer.objects.create(player=p, game=g, power=power)
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': g.name,
+                'form-0-the_set': str(g.the_set.pk)}
+        for gp in g.gameplayer_set.all():
+            data[f'form-0-{gp.pk}'] = str(gp.power.pk)
+        self._set_emails_for_roundplayers(self.r32.roundplayer_set.all())
+        url = reverse('seed_games', args=(self.t3.pk, 2))
+        outbox_before = len(mail.outbox)
+        self.client.post(url,
+                         urlencode(data),
+                         secure=True,
+                         content_type='application/x-www-form-urlencoded')
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.r32.refresh_from_db()
+        self.assertTrue(self.r32.board_call_sent)
+        response = self.client.post(url,
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded',
+                                    follow=True)
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertContains(response, 'The board call was not sent again.')
         # Clean up
         g.delete()
 
@@ -2916,6 +2972,55 @@ class RoundViewTests(TestCase):
         # Clean up
         self.r11.game_set.all().delete()
 
+    def _create_r11_game(self):
+        """Create a Game in r11 with seven players who have email addresses"""
+        powers = {self.austria: self.rp11,
+                  self.turkey: self.rp12,
+                  self.england: self.rp13,
+                  self.russia: self.rp15,
+                  self.italy: self.rp16,
+                  self.france: self.rp17,
+                  self.germany: self.rp19}
+        self._set_emails_for_roundplayers(powers.values())
+        g = Game.objects.create(the_round=self.r11,
+                                name='Existing',
+                                the_set=self.gibsons)
+        for p, rp in powers.items():
+            GamePlayer.objects.create(game=g, power=p, player=rp.player)
+        return g, powers
+
+    def test_create_games_post_modify_players_board_call_already_sent(self):
+        """Changing players after the board call was sent shouldn't resend it (#417)"""
+        g, powers = self._create_r11_game()
+        self.r11.board_call_sent = True
+        self.r11.save(update_fields=['board_call_sent'])
+        # Swap England and Russia
+        powers[self.england], powers[self.russia] = powers[self.russia], powers[self.england]
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-game_id': str(g.id),
+                'form-0-name': g.name,
+                'form-0-external_url': g.external_url,
+                'form-0-notes': g.notes,
+                'form-0-the_set': str(g.the_set.pk)}
+        for p, rp in powers.items():
+            data[f'form-0-{p.name}'] = str(rp.pk)
+        outbox_before = len(mail.outbox)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(g.gameplayer_set.get(power=self.england).player, powers[self.england].player)
+        self.assertEqual(len(mail.outbox), outbox_before)
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)],
+                         ['The board call was not sent again. Use the button below to resend it.'])
+        # Clean up
+        self.r11.game_set.all().delete()
+
     def test_create_games_post_modify_non_players(self):
         """Change attributes other than players and power assignments"""
         self.assertEqual(self.r11.game_set.count(), 0)
@@ -3209,6 +3314,61 @@ class RoundViewTests(TestCase):
                                            secure=True)
                 self.assertContains(response, 'No games exist in the round.')
                 self.assertNotContains(response, '<dl>')
+
+    def test_board_call_send_button(self):
+        self._create_r11_game()
+        url = reverse('board_call', args=(self.t1.pk, 1))
+        send_url = reverse('send_board_call', args=(self.t1.pk, 1))
+        response = self.client.get(url, secure=True)
+        self.assertNotContains(response, send_url)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(url, secure=True)
+        self.assertContains(response, f'action="{send_url}"')
+        self.assertContains(response, 'Send Board Call')
+        self.assertNotContains(response, 'Resend Board Call')
+        self.r11.board_call_sent = True
+        self.r11.save(update_fields=['board_call_sent'])
+        response = self.client.get(url, secure=True)
+        self.assertContains(response, 'Resend Board Call')
+        # Clean up
+        self.r11.game_set.all().delete()
+
+    def test_send_board_call_not_logged_in(self):
+        response = self.client.post(reverse('send_board_call', args=(self.t1.pk, 1)),
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+    def test_send_board_call_get(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('send_board_call', args=(self.t1.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 405)
+
+    def test_send_board_call_no_games(self):
+        self.assertFalse(self.r11.game_set.exists())
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('send_board_call', args=(self.t1.pk, 1)),
+                                    secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_send_board_call(self):
+        """The button resends the board call, even if it was already sent"""
+        self._create_r11_game()
+        self.r11.board_call_sent = True
+        self.r11.save(update_fields=['board_call_sent'])
+        outbox_before = len(mail.outbox)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('send_board_call', args=(self.t1.pk, 1)),
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t1.pk, 1)))
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertIn('Board call for', mail.outbox[-1].subject)
+        self.r11.refresh_from_db()
+        self.assertTrue(self.r11.board_call_sent)
+        # Clean up
+        self.r11.game_set.all().delete()
 
     @patch('tournament.round_views._seed_games')
     def test_seed_games_uses_default_game_set(self, mock_seed_games):

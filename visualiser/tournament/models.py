@@ -2458,6 +2458,8 @@ class Round(models.Model):
                                           verbose_name=gettext_lazy(u'Enable self-check-ins'))
     check_in_email_sent = models.BooleanField(default=False,
                                               verbose_name=gettext_lazy('check-in email sent'))
+    board_call_sent = models.BooleanField(default=False,
+                                          verbose_name=gettext_lazy('board call sent'))
     is_finished = models.BooleanField(default=False,
                                       verbose_name=gettext_lazy('is finished'))
     is_team_round = models.BooleanField(default=False,

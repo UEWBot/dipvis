@@ -575,6 +575,17 @@ def _send_board_call(request, the_round):
                                            'attempted'))
     if not _send_board_call_to_discord(the_round):
         messages.warning(request, _('The board call could not be posted to Discord.'))
+    the_round.board_call_sent = True
+    the_round.save(update_fields=['board_call_sent'])
+
+
+def _send_board_call_once(request, the_round):
+    """Send the board call unless it was already sent, in which case tell the user how to resend it"""
+    if the_round.board_call_sent:
+        messages.info(request,
+                      _('The board call was not sent again. Use the button below to resend it.'))
+    else:
+        _send_board_call(request, the_round)
 
 
 def _claim_seed_generation(the_round, generation):
@@ -597,6 +608,9 @@ def _create_seeded_games(user, tournament, the_round, round_num):
     log_objects_action(user, old_games, DELETION, [{'deleted': {}}],
                        form_name='PowerAssignForm')
     the_round.game_set.all().delete()
+    # These are new Games, so the players need a new board call
+    the_round.board_call_sent = False
+    the_round.save(update_fields=['board_call_sent'])
     if tournament.default_game_set:
         default_set = tournament.default_game_set
     elif tournament.is_virtual:
@@ -769,7 +783,7 @@ def seed_games(request, tournament_id, round_num):
                                    form_name='PowerAssignForm')
             request.session.pop(_seed_issues_key(r), None)
             # Notify the players
-            _send_board_call(request, r)
+            _send_board_call_once(request, r)
             # Redirect to the board call page
             return HttpResponseRedirect(reverse('board_call',
                                                 args=(tournament_id,
@@ -779,6 +793,19 @@ def seed_games(request, tournament_id, round_num):
 
     context = {'tournament': t, 'round': r, 'formset': formset}
     return render(request, 'rounds/seeded_games.html', context)
+
+
+@permission_required('tournament.add_game')
+@require_POST
+def send_board_call(request, tournament_id, round_num):
+    """Send, or resend, the board call for the round"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    if not r.game_set.exists():
+        raise Http404
+    _send_board_call(request, r)
+    return HttpResponseRedirect(reverse('board_call',
+                                        args=(tournament_id, round_num)))
 
 
 # TODO: Name is misleading - also used to modify existing game(s)
@@ -904,7 +931,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
             # Now all GamePlayer scores have been updated, update the RoundPlayer scores
             r.update_scores()
             # Notify the players
-            _send_board_call(request, r)
+            _send_board_call_once(request, r)
             log_objects_change(request.user, changed_games,
                                sorted(changed_game_fields),
                                form_name='GamePlayersForm')

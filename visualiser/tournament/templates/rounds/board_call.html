@@ -25,6 +25,9 @@
     </dd>
   {% endfor %}
 </dl>
+{% if user.is_active and tournament.editable and perms.tournament.add_game %}
+<form class="inline-form" method="post" action="{% url 'send_board_call' tournament.id round.number %}">{% csrf_token %}<button type="submit">{% if round.board_call_sent %}{% trans "Resend Board Call" %}{% else %}{% trans "Send Board Call" %}{% endif %}</button></form>
+{% endif %}
 {% else %}
 <p>{% trans "No games exist in the round." %}</p>
 {% endif %}
