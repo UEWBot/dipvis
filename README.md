@@ -65,6 +65,14 @@ how Dipvis should be used.
 
 Can be found [here](https://github.com/UEWBot/dipvis/blob/master/TESTING)
 
+## Updating a deployed site
+
+[deploy.sh](deploy.sh) updates a running site to the latest code: it pulls the code, installs the
+requirements, applies migrations, compiles translations, collects static files (if `STATIC_ROOT` is
+set), checks the settings, and restarts gunicorn. It's written for one particular setup (a Python
+virtual environment, and gunicorn run by systemd), and the comments in it point out the parts you
+may need to change for a server that's set up differently.
+
 ## Contributions
 
 Contributions are very welcome. There's a list of issues at https://github.com/UEWBot/dipvis/issues
