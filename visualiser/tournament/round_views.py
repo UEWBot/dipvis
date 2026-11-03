@@ -579,6 +579,55 @@ def _send_board_call(request, the_round):
         messages.warning(request, _('The board call could not be posted to Discord.'))
 
 
+def _create_seeded_games(user, tournament, the_round, round_num):
+    """Replace the round's Games with one complete seeded set."""
+    old_games = list(the_round.game_set.all())
+    old_gameplayers = [gp for game in old_games for gp in game.gameplayer_set.all()]
+    log_objects_action(user, old_gameplayers, DELETION, [{'deleted': {}}],
+                       form_name='PowerAssignForm')
+    log_objects_action(user, old_games, DELETION, [{'deleted': {}}],
+                       form_name='PowerAssignForm')
+    the_round.game_set.all().delete()
+    if tournament.default_game_set:
+        default_set = tournament.default_game_set
+    elif tournament.is_virtual:
+        default_set = GameSet.objects.get(name='Backstabbr')
+    else:
+        default_set = GameSet.objects.get(pk=1)
+    data = []
+    games = _group_seeded_games(_seed_games(tournament, the_round))
+    for n, (pool, game_players, issues) in enumerate(games, start=1):
+        new_game = Game.objects.create(name=_generate_game_name(round_num, pool, n),
+                                       the_round=the_round,
+                                       pool=pool,
+                                       is_top_board=(pool is not None) and (pool.determines_top_rankings is not None),
+                                       the_set=default_set)
+        current = {'name': new_game.name,
+                   'the_set': new_game.the_set,
+                   'top_board': new_game.is_top_board,
+                   'issues': '\n'.join(issues)}
+        for tournament_player, power in game_players:
+            game_player = GamePlayer.objects.create(player=tournament_player.player,
+                                                    game=new_game,
+                                                    power=power)
+            current[str(game_player.id)] = power
+        if _pool_power_assignment(tournament.power_assignment, pool) == PowerAssignMethods.PREFERENCES:
+            new_game.assign_powers_from_prefs()
+            for tournament_player, _ in game_players:
+                game_player = GamePlayer.objects.get(player=tournament_player.player,
+                                                     game=new_game)
+                current[str(game_player.id)] = game_player.power
+        data.append(current)
+        log_objects_action(user, [new_game], ADDITION, [{'added': {}}],
+                           form_name='PowerAssignForm')
+        log_objects_action(user, list(new_game.gameplayer_set.all()), ADDITION,
+                           [{'added': {}}], form_name='PowerAssignForm')
+    PowerAssignFormset = formset_factory(PowerAssignForm,
+                                         formset=BasePowerAssignFormset,
+                                         extra=0)
+    return PowerAssignFormset(the_round=the_round, initial=data)
+
+
 @permission_required('tournament.add_game')
 @require_http_methods(['GET', 'HEAD', 'POST'])
 def seed_games(request, tournament_id, round_num):
@@ -675,59 +724,7 @@ def seed_games(request, tournament_id, round_num):
             return HttpResponseRedirect(reverse('get_seven',
                                                 args=(tournament_id,
                                                       round_num)))
-        # Delete any existing Games and GamePlayers for this round
-        old_games = list(r.game_set.all())
-        old_gameplayers = [gp for game in old_games for gp in game.gameplayer_set.all()]
-        log_objects_action(request.user, old_gameplayers, DELETION, [{'deleted': {}}],
-                   form_name='PowerAssignForm')
-        log_objects_action(request.user, old_games, DELETION, [{'deleted': {}}],
-                   form_name='PowerAssignForm')
-        r.game_set.all().delete()
-        # Use the tournament's default GameSet, or fall back to sensible defaults
-        if t.default_game_set:
-            default_set = t.default_game_set
-        elif t.is_virtual:
-            default_set = GameSet.objects.get(name='Backstabbr')
-        else:
-            default_set = GameSet.objects.get(pk=1)
-        data = []
-        # Generate a seeding, and assign powers if required
-        games = _group_seeded_games(_seed_games(t, r))
-        # Add the Games and GamePlayers to the database
-        for n, (pool, g, i) in enumerate(games, start=1):
-            new_game = Game.objects.create(name=_generate_game_name(round_num,
-                                                                    pool,
-                                                                    n),
-                                           the_round=r,
-                                           pool=pool,
-                                           is_top_board=(pool is not None) and (pool.determines_top_rankings is not None),
-                                           the_set=default_set)
-            current = {'name': new_game.name,
-                       'the_set': new_game.the_set,
-                       'top_board': new_game.is_top_board,
-                       'issues': '\n'.join(i)}
-            for tp, power in g:
-                gp = GamePlayer.objects.create(player=tp.player,
-                                               game=new_game,
-                                               power=power)
-                current[str(gp.id)] = power
-            # If we're assigning powers from preferences, do so now
-            if _pool_power_assignment(t.power_assignment, pool) == PowerAssignMethods.PREFERENCES:
-                new_game.assign_powers_from_prefs()
-                for tp, _ in g:
-                    gp = GamePlayer.objects.get(player=tp.player,
-                                                game=new_game)
-                    current[str(gp.id)] = gp.power
-            data.append(current)
-            log_objects_action(request.user, [new_game], ADDITION, [{'added': {}}],
-                               form_name='PowerAssignForm')
-            log_objects_action(request.user, list(new_game.gameplayer_set.all()), ADDITION,
-                               [{'added': {}}], form_name='PowerAssignForm')
-        # Create a form for each of the resulting games
-        PowerAssignFormset = formset_factory(PowerAssignForm,
-                                             formset=BasePowerAssignFormset,
-                                             extra=0)
-        formset = PowerAssignFormset(the_round=r, initial=data)
+        formset = _create_seeded_games(request.user, t, r, round_num)
 
     context = {'tournament': t, 'round': r, 'formset': formset}
     return render(request, 'rounds/seeded_games.html', context)
